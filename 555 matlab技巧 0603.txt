@@ -1,0 +1,29 @@
+1 如何找出向量中的满足某些条件（大于0）的最小值
+V = [ 6 -1 4 4 ];
+find(V==min(V(V>0)))
+
+2 如何找出矩阵中不相同的列向量?
+X = unique(binMatrix','rows')' 
+
+3 如何fprintf一个数字向量？
+A1 = [9.9, 9900];
+formatSpec = 'X is %4.2f meters or %6.3f mm\n';
+fprintf(formatSpec,A1)
+
+4 isempty和flag直接判断的区别
+find()是否能找到这样的集合,一般用isempty来判断;
+而标量间的比较，返回logical值 0 或 1 不能用isempty判断
+
+5 如何对矩阵多个标准排序
+sortrows （按列4先排序 之后按6递减排序）
+sortrows(A,[4 6],{'ascend' 'descend'})
+B = sortrows(___,direction) sorts the rows of A in the order specified by direction for any of the previous syntaxes. direction can be 'ascend' (default) for ascending order or 'descend' for descending order. direction can also be a cell array whose elements are 'ascend' and 'descend', where each element corresponds to a column that sortrows operates on. For example, sortrows(A,[4 6],{'ascend' 'descend'}) sorts the rows of A in ascending order based on the fourth column, then in descending order based on the sixth column to break ties.
+
+6 if ~issorted(ItemSolution.LUidArray) %如果ID已经按递增排序 不用重新排 否则重新排序 
+end
+
+8 如何
+
+7 如何mcc命令输出jar包?
+mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
+
