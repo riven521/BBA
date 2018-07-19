@@ -1,4 +1,5 @@
 function [da] = HLUtoItem(da,ParaArray)
+% 重要函数:LU放入Item中
 % 输入: LU: ID LWH
 % 输出: 
 % da.LUArray (1 LWH (已知)

@@ -1,4 +1,5 @@
 function [da] = HItemToStrip(da,ParaArray)
+% 重要函数:Item放入Strip中
 % 输入: Item: LWH
 % 输出: 
 % da.ItemArray (1 LWH (已知)

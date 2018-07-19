@@ -1,5 +1,5 @@
 function [da] = GcheckInput(da,ParaArray)
-% 先对输入数据进行转换,后对数据进行check
+% 重要函数:输入数据转换+输入数据核对
 % 输入转换
     if size(da.LUArray.ID,1)~=1 && size(da.LUArray.ID,1)>size(da.LUArray.ID,2) %行向量
         da.LUArray.ID=da.LUArray.ID';

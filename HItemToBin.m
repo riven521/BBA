@@ -1,4 +1,5 @@
 function [da] = HItemToBin(da)
+% 重要函数:Item放入Bin中
 %% 获取item与bin的关系 itemBeBinMatrix  + 坐标 CoordItemBin
 %% 获取LU与bin的关系 LUBeBinMatrix  + 坐标 CoordLUBin
 %% 获取LU与item的关系 LURotaFlag

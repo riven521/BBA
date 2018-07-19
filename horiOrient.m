@@ -1,4 +1,5 @@
 function [LWHItemSortHori,idxHori] = horiOrient(LWHItemSort)
+% 普通函数;获取
     LWHItemSortHori = LWHItemSort;
     idxHori = LWHItemSort(1,:) < LWHItemSort(2,:);
     tmpminv = min(LWHItemSort);

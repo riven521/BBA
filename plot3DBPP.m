@@ -1,4 +1,5 @@
 function [] = plot3DBPP(da,ParaArray)
+% 作图函数:三维BPP
 % 初始化
 nDim = size(da.ItemArray.LWH,1);
 nThisItem = size(da.ItemArray.LWH,2);

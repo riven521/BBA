@@ -1,4 +1,5 @@
 function [da]= HStripToBin(da,ParaArray)
+% 重要函数:Strip放入Bin中
 %% 初始化
 % nDim strip维度(2) 
 nDim = size(da.StripArray.LW,1);  

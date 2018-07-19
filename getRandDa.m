@@ -1,4 +1,5 @@
 function [da] = getRandDa(n)
+% 普通函数:随机产生输入数据
      rng(1);
     ID = randi([11,25],1,n); %ID类型数
     LWH = zeros(n,3);

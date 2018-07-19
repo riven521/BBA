@@ -1,4 +1,5 @@
 function [] = plot2DBPP(da,ParaArray)
+% 作图函数:二维BPP
 % 初始化
 nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nThisItem = size(da.ItemArray.LWH,2);

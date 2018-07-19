@@ -1,4 +1,5 @@
 function varargout = printstruct(S, varargin)
+% 网络函数:输出结构体
     % PRINTSTRUCT Recursively print hierarchical outline of structure contents
     %
     %  This is a minor adaptation of the File Exchange contribution "Structure
