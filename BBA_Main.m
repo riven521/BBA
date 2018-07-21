@@ -90,6 +90,7 @@ da = GcheckInput(da,ParaArray);
 %% 启发式：Item到Strip的算法
 printstruct(da);
 [da] = HItemToStrip(da,ParaArray);
+printstruct(da);
 %% 启发式：Strip到Bin的算法
 [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
 % printstruct(da);

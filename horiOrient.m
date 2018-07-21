@@ -5,5 +5,6 @@ function [LWHItemSortHori,idxHori] = horiOrient(LWHItemSort)
     tmpminv = min(LWHItemSort);
     tmpmaxv = max(LWHItemSort);
     LWHItemSortHori(1,idxHori) = tmpmaxv(1,idxHori);
-    LWHItemSortHori(2,idxHori) = tmpminv(1,idxHori);
+    LWHItemSortHori(2,idxHori) = tmpminv(1,idxHori);    
+    idxHori = double(idxHori); %logical×ª»»Îªdouble
 end
