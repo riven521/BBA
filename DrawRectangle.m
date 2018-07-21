@@ -1,29 +1,5 @@
 function h = DrawRectangleWithXY(param,style)
 % ÍøÂçº¯Êý:»­¾ØÐÎÍ¼ À´×ÔÍøÂç
-%--------------------------------------------------------------------------
-% H = DRAWRECTANGLE(PARAM,STYLE)
-% This function draws a rectangle with the given parameters:
-% - inputs:
-%          param................... 1x5 array
-%          - param = [a, b, w, h, theta]
-%          - (a,b): the center of the rectangle
-%          - (w,h): width and height of the rectangle > 0
-%          - theta: the rotation angle of the rectangle
-%          style................... string
-%          - plot style string
-% - output:
-%          h....................... plot handler
-%
-%   Usage Examples,
-%
-%   DrawRectangle([0 0 1 1 0]); 
-%   DrawRectangle([-1,2,3,5,3.1415/6],'r-');
-%   h = DrawRectangle([0,1,2,4,3.1415/3],'--');
-%
-%   Rasoul Mojtahedzadeh (mojtahedzadeh _a_ gmail com)
-%   Version 1.00
-%   November, 2011
-%--------------------------------------------------------------------------
 
 if (nargin <1),
     error('Please see help for INPUT DATA.');

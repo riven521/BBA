@@ -1,21 +1,21 @@
-%% 主函数文件
-function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = BBA_Main(LUID,LULWH,BINLWH,PARA_whichRotationHori,LUBUFF,BINBUFF)
-% function [ ] = BBA_Main()
-% clc;
+function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+    BBA_Main(LUID,LULWH,BINLWH,PARA_whichRotationHori,LUBUFF,BINBUFF)
 % 输入六个参数 LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF
-% 输出四个参数 LUBeBinMatrix,CoordLUBin,LWHRota,DrawSeq
+%  LUID - 行向量(n列) 托盘类型 相同数字表明同一类型,允许堆垛
+%  LULWH - 矩阵(3行*n列) 托盘长宽高 画图使用该值
+%  BINLWH - 列向量(3行) 车辆长宽高 目前仅考虑单车型 TODO 后期增加到多车型按顺序使用
+%  PARA_whichRotationHori - 标量(1*1) 允许rotation,但考虑rotation的差异
+%  LUBUFF - 列向量(2行) 托盘间长宽的总间隙(2倍的单边长宽间隙) 可用托盘长宽高=每个托盘的实际长宽高+增加的buff
+%  BINBUFF - 列向量(3行) 车辆的长宽高的总间隙(2倍的单边长宽间隙,1倍的高度间隙) 可用车型长宽高=车型的实际长宽高-BINBUFF
+% 输出四个参数 Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq
+%  Res1_LUBeBinMatrix - 矩阵(2*n列)
+%  Res2_CoordLUBin - double矩阵(3*n列)
+%  Res3_LWHRota - 矩阵(*n列)
+%  Res4_DrawSeq - double矩阵(2*n列)
+
 %% Call 本函数:
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
-%% 参数初始化
-% whichStripH 1 best 2 first 3 next; whichBinH 1 best; 
-% whichSortItemOrder 1 长高递减 2 最短边递减; 
-% whichRotation 1:允许rotation 0:禁止
-% rotation组合 1 1 2 1 0 (1 1 2 1 1 )(1 1 2 1 2) % 非rotation组合 1 1 1 0 0
-% whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
-ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-    'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-%% 输入结构体定义
 % LUArray = struct('ID',[],'LWH',[],...
 %     'weight',[],'Lbuffer',[],'Wbuffer',[],'Type',[],'Material',[]);
 % ItemArray = struct('ID',[],'LWH',[],...
@@ -25,7 +25,23 @@ ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 % BinArray = struct('ID',[],'LWH',[],...
 %    'Capacity',[],'Lbuffer',[],'Wbuffer',[],'Hbuffer',[]);
 % da = struct('LUArray',LUArray,'ItemArray',ItemArray,'StripArray',StripArray,'BinArray',BinArray);
-%% 结构体da赋值
+%% 1参数初始化
+% whichStripH 1 best 2 first 3 next; whichBinH 1 best; 
+% whichSortItemOrder 1 长高递减 2 最短边递减; 
+% whichRotation 1:允许rotation 0:禁止
+% rotation组合 1 1 2 1 0 (1 1 2 1 1 )(1 1 2 1 2) % 非rotation组合 1 1 1 0 0 （2/3 1 1 0 0）
+% whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
+% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+ParaArray = struct('whichStripH',3,'whichBinH',1,'whichSortItemOrder',2,...
+    'whichRotation',1,'whichRotationHori',1,'timeLimit',100,'ub0',10);
+%% 2结构体da赋值
 if nargin ~=0 %如果参数不为空
     da.LUArray.ID = LUID; 
     da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸
@@ -38,47 +54,40 @@ if nargin ~=0 %如果参数不为空
     da.BinArray.Weight = 1000;
     da.LUArray.Weight = zeros(size(LULWH,1),1);
 else
-    %%
-%     load insLU3.mat;   % load ins.mat;
-%     da.LUArray.ID = LUid;
-%     da.LUArray.LWH = w;
-%     da.BinArray.LWH = W;
-%     clear LUid w W;
-%     error('No input! ');
-    
     da.LUArray.ID = [5236934585 4 5236934585 5236934585];
-    da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
+    da.BinArray.LWH = [8;10;4]';
     da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
+    da.LUArray.BUFF = [1,1];
+    da.BinArray.BUFF = [1,1,1];
+    da.BinArray.Weight = 1000;
+    da.LUArray.Weight = da.LUArray.LWH(1,:);
     
-    da.LUArray.BUFF = [0,0]';
-    da.BinArray.BUFF = [0,0,0]'; 
+% %         da.LUArray.ID = [5236934585 4 5236934585 5236934585];
+% %     da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
+% %     da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
+% %     
+% %     da.LUArray.BUFF = [0,0]';
+% %     da.BinArray.BUFF = [0,0,0]'; 
     
     % 增加重量 -
     da.BinArray.Weight = 1000;
     da.LUArray.Weight = da.LUArray.LWH(1,:);
     
-%     da.LUArray.ID = [da.LUArray.ID da.LUArray.ID da.LUArray.ID];
-%     da.LUArray.LWH = [da.LUArray.LWH da.LUArray.LWH da.LUArray.LWH];
-%     da.LUArray.ID = [66 899 66 55];
-%     da.BinArray.LWH = [15; 20; 4];
-%     da.LUArray.LWH = [3 6 2; 2 4 2; 3 6 1;3 5 2];
-%     da.LUArray.LWH = da.LUArray.LWH';
-%     da.LUArray.ID = [da.LUArray.ID];
-%     da.LUArray.LWH = [da.LUArray.LWH];
-
-% % n=13;da=getRandDa(n);save('datttt.mat','da');
-% % load('datttt.mat')
-
-%     fprintf('未输入参数, 将采用默认算例 \n' );
+    %% 产生随机算例
+    %  n=13;da=getRandDa(n);save('rndDa.mat','da');
+    %  load('rndDa.mat')
+    %%
+    %     load insLU3.mat;   % load ins.mat;
+    %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
+    %     clear LUid w W;%     error('No input! ');
 end
-
+clc;
 %% 检验Input输入数据
-printstruct(da);
+% printstruct(da);
 da = GcheckInput(da,ParaArray);
-printstruct(da);
 %% 启发式: LU到Item的算法
+% printstruct(da);
 [da] = HLUtoItem(da,ParaArray);
-printstruct(da);
 %% 启发式：Item到Strip的算法
 [da] = HItemToStrip(da,ParaArray);
 printstruct(da);
@@ -129,13 +138,17 @@ if nargin == 0
 %     printstruct(da);
 %     plot3DBPP(da,ParaArray);
 % 以下修订纯为画图使用
-da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF;
-da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF/2;
+% plot2DBPP(da,ParaArray);hold on;
+da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
+% plot2DBPP(da,ParaArray);hold on;
+da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
 plot2DBPP(da,ParaArray);
 else
 %     % 以下修订纯为画图使用
-da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF;
-da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF/2;
+% plot2DBPP(da,ParaArray);hold on;
+da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
+% plot2DBPP(da,ParaArray);hold on;
+da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
 plot2DBPP(da,ParaArray);
 end
 

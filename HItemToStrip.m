@@ -1,7 +1,7 @@
 function [da] = HItemToStrip(da,ParaArray)
-% 重要函数:Item放入Strip中
-% 输入: Item: LWH
-% 输出: 
+% 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
+% Input ---  ITEM:  LWH
+% Output --- 输出重点
 % da.ItemArray (1 LWH (已知)
 % da.ItemArray (2 itemBeStripMatrix  (dim1:序号item在某个strip dim2:item进入顺序(左->右) 
 % da.ItemArray (3 CoordItemStrip Item在strip的坐标) 
@@ -9,7 +9,8 @@ function [da] = HItemToStrip(da,ParaArray)
 % da.StripArray (1 LW )
 
 %% 初始化
-% nDim Item维度(2) nItem Item数量 nStrip Strip数量 widthStrip Strip最大宽度
+% nDim Item维度(2) nItem Item数量 nStrip Strip数量 
+% widthStrip Strip最大宽度
 nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nItem = size(da.ItemArray.LWH,2);
 nStrip = nItem;
