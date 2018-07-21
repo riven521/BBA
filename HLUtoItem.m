@@ -40,7 +40,7 @@ clear tmpUniqueBin;
     getItem(); %555 转换
     da.ItemArray.ID = IDItem(:,IDItem(1,:)>0); % 去除未使用的     
     da.ItemArray.Weight = WeightItem(:,WeightItem(1,:)>0); % 去除未使用的 
-    da.ItemArray.RotaFlag = RotaFlagItem(:,RotaFlagItem(1,:)<=1); % 去除未使用的
+    da.ItemArray.itemRotaFlag = RotaFlagItem(:,RotaFlagItem(1,:)<=1); % 去除未使用的
     da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
     da.LUArray.LUBeItemArray(:,da.LUArray.order) = LUBeItemArraySort; % da.LUArray.LUBeItemArray : 每个排序后LU在哪个Item内  以及顺序
 

@@ -66,18 +66,20 @@ clc;  clear;  close all;
     BINBUFF = [0,0,0];
     
     
-    % whichStripH 1 best 2 first 3 next; whichBinH 1 best; TODO 增加其它分批方式
+    % whichStripH 1 best 2 first 3 next; 
+    % whichBinH 1 best; TODO 增加其它分批方式
     % whichSortItemOrder 1 长高递减 2 最短边递减; 
     % whichRotation 1:允许rotation 0:禁止
+    % 0 1 2
     
     %% 不同参数多次计算
-    PARA = [1 1 1 1 0 ];     figure('name',num2str(PARA));    
+    PARA = [2 1 1 1 0 ];     figure('name',num2str(PARA));    
     [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ... 
     BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
     whos
 %     printstruct(da)
  
-    PARA = [3 1 1 1 1 ];     figure('name',num2str(PARA));    
+    PARA = [3 1 1 0 1 ];     figure('name',num2str(PARA));    
     [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ... 
     BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
 

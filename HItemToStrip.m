@@ -30,14 +30,14 @@ clear tmpUniqueBin;
 
         %% 嵌套函数        
     function order = getITEMorder()
-        LWHItem = da.ItemArray.LWH(1:nDim,:);
-        IDItem =     da.ItemArray.ID(1,:);
+        tmpLWHItem = da.ItemArray.LWH(1:nDim,:);
+        tmpIDItem =     da.ItemArray.ID(1,:);
         if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
-            tmpLWH = [IDItem; LWHItem]; %额外增加ITEM的ID到第一行形成临时变量
+            tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
             [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
         end        
         if ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
-            tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
+            tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
             [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
              %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
         end
@@ -61,20 +61,13 @@ clear tmpUniqueBin;
 % % % %     error('设置参数错误');
 % % % % end
 
-%% 获取LWHItemSort
-LWHItemSort = LWHItem(:,:);
-itemRotaSortHori = zeros(1,nItem); % 0 代表horizontal orientation 1 代表 vertical orientation
-
 %% 增对Rotation增加变量 
-% 获取LWHItemSortHori
-% 获取itemRotaSortHori
-% itemRotaSortHori(原始item是否rotation 0-1变量) LWHItemSortHori(Hori orienting后LWH)
-    
-if ParaArray.whichRotation == 1
-%     itemRotaSortHori = zeros(1,nItem); % 0 代表horizontal orientation 1 代表 vertical orientation
-    LWHItemSortHori = zeros(nDim,nItem);
-    [LWHItemSortHori,itemRotaSortHori] = horiOrient(LWHItemSort);
-end
+itemorder = da.ItemArray.order;
+% 获取1 LWHItemSort 排序后的ITEM的长宽高 2 itemRotaSort 排序后的FLAG 全部为0 不重要
+if ParaArray.whichRotation == 0, LWHItemSort = sortedItemArray.LWH; itemRotaSort = sortedItemArray.itemRotaFlag; end
+% 获取1 LWHItemSortHori Hori orienting后LWH 2 itemRotaSortHori 原始item是否rotation  0 代表horizontal orientation 1 代表 vertical orientation
+if ParaArray.whichRotation == 1, [LWHItemSortHori,itemRotaSortHori] = horiOrient(sortedItemArray.LWH); end
+
 
 %% 55 LU->Item->Strip转换 
 % 获取itemBeStripMatrixSort: 每个排序后Item在哪个Strip内  以及顺序
@@ -87,12 +80,14 @@ itemBeStripMatrixSort = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第
 CoordItemStripSort = zeros(2,nItem); %Item在strip的坐标值
 
 %% 获取thisLevel - 当前item要放入的level序号
+% 注释：获取 FLAG（可放下当前item(iStrip)的至少一个level的集合） 
+% 注释：从FLAG中找到按规则的那个thisLevel, 并执行 insert函数
 iLevel = 1; iStrip = 1;
 while 1
     if iStrip > nItem, break; end
     % 不同whichStripH下,获得共同的thisLevel
     if ParaArray.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit          
-        % 增对Rotation增加变量 
+        % 增对Rotation增加变量
         if ParaArray.whichRotation == 1
             % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
             flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
@@ -113,19 +108,33 @@ while 1
                 thisLevel = thisLevel(1);
             end
         end
-    elseif ParaArray.whichStripH == 2
-        % 不同条件下的选择：如果find宽度足够的多个level,并安置在第一个遇到的 唯一区别是thisLevel的获取
-        flag = find(LWStrip(1,1:iLevel) >= LWHItemSort(1,iStrip));
+    elseif ParaArray.whichStripH == 2 % firstfit 
+         % 增对Rotation增加变量
+        if ParaArray.whichRotation == 1
+            % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
+            flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
+                        LWStrip(1,1:iLevel) >= LWHItemSortHori(2,iStrip));  
+        else
+            % 常规条件下的选择：find宽度足够的多个level,并安置在第一个遇到的 唯一区别是thisLevel的获取
+            flag = find(LWStrip(1,1:iLevel) >= LWHItemSort(1,iStrip));
+        end               
         if isempty(flag)
             iLevel = iLevel + 1;% 如果宽度不满足，则level升级
             continue;
         else
             thisLevel = flag(1);
         end
-    elseif ParaArray.whichStripH == 3
-        % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽
-        flag = LWHItemSort(1,iStrip) <= LWStrip(1,iLevel);
-        if ~flag  %注意与前面isempty(flag)的区别
+    elseif ParaArray.whichStripH == 3 % nextfit
+        % 增对Rotation增加变量
+        if ParaArray.whichRotation == 1
+            % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
+            flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
+                        LWStrip(1,1:iLevel) >= LWHItemSortHori(2,iStrip));  
+        else
+            % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽            
+            flag = find(LWHItemSort(1,iStrip) <= LWStrip(1,iLevel));           
+        end   
+        if  isempty(flag) %注意与之前~flag的区别 FIXME ~flag 
             iLevel = iLevel + 1;% 如果宽度不满足，则level升级
             continue;
         else
@@ -144,16 +153,18 @@ end
 % 获取LWStrip:  新生成的strip的长宽
 % 获取itemorder: item的排序
         %Matalb code gerator use:
-        itemBeStripMatrix=itemBeStripMatrixSort;CoordItemStrip=CoordItemStripSort;itemRotaFlag=itemRotaSortHori;
+        itemBeStripMatrix=itemBeStripMatrixSort;CoordItemStrip=CoordItemStripSort;
+        
         
     itemBeStripMatrix(:,itemorder) = itemBeStripMatrixSort;
     CoordItemStrip(:,itemorder) = CoordItemStripSort;
     da.ItemArray.itemBeStripMatrix = itemBeStripMatrix;
     da.ItemArray.CoordItemStrip = CoordItemStrip;
-    
-    % 即使没有RotationFlage 也有该数组 判断是否Rotation
-        itemRotaFlag(:,itemorder) = itemRotaSortHori;
-        da.ItemArray.itemRotaFlag = itemRotaFlag;
+
+% 即使没有RotationFlage 也有该数组 判断是否Rotation
+if ParaArray.whichRotation == 0,   itemRotaFlag(:,itemorder) = itemRotaSort;  end
+if ParaArray.whichRotation == 1,   itemRotaFlag(:,itemorder) = itemRotaSortHori;   end
+da.ItemArray.itemRotaFlag = itemRotaFlag; 
 
 LWStrip = LWStrip(:,LWStrip(2,:)>0);
 da.StripArray.LW = LWStrip; % 去除未使用的Strip
