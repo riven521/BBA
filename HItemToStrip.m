@@ -1,7 +1,8 @@
 function [da] = HItemToStrip(da,ParaArray)
 % 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
-% Input ---  ITEM:  LWH
-% Output --- 输出重点
+% Input ---  ITEM:  ID LWH Weight
+% Output --- ITEM: itemorder itemBeStripMatrix itemRotaFlag CoordItemStrip
+% Output --- StripArray: LW Weight
 % da.ItemArray (1 LWH (已知)
 % da.ItemArray (2 itemBeStripMatrix  (dim1:序号item在某个strip dim2:item进入顺序(左->右) 
 % da.ItemArray (3 CoordItemStrip Item在strip的坐标) 
@@ -18,27 +19,57 @@ nStrip = nItem;
 tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
 widthStrip = tmpUniqueBin(1);
 clear tmpUniqueBin;
-%% Item排序并初始化
-% 获取itemorder
-% 获取LWHItemSort
- % sort 获取Item排序 %
-LWHItem = da.ItemArray.LWH(1:nDim,:);
-if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
-    [~,itemorder] = sort(LWHItem(nDim,:),'descend');   % 按Item的（长度) 递减排序
-elseif ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
-    tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
-    [~,itemorder] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
-    [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
-    clear tmpLWH;
-else
-    error('设置参数错误');
-end
-LWHItemSort = LWHItem(:,itemorder);
+
+
+    %% ITEM排序 555 
+    % getITEMorder - 获取ITEM的顺序(重点是高度递减排序) % ITEM两种排序方式 高度/最短边
+    da.ItemArray.order = getITEMorder(); 
+    % getSortedITEM - 获取按order排序后的ITEM:sortedItemArray
+    sortedItemArray = getSortedITEM(da.ItemArray.order);
+%     printstruct(da) ;printstruct(sortedItemArray)    
+
+        %% 嵌套函数        
+    function order = getITEMorder()
+        LWHItem = da.ItemArray.LWH(1:nDim,:);
+        IDItem =     da.ItemArray.ID(1,:);
+        if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
+            tmpLWH = [IDItem; LWHItem]; %额外增加ITEM的ID到第一行形成临时变量
+            [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
+        end        
+        if ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
+            tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
+            [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
+             %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
+        end
+        if ~isrow(order), order=order'; end
+    end
+
+    function item = getSortedITEM(order)
+        item = structfun(@(x) x(:,order),da.ItemArray,'UniformOutput',false);
+    end
+
+% % % %     %% 获取itemorder
+% % % % % LWHItem = da.ItemArray.LWH(1:nDim,:);
+% % % % if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
+% % % %     [~,itemorder] = sort(LWHItem(nDim,:),'descend');   % 按Item的（长度) 递减排序
+% % % % elseif ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
+% % % %     tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
+% % % %     [~,itemorder] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
+% % % %     [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
+% % % %     clear tmpLWH;
+% % % % else
+% % % %     error('设置参数错误');
+% % % % end
+
+%% 获取LWHItemSort
+LWHItemSort = LWHItem(:,:);
+itemRotaSortHori = zeros(1,nItem); % 0 代表horizontal orientation 1 代表 vertical orientation
+
 %% 增对Rotation增加变量 
 % 获取LWHItemSortHori
 % 获取itemRotaSortHori
 % itemRotaSortHori(原始item是否rotation 0-1变量) LWHItemSortHori(Hori orienting后LWH)
-    itemRotaSortHori = zeros(1,nItem); % 0 代表horizontal orientation 1 代表 vertical orientation
+    
 if ParaArray.whichRotation == 1
 %     itemRotaSortHori = zeros(1,nItem); % 0 代表horizontal orientation 1 代表 vertical orientation
     LWHItemSortHori = zeros(nDim,nItem);
@@ -55,6 +86,7 @@ stripBeItemArray = zeros(1,nStrip);  % 每个Strip内的Item数量 后期不用
 itemBeStripMatrixSort = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
 CoordItemStripSort = zeros(2,nItem); %Item在strip的坐标值
 
+%% 获取thisLevel - 当前item要放入的level序号
 iLevel = 1; iStrip = 1;
 while 1
     if iStrip > nItem, break; end

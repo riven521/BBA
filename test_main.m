@@ -60,8 +60,8 @@ clc;  clear;  close all;
 % % %     BINBUFF = [0,0,0];       
 
     LUID = [1 2 1 2];
-    BINLWH = [5;20;4]';
-    LULWH = [2 5 2;  3 6 4; 2 5 2; 3 6 4];
+    BINLWH = [10;20;4]';
+    LULWH = [2 5 4;  7 5 4; 2 5 2; 7 5 4];
     LUBUFF = [0,0];
     BINBUFF = [0,0,0];
     
@@ -71,7 +71,7 @@ clc;  clear;  close all;
     % whichRotation 1:允许rotation 0:禁止
     
     %% 不同参数多次计算
-    PARA = [1 1 2 1 0 ];     figure('name',num2str(PARA));    
+    PARA = [1 1 1 1 0 ];     figure('name',num2str(PARA));    
     [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ... 
     BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
     whos

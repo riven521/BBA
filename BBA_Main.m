@@ -38,7 +38,7 @@ ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 %% 2结构体da赋值
 if nargin ~=0 %如果参数不为空
     da.LUArray.ID = LUID; 
-    da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸
+    da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸    
     da.BinArray.LWH = BINLWH; %LWHREAL 真实尺寸    
     % 增加间隙 -
     da.LUArray.BUFF = LUBUFF; %BUFF 托盘LU的间隙
@@ -88,8 +88,8 @@ da = GcheckInput(da,ParaArray);
 % printstruct(da);
 [da] = HLUtoItem(da,ParaArray);
 %% 启发式：Item到Strip的算法
+printstruct(da);
 [da] = HItemToStrip(da,ParaArray);
-% printstruct(da);
 %% 启发式：Strip到Bin的算法
 [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
 % printstruct(da);

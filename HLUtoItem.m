@@ -25,7 +25,7 @@ tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
 heightBin = tmpUniqueBin(3);
 clear tmpUniqueBin;
 
-    %% LU排序并初始化
+    %% LU排序
     % getLUorder - 获取LU的顺序(重点是高度递减排序)
     % getSortedLU - 获取按order排序后的LU:sortedLUArray
     da.LUArray.order = getLUorder(); %获取 LU排序(先ID递增,后高度递减)
@@ -33,16 +33,17 @@ clear tmpUniqueBin;
 
     %% 55 LU->Item转换
     IDItem = zeros(1,nItem);   %Item的ID类型
-    LWHItem = zeros(nDim,nItem);   %Item的宽长高
     WeightItem = zeros(1,nItem);   %Item的重量
+    LWHItem = zeros(nDim,nItem);   %Item的宽长高
+    RotaFlagItem = ones(1,nItem)*5;   %Item的旋转flag（0和1,其它为未使用）
     LUBeItemArraySort = zeros(2,nLU); %dim1:属于第几个Item dim2:属于该Item第几个排放 555
     getItem(); %555 转换
-    da.ItemArray.ID = IDItem(:,IDItem(1,:)>0); % 去除未使用的 
-    da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
+    da.ItemArray.ID = IDItem(:,IDItem(1,:)>0); % 去除未使用的     
     da.ItemArray.Weight = WeightItem(:,WeightItem(1,:)>0); % 去除未使用的 
+    da.ItemArray.RotaFlag = RotaFlagItem(:,RotaFlagItem(1,:)<=1); % 去除未使用的
+    da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
     da.LUArray.LUBeItemArray(:,da.LUArray.order) = LUBeItemArraySort; % da.LUArray.LUBeItemArray : 每个排序后LU在哪个Item内  以及顺序
-    printstruct(da)
-1
+
     %% 测试script
     % 输出主要结果:获得每个item包含的 原始 LU序号
     printscript();
@@ -75,6 +76,7 @@ clear tmpUniqueBin;
                     LWHItem(3,iItem) = LWHItem(3,iItem) + sortedLUArray.LWH(nDim,iLU); %更新item高度
                     WeightItem(1,iItem) = WeightItem(1,iItem) + sortedLUArray.Weight(1,iLU); %更新item重量
                     IDItem(1,iItem) = sortedLUArray.ID(1,iLU); %更新ID类型
+                    RotaFlagItem(1,iItem) = sortedLUArray.RotaFlag(1,iLU); %更新RotaFlag类型                    
                     itemBeLUArray(iItem) = itemBeLUArray(iItem) + 1;
                     LUBeItemArraySort(1,iLU) = iItem;
                     LUBeItemArraySort(2,iLU) = itemBeLUArray(iItem);
