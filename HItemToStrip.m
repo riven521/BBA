@@ -26,16 +26,14 @@ LWHItem = da.ItemArray.LWH(1:nDim,:);
 if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
     [~,itemorder] = sort(LWHItem(nDim,:),'descend');   % 按Item的（长度) 递减排序
 elseif ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
-    tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边形成临时变量tmpLWH
-    
-    [~,itemorder] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1
+    tmpLWH = [LWHItem; min(LWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
+    [~,itemorder] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
     [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
     clear tmpLWH;
 else
     error('设置参数错误');
 end
 LWHItemSort = LWHItem(:,itemorder);
-
 %% 增对Rotation增加变量 
 % 获取LWHItemSortHori
 % 获取itemRotaSortHori

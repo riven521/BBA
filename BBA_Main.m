@@ -1,4 +1,4 @@
-function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
     BBA_Main(LUID,LULWH,BINLWH,PARA_whichRotationHori,LUBUFF,BINBUFF)
 % 输入六个参数 LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF
 %  LUID - 行向量(n列) 托盘类型 相同数字表明同一类型,允许堆垛
@@ -26,39 +26,38 @@ function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
 %    'Capacity',[],'Lbuffer',[],'Wbuffer',[],'Hbuffer',[]);
 % da = struct('LUArray',LUArray,'ItemArray',ItemArray,'StripArray',StripArray,'BinArray',BinArray);
 %% 1参数初始化
-% whichStripH 1 best 2 first 3 next; whichBinH 1 best; 
+% whichStripH 1 best 2 first 3 next; whichBinH 1 best; TODO 增加其它分批方式
 % whichSortItemOrder 1 长高递减 2 最短边递减; 
 % whichRotation 1:允许rotation 0:禁止
 % rotation组合 1 1 2 1 0 (1 1 2 1 1 )(1 1 2 1 2) % 非rotation组合 1 1 1 0 0 （2/3 1 1 0 0）
 % whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
 % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 %     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-ParaArray = struct('whichStripH',3,'whichBinH',1,'whichSortItemOrder',2,...
-    'whichRotation',1,'whichRotationHori',1,'timeLimit',100,'ub0',10);
+ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+    'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
 %% 2结构体da赋值
 if nargin ~=0 %如果参数不为空
     da.LUArray.ID = LUID; 
     da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸
-    da.BinArray.LWH = BINLWH; %LWHREAL 真实尺寸
-    ParaArray.whichRotationHori = PARA_whichRotationHori;
+    da.BinArray.LWH = BINLWH; %LWHREAL 真实尺寸    
     % 增加间隙 -
     da.LUArray.BUFF = LUBUFF; %BUFF 托盘LU的间隙
     da.BinArray.BUFF = BINBUFF; %BUFF 车辆BIN的间隙
     % 增加重量 -
     da.BinArray.Weight = 1000;
     da.LUArray.Weight = zeros(size(LULWH,1),1);
+    % 多参数测试
+    ParaArray.whichStripH = PARA_whichRotationHori(1);
+    ParaArray.whichBinH = PARA_whichRotationHori(2);
+    ParaArray.whichSortItemOrder = PARA_whichRotationHori(3);
+    ParaArray.whichRotation = PARA_whichRotationHori(4);
+    ParaArray.whichRotationHori = PARA_whichRotationHori(5);
 else
-    da.LUArray.ID = [5236934585 4 5236934585 5236934585];
-    da.BinArray.LWH = [8;10;4]';
-    da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
-    da.LUArray.BUFF = [1,1];
-    da.BinArray.BUFF = [1,1,1];
+    da.LUArray.ID = [1 1 2 2];
+    da.BinArray.LWH = [5;20;4]';
+    da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
+    da.LUArray.BUFF = [0,0];
+    da.BinArray.BUFF = [0,0,0];
     da.BinArray.Weight = 1000;
     da.LUArray.Weight = da.LUArray.LWH(1,:);
     
@@ -90,13 +89,13 @@ da = GcheckInput(da,ParaArray);
 [da] = HLUtoItem(da,ParaArray);
 %% 启发式：Item到Strip的算法
 [da] = HItemToStrip(da,ParaArray);
-printstruct(da);
+% printstruct(da);
 %% 启发式：Strip到Bin的算法
 [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
-printstruct(da);
+% printstruct(da);
 %% Item到bin的信息获取:
 [da] = HItemToBin(da); 
-printstruct(da);
+% printstruct(da);
 %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
 da.LUArray.LWHRota = da.LUArray.LWH;
 nLU = numel(da.LUArray.LURotaFlag);
@@ -125,7 +124,8 @@ LUBeItemArray=da.LUArray.LUBeItemArray(1,:);
 LUID=da.LUArray.ID;
 Res4_DrawSeq = [LUBeItemArray; LUID];%Res4_DrawSeq：行1：LU在Item的位置；行2：LU的ID类型
 
-%% Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
+% Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
+
 %% 返回输出结果(安放顺序)
 % % [~,x]=sort(LUBeBinMatrix(2,:));
 % % LUBeBinMatrix=LUBeBinMatrix(:,x)

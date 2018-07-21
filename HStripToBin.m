@@ -24,6 +24,7 @@ LWBin(1,:) = uniBinDataMatrix(1);
 LWBin(2,:) = uniBinDataMatrix(2);
 binBeStripArray = zeros(1,nBin);    % 每个Bin内的Strip数量 后期不用
 stripBeBinMatrixSort = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
+
 iStrip=1; iBin=1;
 while 1
     if iStrip > nStrip, break; end

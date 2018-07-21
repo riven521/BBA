@@ -112,15 +112,15 @@ for iBin = 1:max(da.ItemArray.itemBeBinMatrix(1,:))
     fprintf('\n');    
 
     % 按安放顺序展示
-    [~,x]=sort(da.LUArray.LUBeBinMatrix(2,idxLU));    
-    idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
-    idxLUItem = idxLUItem(x);
-    fprintf('%d ',idxLU);fprintf('\n');
-    fprintf('{%d} ',idxLUSeq);fprintf('\n');
-    fprintf('[%d] ',idxLUItem);fprintf('\n');
-    fprintf(' (%d %d %d) ', da.LUArray.LWH(1:nDim,idxLU(x)));fprintf('\n');
-    fprintf(' [%d]     ', da.LUArray.LURotaFlag(:,idxLU(x)));fprintf('\n');
-    fprintf(' {%d %d %d} ', da.LUArray.CoordLUBin(:,idxLU(x)));fprintf('\n');
-    fprintf('\n');
+% %     [~,x]=sort(da.LUArray.LUBeBinMatrix(2,idxLU));    
+% %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
+% %     idxLUItem = idxLUItem(x);
+% %     fprintf('%d ',idxLU);fprintf('\n');
+% %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
+% %     fprintf('[%d] ',idxLUItem);fprintf('\n');
+% %     fprintf(' (%d %d %d) ', da.LUArray.LWH(1:nDim,idxLU(x)));fprintf('\n');
+% %     fprintf(' [%d]     ', da.LUArray.LURotaFlag(:,idxLU(x)));fprintf('\n');
+% %     fprintf(' {%d %d %d} ', da.LUArray.CoordLUBin(:,idxLU(x)));fprintf('\n');
+% %     fprintf('\n');
 end
 end

@@ -32,12 +32,16 @@ clear tmpUniqueBin;
     LWHItem = zeros(nDim,nItem);   %Item的宽长高
     LWHWeight = zeros(1,nItem);   %Item的重量
     LUBeItemArraySort = zeros(2,nLU); %dim1:属于第几个Item dim2:属于该Item第几个排放 555
-    getItem();
+    getItem(); %555 转换
     da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
     da.ItemArray.Weight = LWHWeight(:,LWHWeight(1,:)>0); % 去除未使用的 
     da.LUArray.LUBeItemArray(:,da.LUArray.order) = LUBeItemArraySort; % da.LUArray.LUBeItemArray : 每个排序后LU在哪个Item内  以及顺序
 %     printstruct(da)
 
+    %% 测试script
+    % 输出主要结果:获得每个item包含的 原始 LU序号
+    printscript();
+    
     %% 嵌套函数
     function order = getLUorder()
         tmpLUMatrix = [da.LUArray.ID; da.LUArray.LWH(1:nDim,:)];
@@ -46,6 +50,7 @@ clear tmpUniqueBin;
         % tepLUorder = [2 3 4 1 5]';
         order = tepLUorder';
     end
+
     function lu = getSortedLU(LUorder)
         lu = structfun(@(x) x(:,LUorder),da.LUArray,'UniformOutput',false);
     end
@@ -73,19 +78,18 @@ clear tmpUniqueBin;
         end
     end
 
-%% 测试script
-% 输出主要结果:获得每个item包含的 原始 LU序号
-% % for iItem = 1:max(da.LUArray.LUBeItemArray(1,:))
-% %     [~,idx] = find(da.LUArray.LUBeItemArray(1,:)==iItem);
-% %     fprintf('item %d 的长宽高为:  ',iItem);
-% %     fprintf('( %d ) ',da.ItemArray.LWH(:,iItem));
-% %     fprintf('\n');
-% %     fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
-% %     fprintf('%d ',idx);
-% %     fprintf('( %d ) ', da.LUArray.LWH(:,idx));
-% %     fprintf('\n');
-% % end
-
+    function printscript()
+        for iItem = 1:max(da.LUArray.LUBeItemArray(1,:))
+            [~,idx] = find(da.LUArray.LUBeItemArray(1,:)==iItem);
+            fprintf('item %d 的长宽高为:  ',iItem);
+            fprintf('( %d ) ',da.ItemArray.LWH(:,iItem));
+            fprintf('\n');
+            fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
+            fprintf('%d ',idx);
+            fprintf('( %d ) ', da.LUArray.LWH(:,idx));
+            fprintf('\n');
+        end
+    end
 end
 
 
