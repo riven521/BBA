@@ -53,13 +53,13 @@ if nargin ~=0 %如果参数不为空
     ParaArray.whichRotation = PARA_whichRotationHori(4);
     ParaArray.whichRotationHori = PARA_whichRotationHori(5);
 else
-    da.LUArray.ID = [1 1 2 2];
-    da.BinArray.LWH = [5;20;4]';
-    da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
-    da.LUArray.BUFF = [0,0];
-    da.BinArray.BUFF = [0,0,0];
-    da.BinArray.Weight = 1000;
-    da.LUArray.Weight = da.LUArray.LWH(1,:);
+%     da.LUArray.ID = [1 1 2 2];
+%     da.BinArray.LWH = [5;20;4]';
+%     da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
+%     da.LUArray.BUFF = [0,0];
+%     da.BinArray.BUFF = [0,0,0];
+%     da.BinArray.Weight = 1000;
+%     da.LUArray.Weight = da.LUArray.LWH(1,:);
     
 % %         da.LUArray.ID = [5236934585 4 5236934585 5236934585];
 % %     da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
@@ -67,14 +67,14 @@ else
 % %     
 % %     da.LUArray.BUFF = [0,0]';
 % %     da.BinArray.BUFF = [0,0,0]'; 
-    
-    % 增加重量 -
-    da.BinArray.Weight = 1000;
-    da.LUArray.Weight = da.LUArray.LWH(1,:);
-    
+            
+         % 增加重量 -
+%          da.BinArray.Weight = 1000;
+%     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-    %  n=13;da=getRandDa(n);save('rndDa.mat','da');
-    %  load('rndDa.mat')
+     n=50;da=getRandDa(n);save('rndDa.mat','da');
+     load('rndDa.mat')
+
     %%
     %     load insLU3.mat;   % load ins.mat;
     %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
@@ -96,7 +96,7 @@ printstruct(da);
 % printstruct(da);
 %% Item到bin的信息获取:
 [da] = HItemToBin(da); 
-% printstruct(da);
+printstruct(da);
 %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
 da.LUArray.LWHRota = da.LUArray.LWH;
 nLU = numel(da.LUArray.LURotaFlag);
@@ -106,34 +106,34 @@ for iLU=1:nLU
         da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
     end
 end
-
+printstruct(da);
 %% 返回输出结果(原始顺序) 输出4个参数
-Res1_LUBeBinMatrix=da.LUArray.LUBeBinMatrix; %Res1_LUBeBinMatrix 行1:Bin序号；行2：该bin内顺序
+% 参数1 - 行1:Bin序号；行2：该bin内顺序
+Res1_LUBeBinMatrix=da.LUArray.LUBeBinMatrix;
+
+% 参数2 - LU在Bin内的坐标
 % 增加间隙-增加CoordLUBinWithBuff变量
-% X=(da.LUArray.BUFF)/2;% XX=(da.LUArray.BUFF)./2;
-% fprintf('X = %f \n',X);% fprintf('X = %f \n',XX);
-% fprintf('da.LUArray.BUFF = %f \n',da.LUArray.BUFF);% fprintf('da.LUArray.CoordLUBin = %f \n',da.LUArray.CoordLUBin);
-% da.LUArray.CoordLUBinWithBuff = double(da.LUArray.CoordLUBin) + XX;
 da.LUArray.CoordLUBinWithBuff = da.LUArray.CoordLUBin + da.LUArray.BUFF./2;
 Res2_CoordLUBin=da.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
 
+% 参数3 - LU的长宽高(旋转后)
 % 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
 da.LUArray.LWHRota = da.LUArray.LWHRota - da.LUArray.BUFF;
-Res3_LWHRota=da.LUArray.LWHRota;%Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+Res3_LWHRota=da.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
 
+% 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
 LUBeItemArray=da.LUArray.LUBeItemArray(1,:);
 LUID=da.LUArray.ID;
-Res4_DrawSeq = [LUBeItemArray; LUID];%Res4_DrawSeq：行1：LU在Item的位置；行2：LU的ID类型
+Res4_DrawSeq = [LUBeItemArray; LUID];
 
 % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
-
 %% 返回输出结果(安放顺序)
-% % [~,x]=sort(LUBeBinMatrix(2,:));
-% % LUBeBinMatrix=LUBeBinMatrix(:,x)
+% % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
+% % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
 % % LUBeItemArray=LUBeItemArray(1,x)
-% % CoordLUBin=CoordLUBin(:,x)
-% % LWHRota=LWHRota(:,x)
-% fprintf('本算例计算全部完成 \n');
+% % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
+% % Res3_LWHRota=Res3_LWHRota(:,x)
+% % fprintf('本算例计算全部完成 \n');
 %% 画图
 if nargin == 0
 %     printstruct(da);
