@@ -1,11 +1,14 @@
 function [da] = HLUtoItem(da,ParaArray)
 % 重要函数:LU堆垛后形成Item %  行数:长宽高(row);  列数:托盘数量(coloum);
-% Input ---  LU: ID LWH
-% Output --- 输出重点
+% Input ---  LUArray: ID LWH Weight
+% Output --- LUArray: order LUBeItemArray
+% Output --- ItemArray: ID LWH Weight
 % da.LUArray.LUBeItemArray (2行*n列: 行1: LU在第几个item 行2:LU进入该item的顺序(底-高)) 
-% da.LUArray.LUorder (1行*n列: LU排序顺序)
+% da.LUArray.order (1行*n列: LU排序顺序)
+% da.ItemArray.ID （1行*n列: ITEM的类型 等同内部LU类型)
 % da.ItemArray.LWH (3行*n列: ITEM的长宽高-长宽与LU相同,高度为堆垛后高度)
 % da.ItemArray.Weight (1行*n列: ITEM的重量)
+% 嵌套函数(先排序 后转换)
 % getLUorder
 % getSortedLU
 % getItem
@@ -29,15 +32,17 @@ clear tmpUniqueBin;
     sortedLUArray = getSortedLU(da.LUArray.order);
 
     %% 55 LU->Item转换
+    IDItem = zeros(1,nItem);   %Item的ID类型
     LWHItem = zeros(nDim,nItem);   %Item的宽长高
-    LWHWeight = zeros(1,nItem);   %Item的重量
+    WeightItem = zeros(1,nItem);   %Item的重量
     LUBeItemArraySort = zeros(2,nLU); %dim1:属于第几个Item dim2:属于该Item第几个排放 555
     getItem(); %555 转换
+    da.ItemArray.ID = IDItem(:,IDItem(1,:)>0); % 去除未使用的 
     da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
-    da.ItemArray.Weight = LWHWeight(:,LWHWeight(1,:)>0); % 去除未使用的 
+    da.ItemArray.Weight = WeightItem(:,WeightItem(1,:)>0); % 去除未使用的 
     da.LUArray.LUBeItemArray(:,da.LUArray.order) = LUBeItemArraySort; % da.LUArray.LUBeItemArray : 每个排序后LU在哪个Item内  以及顺序
-%     printstruct(da)
-
+    printstruct(da)
+1
     %% 测试script
     % 输出主要结果:获得每个item包含的 原始 LU序号
     printscript();
@@ -68,7 +73,8 @@ clear tmpUniqueBin;
                     heightLeft = heightLeft - sortedLUArray.LWH(nDim,iLU); %更新剩余高度
                     LWHItem(1:2,iItem) = sortedLUArray.LWH(1:2,iLU); %更新item长宽
                     LWHItem(3,iItem) = LWHItem(3,iItem) + sortedLUArray.LWH(nDim,iLU); %更新item高度
-                    LWHWeight(1,iItem) = LWHWeight(1,iItem) + sortedLUArray.Weight(1,iLU); %更新item重量
+                    WeightItem(1,iItem) = WeightItem(1,iItem) + sortedLUArray.Weight(1,iLU); %更新item重量
+                    IDItem(1,iItem) = sortedLUArray.ID(1,iLU); %更新ID类型
                     itemBeLUArray(iItem) = itemBeLUArray(iItem) + 1;
                     LUBeItemArraySort(1,iLU) = iItem;
                     LUBeItemArraySort(2,iLU) = itemBeLUArray(iItem);

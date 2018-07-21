@@ -45,7 +45,7 @@ if nargin ~=0 %如果参数不为空
     da.BinArray.BUFF = BINBUFF; %BUFF 车辆BIN的间隙
     % 增加重量 -
     da.BinArray.Weight = 1000;
-    da.LUArray.Weight = zeros(size(LULWH,1),1);
+    da.LUArray.Weight = ones(size(LULWH,1),1);
     % 多参数测试
     ParaArray.whichStripH = PARA_whichRotationHori(1);
     ParaArray.whichBinH = PARA_whichRotationHori(2);

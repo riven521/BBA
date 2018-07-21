@@ -61,7 +61,7 @@ clc;  clear;  close all;
 
     LUID = [1 2 1 2];
     BINLWH = [5;20;4]';
-    LULWH = [2 5 4;  3 6 4; 2 5 4; 3 6 4];
+    LULWH = [2 5 2;  3 6 4; 2 5 2; 3 6 4];
     LUBUFF = [0,0];
     BINBUFF = [0,0,0];
     
