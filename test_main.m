@@ -59,11 +59,11 @@ clc;  clear;  close all;
     LUBUFF = [0,0];
     BINBUFF = [0,0,0];       
 
-% % %     LUID = [1 2 1 2];
-% % %     BINLWH = [10;20;4]';
-% % %     LULWH = [2 5 4;  7 5 4; 2 5 2; 7 5 4];
-% % %     LUBUFF = [0,0];
-% % %     BINBUFF = [0,0,0];
+% %     LUID = [1 2 1 2];
+% %     BINLWH = [10;20;4]';
+% %     LULWH = [2 5 4;  7 5 4; 2 5 2; 7 5 4];
+% %     LUBUFF = [0,0];
+% %     BINBUFF = [0,0,0];
     
     
     % whichStripH 1 best 2 first 3 next; 
@@ -73,18 +73,37 @@ clc;  clear;  close all;
     % 0 1 2
     
     %% 不同参数多次计算
-    for i = 1:3 %1-3
-        for j=1:2 %1-2
-            for k=0:1 %0-1
+    res = zeros(1,36);
+    respara = zeros(5,36);
+    r = 1;
+    for i = 3:3 %1-3
+        for j=1:1 %1-2
+            for k=1:1 %0-1
                 for l=0:2 %0-2
-    PARA = [i 1 j k l ];     
-    figure('name',num2str(PARA));    
-    [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ... 
-    BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
+                    PARA = [i 1 j k l ];
+                    figure('name',num2str(PARA));
+                    [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
+                        BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
+                    res(1,r) = mean(da.StripArray.Itemloadingrate);
+                    respara(:,r) = PARA';
+                    r=r+1;
                 end
             end
         end
     end
+    close all    
+    [x,y]=max(res);
+    [a,~]=find(res(:)==x);
+    for b=1:length(a)
+        PARA=respara(:,a(b));
+        figure('name',num2str(PARA));
+        [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
+            BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
+    end
+PARA
+y
+x
+res
 
 
 

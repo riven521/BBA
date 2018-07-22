@@ -72,7 +72,7 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=50;da=getRandDa(n);save('rndDa.mat','da');
+     n=15;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat')
 
     %%
@@ -82,19 +82,40 @@ else
 end
 clc;
 %% 检验Input输入数据
-% printstruct(da);
+printstruct(da);
 da = GcheckInput(da,ParaArray);
 %% 启发式: LU到Item的算法
-% printstruct(da);
+printstruct(da);
 [da] = HLUtoItem(da,ParaArray);
 %% 启发式：Item到Strip的算法
 printstruct(da);
 [da] = HItemToStrip(da,ParaArray);
-printstruct(da);
+%% 计算装载率 
+da = computeLoadingRate(da);
+    function da = computeLoadingRate(da)
+        % printstruct(da);
+        % 初始化
+        nStrip = size(da.StripArray.LW,2);
+        da.StripArray.Stripvolume = zeros(1,nStrip);
+        da.StripArray.Itemvolume = zeros(1,nStrip);
+        da.StripArray.Itemloadingrate = zeros(1,nStrip);
+        
+        % 计算每个strip的装载率
+        da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);      %每个strip的可用体积
+        a = da.ItemArray.LWH;
+        b = da.ItemArray.itemBeStripMatrix;
+        for iStrip =1:nStrip
+            %每个strip的装载体积
+            da.StripArray.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
+        end
+        %每个strip的装载比率
+        da.StripArray.Itemloadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
+    end
 %% 启发式：Strip到Bin的算法
+printstruct(da);
 [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
-% printstruct(da);
 %% Item到bin的信息获取:
+printstruct(da);
 [da] = HItemToBin(da); 
 printstruct(da);
 %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
