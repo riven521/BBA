@@ -43,6 +43,13 @@ printInput();
         % da.LUArray.LWH: 必须是matrix矩阵,列数为托盘数量,行数为3; 未考虑3行3列情形
         if size(da.LUArray.LWH,1)~=3,     da.LUArray.LWH=da.LUArray.LWH';     end
         
+        if ParaArray.whichRotationAll ==1
+            tmp = da.LUArray.LWH;
+            tmp(1,:) = da.LUArray.LWH(2,:);
+            tmp(2,:) = da.LUArray.LWH(1,:);
+            da.LUArray.LWH = tmp;
+        end
+        
         % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
         da.BinArray.LWH = da.BinArray.LWH - da.BinArray.BUFF;
         da.LUArray.BUFF = [da.LUArray.BUFF; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)

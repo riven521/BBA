@@ -52,6 +52,7 @@ if nargin ~=0 %如果参数不为空
     ParaArray.whichSortItemOrder = PARA_whichRotationHori(3);
     ParaArray.whichRotation = PARA_whichRotationHori(4);
     ParaArray.whichRotationHori = PARA_whichRotationHori(5);
+    ParaArray.whichRotationAll = PARA_whichRotationHori(6);
 else
 %     da.LUArray.ID = [1 1 2 2];
 %     da.BinArray.LWH = [5;20;4]';
