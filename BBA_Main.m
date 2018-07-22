@@ -34,7 +34,7 @@ function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
 % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 %     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
 ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-    'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+    'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
 %% 2结构体da赋值
 if nargin ~=0 %如果参数不为空
     da.LUArray.ID = LUID; 
@@ -45,7 +45,7 @@ if nargin ~=0 %如果参数不为空
     da.BinArray.BUFF = BINBUFF; %BUFF 车辆BIN的间隙
     % 增加重量 -
     da.BinArray.Weight = 1000;
-    da.LUArray.Weight = ones(size(LULWH,1),1);
+    da.LUArray.Weight = ones(size(LULWH,2),1);
     % 多参数测试
     ParaArray.whichStripH = PARA_whichRotationHori(1);
     ParaArray.whichBinH = PARA_whichRotationHori(2);
@@ -53,6 +53,7 @@ if nargin ~=0 %如果参数不为空
     ParaArray.whichRotation = PARA_whichRotationHori(4);
     ParaArray.whichRotationHori = PARA_whichRotationHori(5);
     ParaArray.whichRotationAll = PARA_whichRotationHori(6);
+    ParaArray.whichRotationBin = PARA_whichRotationHori(7);
 else
 %     da.LUArray.ID = [1 1 2 2];
 %     da.BinArray.LWH = [5;20;4]';
@@ -94,7 +95,7 @@ printstruct(da);
 %% 计算装载率 
 da = computeLoadingRate(da);
     function da = computeLoadingRate(da)
-        % printstruct(da);
+        printstruct(da);
         % 初始化
         nStrip = size(da.StripArray.LW,2);
         da.StripArray.Stripvolume = zeros(1,nStrip);
@@ -102,7 +103,10 @@ da = computeLoadingRate(da);
         da.StripArray.Itemloadingrate = zeros(1,nStrip);
         
         % 计算每个strip的装载率
-        da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);      %每个strip的可用体积
+        %每个strip的可用体积 = 高度*宽度(车辆的宽度)        
+        da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);      
+        %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
+        da.StripArray.StripvolumeLimit = da.StripArray.LW(2,:) .* (da.BinArray.LWH(1,1) - da.StripArray.LW(1,:));
         a = da.ItemArray.LWH;
         b = da.ItemArray.itemBeStripMatrix;
         for iStrip =1:nStrip
@@ -111,6 +115,8 @@ da = computeLoadingRate(da);
         end
         %每个strip的装载比率
         da.StripArray.Itemloadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
+        %每个strip的有限装载比率
+        da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
     end
 %% 启发式：Strip到Bin的算法
 printstruct(da);

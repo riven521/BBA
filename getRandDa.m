@@ -1,7 +1,7 @@
 function [da] = getRandDa(n)
 % 普通函数:随机产生输入数据
      rng(1);
-    ID = randi([11,12],1,n); %ID类型数
+    ID = randi([11,15],1,n); %ID类型数
     LWH = zeros(n,3);
     [uniID] = unique(ID);
     for i=1:length(uniID)

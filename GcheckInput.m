@@ -24,6 +24,10 @@ printInput();
         end
         % 初步判断输入: da.LUArray
         if numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) || numel(da.LUArray.BUFF(:)) ~= 2 || numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) || ~ismatrix(da.LUArray.LWH)
+            numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) 
+            numel(da.LUArray.BUFF(:)) ~= 2 
+            numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) 
+            ~ismatrix(da.LUArray.LWH)           
             error('本算例da.LUArray错误,超出预期 \n');
         end
     end
@@ -49,6 +53,14 @@ printInput();
             tmp(2,:) = da.LUArray.LWH(1,:);
             da.LUArray.LWH = tmp;
         end
+
+        if ParaArray.whichRotationBin ==1
+            tmp = da.BinArray.LWH;
+            tmp(1,:) = da.BinArray.LWH(2,:);
+            tmp(2,:) = da.BinArray.LWH(1,:);
+            da.BinArray.LWH = tmp;
+        end
+
         
         % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
         da.BinArray.LWH = da.BinArray.LWH - da.BinArray.BUFF;
