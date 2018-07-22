@@ -19,6 +19,7 @@ LWStrip = da.StripArray.LW(1:nDim,:);
 [~,striporder] = sort(LWStrip(nDim,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
 LWStripSort = LWStrip(:,striporder);
 
+
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
 % 获取LWBin:  新生成的Bin的剩余长宽

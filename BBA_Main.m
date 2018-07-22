@@ -67,7 +67,7 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=15;da=getRandDa(n);save('rndDa.mat','da');
+     n=30;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat');
     %%
     %     load insLU3.mat;   % load ins.mat;
@@ -93,7 +93,7 @@ for i = 1:3 %1-3 best first next均可
                         ParaArray.whichRotationAll = PARA(6);
                         ParaArray.whichRotationBin = PARA(7);
                         [daS] = getSolution(da);        %% 55555555           
-                         resLoadingRateLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate
+                         resLoadingRateLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
                          respara(:,r) = PARA';
                          r=r+1;
                     end
@@ -103,10 +103,15 @@ for i = 1:3 %1-3 best first next均可
     end
 end
 
-
+%% aa代表ItemloadingrateLimit均值最大的
 [maxres,~]=max(resLoadingRateLimit);
 [aa,~]=find(resLoadingRateLimit(:)==maxres);
-for bb=1:1 % length(aa) %单次或多次计算
+%% aa代表相同前约束下每个车LoadingRate最大的优先
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+TODO 
+
+
+for bb=1:length(aa) %1  length(aa) %单次或多次计算
     PARA=respara(:,aa(bb));
     % 多参数测试
     ParaArray.whichStripH = PARA(1);
@@ -118,9 +123,11 @@ for bb=1:1 % length(aa) %单次或多次计算
     ParaArray.whichRotationBin = PARA(7);
     [daSMax] = getSolution(da);
     getReturn(daSMax);
+    plotSolution(daSMax); 
 end
+printstruct(daSMax);
 
-if nargin ==0,   plotSolution(daSMax);  end
+% % if nargin ==0,   plotSolution(daSMax);  end
 
 % printstruct(da);
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
@@ -131,7 +138,7 @@ if nargin ==0,   plotSolution(daSMax);  end
     function [da] = getSolution(da)
         
         %% 检验Input输入数据
-%         printstruct(da);
+%         da.LUArray.LWH
         da = GcheckInput(da,ParaArray);
         %% 启发式: LU到Item的算法
 %         printstruct(da);
@@ -165,13 +172,33 @@ if nargin ==0,   plotSolution(daSMax);  end
             %每个strip的有限装载比率
             da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
         end
+        %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
+        da = modifyStripWithOneItem(da);
+        function da = modifyStripWithOneItem(da)
+            stripheight = da.StripArray.LW(2,:);
+            binwidth = da.BinArray.LWH(1,1);
+            stripleftwidth = da.StripArray.LW(1,:);
+            stripwidth = ( binwidth - stripleftwidth );
+            [tmpset] = find(stripheight > stripwidth);
+            if ~isempty(tmpset)
+                if isscalar(tmpset) %对该strip调换内部仅有1个Item方可,多个调整涉及CoordItemStrip
+                    da.StripArray.LW(:,tmpset) = [binwidth-stripheight(tmpset),stripwidth(tmpset)];    %strip的长宽调整
+                    %内部Item的itemRotaFlag调整 
+                    idxItem = find(da.ItemArray.itemBeStripMatrix(1,:)==tmpset );
+                    if isscalar(idxItem)
+                        da.ItemArray.itemRotaFlag(idxItem) = ~da.ItemArray.itemRotaFlag(idxItem);
+                    end                    
+                    %内部LU的LURotaFlag 不調 還未到 %内部Item的CoordItemStrip不調                    
+                end
+            end
+        end
         %% 启发式：Strip到Bin的算法
 %         printstruct(da);
         [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
 %         printstruct(da);
         [da] = HItemToBin(da);
-%         printstruct(da);
+         printstruct(da);
         %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
         da.LUArray.LWHRota = da.LUArray.LWH;
         nLU = numel(da.LUArray.LURotaFlag);

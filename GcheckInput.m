@@ -69,8 +69,8 @@ printInput();
         da.LUArray.LWH = da.LUArray.LWH + da.LUArray.BUFF;
         %TODO: 此处增加间隙为权宜之际，未考虑rotation后的变化；后期考虑在算法中增加间隙
         
-        % 3 Input增加LUArray是否Rotation的判断flag
-        da.LUArray.RotaFlag = zeros(1,numel(da.LUArray.ID));
+        % 3 Input增加LUArray是否Rotation的判断flag TOBE DELE
+%         da.LUArray.RotaFlag = zeros(1,numel(da.LUArray.ID)); TOBE DELE
     end
 
     %% LUID输入转换: da.LUArray.ID 转换为从1开始的类序号 方便刘工输入ID信息

@@ -56,7 +56,7 @@ clc;  clear;  close all;
 1220 820 1100 ;
 1955 760 550 ];    
     PARA = [ 1 0] ;    
-    LUBUFF = [0,0];
+    LUBUFF = [100,100];
     BINBUFF = [0,0,0];       
 
 % %     LUID = [1 2 1 2];
