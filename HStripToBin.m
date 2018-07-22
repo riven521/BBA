@@ -1,5 +1,9 @@
 function [da]= HStripToBin(da,ParaArray)
-% 重要函数:Strip放入Bin中
+% 重要函数:Strip放入Bin中 %  行数:长宽高(row);  列数:托盘数量(coloum);
+% Input ---  Strip:  
+% Output --- Strip: 
+% Output --- Bin: 
+
 %% 初始化
 % nDim strip维度(2) 
 nDim = size(da.StripArray.LW,1);  
@@ -7,10 +11,9 @@ nStrip = size(da.StripArray.LW,2); %具体使用的Strip的数量
 nBin = nStrip;
 uniBinDataMatrix = unique((da.BinArray.LWH(1:nDim,:))','rows')';
 
-%% Strip排序并初始化
+%% Strip排序
 % 获取striporder
 % 获取LWStripSort
- % sort 获取strip排序 %
 LWStrip = da.StripArray.LW(1:nDim,:);
 %/* sort the strips by 长(高) -> Rotations需要再排序 非Rota无需再行排序 */
 [~,striporder] = sort(LWStrip(nDim,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
@@ -25,12 +28,18 @@ LWBin(2,:) = uniBinDataMatrix(2);
 binBeStripArray = zeros(1,nBin);    % 每个Bin内的Strip数量 后期不用
 stripBeBinMatrixSort = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
 
+% 55 获取thisBin - 当前strip要放入的bin序号
+% 循环往bin中安置strip,即固定strip,变化选择不同bin(thisBin)
+% 注释：获取 FLAG        可放下当前iStrip的至少一个bin的集合 
+% 注释：获取 thisBin   从FLAG中找到按规则的那个thisBin, 并执行 insert函数
+
 iStrip=1; iBin=1;
 while 1
     if iStrip > nStrip, break; end
     if ParaArray.whichBinH == 1 % 1 bestfit
         % 条件: 寻找 bin的剩余高度 >= 本strip的高度 集合中的最小值
         flag = find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip), 1);
+        
         if isempty(flag)
             iBin = iBin + 1;
             continue;
@@ -42,9 +51,14 @@ while 1
                 thisBin = thisBin(1);
             end
         end
+    elseif ParaArray.whichBinH == 2 % 1 firstfit
+    
+    elseif ParaArray.whichBinH == 3 % 1 nextfit
+        
     else
         error('错误参数设置');
     end
+    
     insertStripToBin();
     iStrip = iStrip + 1;
 end

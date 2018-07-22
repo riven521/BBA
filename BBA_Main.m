@@ -1,5 +1,5 @@
-function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
-    BBA_Main(LUID,LULWH,BINLWH,PARA_whichRotationHori,LUBUFF,BINBUFF)
+function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF)
 % 输入六个参数 LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF
 %  LUID - 行向量(n列) 托盘类型 相同数字表明同一类型,允许堆垛
 %  LULWH - 矩阵(3行*n列) 托盘长宽高 画图使用该值
@@ -33,11 +33,11 @@ function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
 % whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
 % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 %     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-    'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
+% % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+% %     'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
 %% 2结构体da赋值
 if nargin ~=0 %如果参数不为空
-    da.LUArray.ID = LUID; 
+    da.LUArray.ID = LUID;
     da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸    
     da.BinArray.LWH = BINLWH; %LWHREAL 真实尺寸    
     % 增加间隙 -
@@ -45,16 +45,9 @@ if nargin ~=0 %如果参数不为空
     da.BinArray.BUFF = BINBUFF; %BUFF 车辆BIN的间隙
     % 增加重量 -
     da.BinArray.Weight = 1000;
-    da.LUArray.Weight = ones(size(LULWH,2),1);
-    % 多参数测试
-    ParaArray.whichStripH = PARA_whichRotationHori(1);
-    ParaArray.whichBinH = PARA_whichRotationHori(2);
-    ParaArray.whichSortItemOrder = PARA_whichRotationHori(3);
-    ParaArray.whichRotation = PARA_whichRotationHori(4);
-    ParaArray.whichRotationHori = PARA_whichRotationHori(5);
-    ParaArray.whichRotationAll = PARA_whichRotationHori(6);
-    ParaArray.whichRotationBin = PARA_whichRotationHori(7);
+    da.LUArray.Weight = ones(numel(LUID),1);       
 else
+%%
 %     da.LUArray.ID = [1 1 2 2];
 %     da.BinArray.LWH = [5;20;4]';
 %     da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
@@ -75,120 +68,169 @@ else
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
      n=15;da=getRandDa(n);save('rndDa.mat','da');
-     load('rndDa.mat')
-
+     load('rndDa.mat');
     %%
     %     load insLU3.mat;   % load ins.mat;
     %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
     %     clear LUid w W;%     error('No input! ');
 end
-clc;
-%% 检验Input输入数据
-printstruct(da);
-da = GcheckInput(da,ParaArray);
-%% 启发式: LU到Item的算法
-printstruct(da);
-[da] = HLUtoItem(da,ParaArray);
-%% 启发式：Item到Strip的算法
-printstruct(da);
-[da] = HItemToStrip(da,ParaArray);
-%% 计算装载率 
-da = computeLoadingRate(da);
-    function da = computeLoadingRate(da)
-        printstruct(da);
-        % 初始化
-        nStrip = size(da.StripArray.LW,2);
-        da.StripArray.Stripvolume = zeros(1,nStrip);
-        da.StripArray.Itemvolume = zeros(1,nStrip);
-        da.StripArray.Itemloadingrate = zeros(1,nStrip);
-        
-        % 计算每个strip的装载率
-        %每个strip的可用体积 = 高度*宽度(车辆的宽度)        
-        da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);      
-        %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
-        da.StripArray.StripvolumeLimit = da.StripArray.LW(2,:) .* (da.BinArray.LWH(1,1) - da.StripArray.LW(1,:));
-        a = da.ItemArray.LWH;
-        b = da.ItemArray.itemBeStripMatrix;
-        for iStrip =1:nStrip
-            %每个strip的装载体积
-            da.StripArray.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
+
+resLoadingRateLimit = zeros(1,36);
+respara = zeros(7,36);
+r = 1;
+for i = 1:3 %1-3 best first next均可
+    for j=1:2 %1-2 排序可多选
+        for k=1:1 %0-1 默认1可旋转
+            for l=1:2 %0-2 0不好
+                for p =0:1
+                    for o = 0:0 %车辆rota不如物流rota
+                        PARA = [i 1 j k l p o];
+                        ParaArray.whichStripH = PARA(1);
+                        ParaArray.whichBinH = PARA(2);
+                        ParaArray.whichSortItemOrder = PARA(3);
+                        ParaArray.whichRotation = PARA(4);
+                        ParaArray.whichRotationHori = PARA(5);
+                        ParaArray.whichRotationAll = PARA(6);
+                        ParaArray.whichRotationBin = PARA(7);
+                        [daS] = getSolution(da);        %% 55555555           
+                         resLoadingRateLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate
+                         respara(:,r) = PARA';
+                         r=r+1;
+                    end
+                end
+            end
         end
-        %每个strip的装载比率
-        da.StripArray.Itemloadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
-        %每个strip的有限装载比率
-        da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
-    end
-%% 启发式：Strip到Bin的算法
-printstruct(da);
-[da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
-%% Item到bin的信息获取:
-printstruct(da);
-[da] = HItemToBin(da); 
-printstruct(da);
-%% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
-da.LUArray.LWHRota = da.LUArray.LWH;
-nLU = numel(da.LUArray.LURotaFlag);
-for iLU=1:nLU
-    if da.LUArray.LURotaFlag(iLU)
-        da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
-        da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
     end
 end
-printstruct(da);
-%% 返回输出结果(原始顺序) 输出4个参数
-% 参数1 - 行1:Bin序号；行2：该bin内顺序
-Res1_LUBeBinMatrix=da.LUArray.LUBeBinMatrix;
 
-% 参数2 - LU在Bin内的坐标
-% 增加间隙-增加CoordLUBinWithBuff变量
-da.LUArray.CoordLUBinWithBuff = da.LUArray.CoordLUBin + da.LUArray.BUFF./2;
-Res2_CoordLUBin=da.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
 
-% 参数3 - LU的长宽高(旋转后)
-% 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
-da.LUArray.LWHRota = da.LUArray.LWHRota - da.LUArray.BUFF;
-Res3_LWHRota=da.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
-
-% 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
-LUBeItemArray=da.LUArray.LUBeItemArray(1,:);
-LUID=da.LUArray.ID;
-Res4_DrawSeq = [LUBeItemArray; LUID];
-
-% Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
-%% 返回输出结果(安放顺序)
-% % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
-% % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
-% % LUBeItemArray=LUBeItemArray(1,x)
-% % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
-% % Res3_LWHRota=Res3_LWHRota(:,x)
-% % fprintf('本算例计算全部完成 \n');
-%% 画图
-if nargin == 0
-%     printstruct(da);
-%     plot3DBPP(da,ParaArray);
-% 以下修订纯为画图使用
-% plot2DBPP(da,ParaArray);hold on;
-da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
-% plot2DBPP(da,ParaArray);hold on;
-da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
-plot2DBPP(da,ParaArray);
-else
-%     % 以下修订纯为画图使用
-% plot2DBPP(da,ParaArray);hold on;
-da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
-% plot2DBPP(da,ParaArray);hold on;
-da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
-plot2DBPP(da,ParaArray);
+[maxres,~]=max(resLoadingRateLimit);
+[aa,~]=find(resLoadingRateLimit(:)==maxres);
+for bb=1:1 % length(aa) %单次或多次计算
+    PARA=respara(:,aa(bb));
+    % 多参数测试
+    ParaArray.whichStripH = PARA(1);
+    ParaArray.whichBinH = PARA(2);
+    ParaArray.whichSortItemOrder = PARA(3);
+    ParaArray.whichRotation = PARA(4);
+    ParaArray.whichRotationHori = PARA(5);
+    ParaArray.whichRotationAll = PARA(6);
+    ParaArray.whichRotationBin = PARA(7);
+    [daSMax] = getSolution(da);
+    getReturn(daSMax);
 end
+
+if nargin ==0,   plotSolution(daSMax);  end
 
 % printstruct(da);
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-%% 计算下届
-% lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
+      
+%% ************************* 下面是嵌套函数  ************************
+
+  
+    function [da] = getSolution(da)
+        
+        %% 检验Input输入数据
+%         printstruct(da);
+        da = GcheckInput(da,ParaArray);
+        %% 启发式: LU到Item的算法
+%         printstruct(da);
+        [da] = HLUtoItem(da,ParaArray);
+        %% 启发式：Item到Strip的算法
+%         printstruct(da);
+        [da] = HItemToStrip(da,ParaArray);
+        %% 计算装载率
+        da = computeLoadingRate(da);
+        function da = computeLoadingRate(da)
+            printstruct(da);
+            % 初始化
+            nStrip = size(da.StripArray.LW,2);
+            da.StripArray.Stripvolume = zeros(1,nStrip);
+            da.StripArray.Itemvolume = zeros(1,nStrip);
+            da.StripArray.Itemloadingrate = zeros(1,nStrip);
+            
+            % 计算每个strip的装载率
+            %每个strip的可用体积 = 高度*宽度(车辆的宽度)
+            da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);
+            %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
+            da.StripArray.StripvolumeLimit = da.StripArray.LW(2,:) .* (da.BinArray.LWH(1,1) - da.StripArray.LW(1,:));
+            a = da.ItemArray.LWH;
+            b = da.ItemArray.itemBeStripMatrix;
+            for iStrip =1:nStrip
+                %每个strip的装载体积
+                da.StripArray.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
+            end
+            %每个strip的装载比率
+            da.StripArray.Itemloadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
+            %每个strip的有限装载比率
+            da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
+        end
+        %% 启发式：Strip到Bin的算法
+%         printstruct(da);
+        [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
+        %% Item到bin的信息获取:
+%         printstruct(da);
+        [da] = HItemToBin(da);
+%         printstruct(da);
+        %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
+        da.LUArray.LWHRota = da.LUArray.LWH;
+        nLU = numel(da.LUArray.LURotaFlag);
+        for iLU=1:nLU
+            if da.LUArray.LURotaFlag(iLU)
+                da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
+                da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
+            end
+        end    
+    end
+
+    function getReturn(da) 
+        %% 返回输出结果(原始顺序) 输出4个参数
+        % 参数1 - 行1:Bin序号；行2：该bin内顺序
+        Res1_LUBeBinMatrix=da.LUArray.LUBeBinMatrix;
+        
+        % 参数2 - LU在Bin内的坐标
+        % 增加间隙-增加CoordLUBinWithBuff变量
+        da.LUArray.CoordLUBinWithBuff = da.LUArray.CoordLUBin + da.LUArray.BUFF./2;
+        Res2_CoordLUBin=da.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+        
+        % 参数3 - LU的长宽高(旋转后)
+        % 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
+        da.LUArray.LWHRota = da.LUArray.LWHRota - da.LUArray.BUFF;
+        Res3_LWHRota=da.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+        
+        % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
+        LUBeItemArray=da.LUArray.LUBeItemArray(1,:);
+        LUID=da.LUArray.ID;
+        Res4_DrawSeq = [LUBeItemArray; LUID];
+        
+        % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
+        %% 返回输出结果(安放顺序)
+        % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
+        % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
+        % % LUBeItemArray=LUBeItemArray(1,x)
+        % % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
+        % % Res3_LWHRota=Res3_LWHRota(:,x)
+        % % fprintf('本算例计算全部完成 \n');
+        end
+
+    function plotSolution(da) 
+        %% 画图
+            %     printstruct(da);
+            %     plot3DBPP(da,ParaArray);
+            % 以下修订纯为画图使用
+            figure('name',num2str(PARA));
+            % plot2DBPP(da,ParaArray);hold on;
+            da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
+            % plot2DBPP(da,ParaArray);hold on;
+            da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
+            plot2DBPP(da,ParaArray);
+    end
+
 end
 
 
-
+%% 计算下届
+% lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
 
 
 %% ********************** 下面是ts算法的代码 暂时不用 ****************
