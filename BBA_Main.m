@@ -67,21 +67,24 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=30;da=getRandDa(n);save('rndDa.mat','da');
+     n=50;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat');
     %%
-    %     load insLU3.mat;   % load ins.mat;
+    %     load insLU3.mat;   % load ins.4at;
     %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
     %     clear LUid w W;%     error('No input! ');
 end
-
-resLoadingRateLimit = zeros(1,36);
+close all
+resLoadingRateStripLimit = zeros(1,36);
+resLoadingRateStrip = zeros(1,36);
+resLoadingRateBinLimit = zeros(1,36);
+resLoadingRateBin = zeros(1,36);
 respara = zeros(7,36);
 r = 1;
-for i = 1:3 %1-3 best first next均可
+for i = 2:2 %1-3 best first next均可
     for j=1:2 %1-2 排序可多选
-        for k=1:1 %0-1 默认1可旋转
-            for l=1:2 %0-2 0不好
+        for k=0:1 %0-1 默认1可旋转
+            for l=0:2 %0-2 0不好
                 for p =0:1
                     for o = 0:0 %车辆rota不如物流rota
                         PARA = [i 1 j k l p o];
@@ -92,8 +95,13 @@ for i = 1:3 %1-3 best first next均可
                         ParaArray.whichRotationHori = PARA(5);
                         ParaArray.whichRotationAll = PARA(6);
                         ParaArray.whichRotationBin = PARA(7);
-                        [daS] = getSolution(da);        %% 55555555           
-                         resLoadingRateLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+                        [daS] = getSolution(da);        %% 55555555     
+                        daS.StripArray.ItemloadingrateLimit
+                        daS.BinSArray.ItemloadingrateLimit
+                        resLoadingRateStrip(1,r) = mean(daS.StripArray.Itemloadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
+                         resLoadingRateStripLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+                         resLoadingRateBinLimit(1,r) = mean(daS.BinSArray.ItemloadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+                         resLoadingRateBin(1,r) = mean(daS.BinSArray.Itemloadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
                          respara(:,r) = PARA';
                          r=r+1;
                     end
@@ -103,17 +111,49 @@ for i = 1:3 %1-3 best first next均可
     end
 end
 
-%% aa代表ItemloadingrateLimit均值最大的
-[maxres,~]=max(resLoadingRateLimit);
-[aa,~]=find(resLoadingRateLimit(:)==maxres);
-%% aa代表相同前约束下每个车LoadingRate最大的优先
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-TODO 
+%% 算法选择最优的解给用户
+% maxresBin=max(resLoadingRateBinLimit(1,idxStrip)); %找出idxStrip中的最大bin
+% if ~all(ismember(idxBin,idxStrip)),   error('not all member of bin in strip'); end %错误有可能出现 
+%% 1 maxresBin代表常规车辆的平均装载率,物品总量一定,bin越多,该值越小,解越差,此最大值是必须
+maxresBin=max(resLoadingRateBin); %找出idxStrip中的最大bin
+idxBin=find(resLoadingRateBin==maxresBin);
+%% 2 maxresStrip代表常规Strip的平均装载率,物品总量一定,strip宽度一定,高度越高,该值越小,解越差,此最大值不一定时必须（因为看起来不好看）
+%% 但该值在不同bin高度时可能有影响，且该值好时，人为看起来可能并不好
+maxresStrip=max(resLoadingRateStrip);  
+idxStrip=find(resLoadingRateStrip==maxresStrip);
+%% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
+%% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
+maxresStripLimit=max(resLoadingRateStripLimit);
+idxStripLimit=find(resLoadingRateStripLimit==maxresStripLimit);
+%% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
+maxresBinLimit=max(resLoadingRateBinLimit); %找出idxStrip中的最大bin
+idxBinLimit=find(resLoadingRateBinLimit==maxresBinLimit);
+%% 5 找出idxStrip和idxBin两者的交集
+% % if isempty(intersect(idxBin,idxStrip))
+idx =intersect(idxBin,idxStripLimit);
+ idx =idxBin;
+if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
+idx1 = intersect(idx,idxBinLimit);
+if ~isempty(idx1),  
+%     idx = idx1; 
+else
+    warning('idx1 is empty');
+end
+idx2 = intersect(idx,idxStrip);
+if ~isempty(idx2),  
+%     idx = idx2; 
+else
+    warning('idx2 is empty');
+% % end
+% % resLoadingRateStripLimit
+% % resLoadingRateBinLimit
+% % resLoadingRateStrip
+% % resLoadingRateBin
 
-
-for bb=1:length(aa) %1  length(aa) %单次或多次计算
-    PARA=respara(:,aa(bb));
-    % 多参数测试
+%% 3 从idx多个里面再选择最好的
+for bb=1:length(idx) %1  length(aa) %单次或多次计算
+    PARA=respara(:,idx(bb)); %idxStrip是之前
+        % 多参数测试
     ParaArray.whichStripH = PARA(1);
     ParaArray.whichBinH = PARA(2);
     ParaArray.whichSortItemOrder = PARA(3);
@@ -125,8 +165,8 @@ for bb=1:length(aa) %1  length(aa) %单次或多次计算
     getReturn(daSMax);
     plotSolution(daSMax); 
 end
-printstruct(daSMax);
 
+% printstruct(daSMax);
 % % if nargin ==0,   plotSolution(daSMax);  end
 
 % printstruct(da);
@@ -146,15 +186,15 @@ printstruct(daSMax);
         %% 启发式：Item到Strip的算法
 %         printstruct(da);
         [da] = HItemToStrip(da,ParaArray);
-        %% 计算装载率
-        da = computeLoadingRate(da);
-        function da = computeLoadingRate(da)
-            printstruct(da);
+        %% 计算strip装载率
+        da = computeLoadingRateStrip(da);
+        function da = computeLoadingRateStrip(da)
             % 初始化
             nStrip = size(da.StripArray.LW,2);
             da.StripArray.Stripvolume = zeros(1,nStrip);
             da.StripArray.Itemvolume = zeros(1,nStrip);
             da.StripArray.Itemloadingrate = zeros(1,nStrip);
+            da.StripArray.ItemloadingrateLimit = zeros(1,nStrip);
             
             % 计算每个strip的装载率
             %每个strip的可用体积 = 高度*宽度(车辆的宽度)
@@ -173,7 +213,7 @@ printstruct(daSMax);
             da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
         end
         %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
-        da = modifyStripWithOneItem(da);
+         da = modifyStripWithOneItem(da);
         function da = modifyStripWithOneItem(da)
             stripheight = da.StripArray.LW(2,:);
             binwidth = da.BinArray.LWH(1,1);
@@ -197,8 +237,38 @@ printstruct(daSMax);
         [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
 %         printstruct(da);
-        [da] = HItemToBin(da);
-         printstruct(da);
+        [da] = HItemToBin(da);         
+         %% 计算bin装载率
+         % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
+         % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
+         da = computeLoadingRateBin(da);
+        function da = computeLoadingRateBin(da)
+            % 初始化
+            nBin = size(da.BinSArray.LW,2);
+            da.BinSArray.Binvolume = zeros(1,nBin);
+            da.BinSArray.Itemvolume = zeros(1,nBin);
+            da.BinSArray.Itemloadingrate = zeros(1,nBin);
+            da.BinSArray.ItemloadingrateLimit = zeros(1,nBin);
+            % 计算每个Bin的装载率            
+            BinWidth = da.BinArray.LWH(1,:);
+            BinHeight = da.BinArray.LWH(2,:);
+            BinVolume = BinWidth .* BinHeight;
+            %每个Bin的可用体积 = 车辆高度*车辆宽度
+            da.BinSArray.Binvolume = repmat(BinVolume,1,nBin);            
+            %每个Bin 的有限可用体积 = 宽度(bin使用宽度=车辆宽度-bin剩余宽度) *高度(bin使用高度=车辆高度-bin剩余高度)
+            da.BinSArray.BinvolumeLimit = (BinWidth - da.BinSArray.LW(1,:)) .* (BinHeight - da.BinSArray.LW(2,:));
+            
+            a = da.ItemArray.LWH;
+            b = da.ItemArray.itemBeBinMatrix;
+            for iBin =1:nBin
+                %每个Bin的装载体积
+                da.BinSArray.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
+            end
+            %每个bin的装载比率
+            da.BinSArray.Itemloadingrate =  da.BinSArray.Itemvolume ./ da.BinSArray.Binvolume;
+            %每个bin的有限装载比率
+            da.BinSArray.ItemloadingrateLimit =  da.BinSArray.Itemvolume ./ da.BinSArray.BinvolumeLimit;
+        end
         %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
         da.LUArray.LWHRota = da.LUArray.LWH;
         nLU = numel(da.LUArray.LURotaFlag);

@@ -27,11 +27,11 @@ clear tmpUniqueBin;
     % getSortedITEM - 获取按order排序后的ITEM:sortedItemArray
     sortedItemArray = getSortedITEM(da.ItemArray.itemorder);
 %     printstruct(da) ;printstruct(sortedItemArray)    
-
+da.ItemArray
 %% 增对Rotation增加变量 
 itemorder = da.ItemArray.itemorder;
 % 获取1 LWHItemSort 排序后的ITEM的长宽高 2 itemRotaSort 排序后的FLAG 全部为0 不重要
-if ParaArray.whichRotation == 0, LWHItemSort = sortedItemArray.LWH(1:nDim,:);; itemRotaSort = sortedItemArray.itemRotaFlag; end
+if ParaArray.whichRotation == 0, LWHItemSort = sortedItemArray.LWH(1:nDim,:); itemRotaSort = zeros(1,size(da.ItemArray.LWH,2)); end %itemRotaSort = sortedItemArray.itemRotaFlag; 
 % 获取1 LWHItemSortHori Hori orienting后LWH 2 itemRotaSortHori 原始item是否rotation  0 代表horizontal orientation 1 代表 vertical orientation
 if ParaArray.whichRotation == 1,     [LWHItemSortHori,itemRotaSortHori] = horiOrient(sortedItemArray.LWH(1:nDim,:)); end
 
