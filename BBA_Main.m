@@ -74,36 +74,21 @@ else
     %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
     %     clear LUid w W;%     error('No input! ');
 end
+%% Matlab画矩阵
+% % % % rectangle('Position',[0.5 0.5 0.3 0.4])
+% % % % rectangle('Position',[0 0 1 1],'EdgeColor','k','FaceColor',[0 .5 .5])
 close all
-resLoadingRateStripLimit = zeros(1,36);
-resLoadingRateStrip = zeros(1,36);
-resLoadingRateBinLimit = zeros(1,36);
-resLoadingRateBin = zeros(1,36);
-respara = zeros(7,36);
 r = 1;
-for i = 2:2 %1-3 best first next均可
+for i = 1:3 %1-3 best first next均可
     for j=1:2 %1-2 排序可多选
-        for k=0:1 %0-1 默认1可旋转
+        for k=1:1 %0-1 默认1可旋转
             for l=0:2 %0-2 0不好
                 for p =0:1
                     for o = 0:0 %车辆rota不如物流rota
-                        PARA = [i 1 j k l p o];
-                        ParaArray.whichStripH = PARA(1);
-                        ParaArray.whichBinH = PARA(2);
-                        ParaArray.whichSortItemOrder = PARA(3);
-                        ParaArray.whichRotation = PARA(4);
-                        ParaArray.whichRotationHori = PARA(5);
-                        ParaArray.whichRotationAll = PARA(6);
-                        ParaArray.whichRotationBin = PARA(7);
-                        [daS] = getSolution(da);        %% 55555555     
-                        daS.StripArray.ItemloadingrateLimit
-                        daS.BinSArray.ItemloadingrateLimit
-                        resLoadingRateStrip(1,r) = mean(daS.StripArray.Itemloadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
-                         resLoadingRateStripLimit(1,r) = mean(daS.StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-                         resLoadingRateBinLimit(1,r) = mean(daS.BinSArray.ItemloadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-                         resLoadingRateBin(1,r) = mean(daS.BinSArray.Itemloadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-                         respara(:,r) = PARA';
-                         r=r+1;
+                        tmppar =[i 1 j k l p o];
+                        paArray(r) = changeStruct(tmppar);     %获取参数结构体
+                        daArray(r) = getSolution(da,paArray(r));        %获取可行解结构体
+                        r=r+1;
                     end
                 end
             end
@@ -111,71 +96,87 @@ for i = 2:2 %1-3 best first next均可
     end
 end
 
-%% 算法选择最优的解给用户
-% maxresBin=max(resLoadingRateBinLimit(1,idxStrip)); %找出idxStrip中的最大bin
-% if ~all(ismember(idxBin,idxStrip)),   error('not all member of bin in strip'); end %错误有可能出现 
-%% 1 maxresBin代表常规车辆的平均装载率,物品总量一定,bin越多,该值越小,解越差,此最大值是必须
-maxresBin=max(resLoadingRateBin); %找出idxStrip中的最大bin
-idxBin=find(resLoadingRateBin==maxresBin);
-%% 2 maxresStrip代表常规Strip的平均装载率,物品总量一定,strip宽度一定,高度越高,该值越小,解越差,此最大值不一定时必须（因为看起来不好看）
-%% 但该值在不同bin高度时可能有影响，且该值好时，人为看起来可能并不好
-maxresStrip=max(resLoadingRateStrip);  
-idxStrip=find(resLoadingRateStrip==maxresStrip);
-%% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
-%% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
-maxresStripLimit=max(resLoadingRateStripLimit);
-idxStripLimit=find(resLoadingRateStripLimit==maxresStripLimit);
-%% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
-maxresBinLimit=max(resLoadingRateBinLimit); %找出idxStrip中的最大bin
-idxBinLimit=find(resLoadingRateBinLimit==maxresBinLimit);
-%% 5 找出idxStrip和idxBin两者的交集
-% % if isempty(intersect(idxBin,idxStrip))
-idx =intersect(idxBin,idxStripLimit);
- idx =idxBin;
-if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
-idx1 = intersect(idx,idxBinLimit);
-if ~isempty(idx1),  
-%     idx = idx1; 
-else
-    warning('idx1 is empty');
-end
-idx2 = intersect(idx,idxStrip);
-if ~isempty(idx2),  
-%     idx = idx2; 
-else
-    warning('idx2 is empty');
-% % end
-% % resLoadingRateStripLimit
-% % resLoadingRateBinLimit
-% % resLoadingRateStrip
-% % resLoadingRateBin
+% 算法从多组可行解中选择最优结果
+[daMax,parMax] = getbestsol(daArray,paArray); 
 
-%% 3 从idx多个里面再选择最好的
-for bb=1:length(idx) %1  length(aa) %单次或多次计算
-    PARA=respara(:,idx(bb)); %idxStrip是之前
-        % 多参数测试
-    ParaArray.whichStripH = PARA(1);
-    ParaArray.whichBinH = PARA(2);
-    ParaArray.whichSortItemOrder = PARA(3);
-    ParaArray.whichRotation = PARA(4);
-    ParaArray.whichRotationHori = PARA(5);
-    ParaArray.whichRotationAll = PARA(6);
-    ParaArray.whichRotationBin = PARA(7);
-    [daSMax] = getSolution(da);
-    getReturn(daSMax);
-    plotSolution(daSMax); 
+for r = 1:length(parMax)
+      getReturnBBA(daMax(r));
+      plotSolution(daMax(r),parMax(r));
 end
 
 % printstruct(daSMax);
 % % if nargin ==0,   plotSolution(daSMax);  end
-
-% printstruct(da);
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
+% close all;
+%END MAIN
+
       
 %% ************************* 下面是嵌套函数  ************************
 
-  
-    function [da] = getSolution(da)
+
+    function getReturnBBA(daMax) 
+        %% 返回输出结果(原始顺序) 输出4个参数
+        % 参数1 - 行1:Bin序号；行2：该bin内顺序
+        Res1_LUBeBinMatrix=daMax.LUArray.LUBeBinMatrix;
+        
+        % 参数2 - LU在Bin内的坐标
+        % 增加间隙-增加CoordLUBinWithBuff变量
+        daMax.LUArray.CoordLUBinWithBuff = daMax.LUArray.CoordLUBin + daMax.LUArray.BUFF./2;
+        Res2_CoordLUBin=daMax.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+        
+        % 参数3 - LU的长宽高(旋转后)
+        % 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
+        daMax.LUArray.LWHRota = daMax.LUArray.LWHRota - daMax.LUArray.BUFF;
+        Res3_LWHRota=daMax.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+        
+        % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
+        LUBeItemArray=daMax.LUArray.LUBeItemArray(1,:);
+        LUID=daMax.LUArray.ID;
+        Res4_DrawSeq = [LUBeItemArray; LUID];
+        
+        % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
+        %% 返回输出结果(安放顺序)
+        % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
+        % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
+        % % LUBeItemArray=LUBeItemArray(1,x)
+        % % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
+        % % Res3_LWHRota=Res3_LWHRota(:,x)
+        % % fprintf('本算例计算全部完成 \n');
+        end
+
+
+end
+
+
+%% 计算下届
+% lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
+%% ******* 局部函数 ****************
+function p = changeStruct(PARA)
+                        p.whichStripH = PARA(1);
+                        p.whichBinH = PARA(2);
+                        p.whichSortItemOrder = PARA(3);
+                        p.whichRotation = PARA(4);
+                        p.whichRotationHori = PARA(5);
+                        p.whichRotationAll = PARA(6);
+                        p.whichRotationBin = PARA(7);
+end
+
+function plotSolution(da,par)
+%% 画图
+%     printstruct(da);
+%     plot3DBPP(da,ParaArray);
+% 以下修订纯为画图使用
+
+fields = fieldnames(par);
+aField = [];
+for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
+figure('name',num2str(aField));
+da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
+da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
+plot2DBPP(da,par);
+end
+
+function [da] = getSolution(da,ParaArray)
         
         %% 检验Input输入数据
 %         da.LUArray.LWH
@@ -280,54 +281,66 @@ end
         end    
     end
 
-    function getReturn(da) 
-        %% 返回输出结果(原始顺序) 输出4个参数
-        % 参数1 - 行1:Bin序号；行2：该bin内顺序
-        Res1_LUBeBinMatrix=da.LUArray.LUBeBinMatrix;
-        
-        % 参数2 - LU在Bin内的坐标
-        % 增加间隙-增加CoordLUBinWithBuff变量
-        da.LUArray.CoordLUBinWithBuff = da.LUArray.CoordLUBin + da.LUArray.BUFF./2;
-        Res2_CoordLUBin=da.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
-        
-        % 参数3 - LU的长宽高(旋转后)
-        % 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
-        da.LUArray.LWHRota = da.LUArray.LWHRota - da.LUArray.BUFF;
-        Res3_LWHRota=da.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
-        
-        % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
-        LUBeItemArray=da.LUArray.LUBeItemArray(1,:);
-        LUID=da.LUArray.ID;
-        Res4_DrawSeq = [LUBeItemArray; LUID];
-        
-        % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
-        %% 返回输出结果(安放顺序)
-        % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
-        % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
-        % % LUBeItemArray=LUBeItemArray(1,x)
-        % % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
-        % % Res3_LWHRota=Res3_LWHRota(:,x)
-        % % fprintf('本算例计算全部完成 \n');
-        end
+%% **** 算法指标选择最优解 ****    
+function [daMax,parMax] = getbestsol(DaS,Par)
 
-    function plotSolution(da) 
-        %% 画图
-            %     printstruct(da);
-            %     plot3DBPP(da,ParaArray);
-            % 以下修订纯为画图使用
-            figure('name',num2str(PARA));
-            % plot2DBPP(da,ParaArray);hold on;
-            da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
-            % plot2DBPP(da,ParaArray);hold on;
-            da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
-            plot2DBPP(da,ParaArray);
+%获取评价指标和对应参数
+for r=1:length(DaS)
+    resLoadingRateStrip(r) = mean(DaS(r).StripArray.Itemloadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStripLimit(r) = mean(DaS(r).StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBinLimit(r) = mean(DaS(r).BinSArray.ItemloadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBin(r) = mean(DaS(r).BinSArray.Itemloadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+%     Par(r);
+end
+
+%% 算法选择最优的解给用户
+% maxresBin=max(resLoadingRateBinLimit(1,idxStrip)); %找出idxStrip中的最大bin
+% if ~all(ismember(idxBin,idxStrip)),   error('not all member of bin in strip'); end %错误有可能出现 
+%% 1 maxresBin代表常规车辆的平均装载率,物品总量一定,bin越多,该值越小,解越差,此最大值是必须
+%% 2 maxresStrip代表常规Strip的平均装载率,物品总量一定,strip宽度一定,高度越高,该值越小,解越差,此最大值不一定时必须（因为看起来不好看）
+%% 但该值在不同bin高度时可能有影响，且该值好时，人为看起来可能并不好
+%% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
+%% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
+%% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
+idxBin=find(resLoadingRateBin==max(resLoadingRateBin));
+idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
+idxStripLimit=find(resLoadingRateStripLimit==max(resLoadingRateStripLimit));
+idxBinLimit=find(resLoadingRateBinLimit==max(resLoadingRateBinLimit));
+
+%% 5 找出idxStrip和idxBin两者的交集
+% % if isempty(intersect(idxBin,idxStrip))
+idx =idxBin;
+if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
+idx =intersect(idx,idxStripLimit);
+if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
+idx1 = intersect(idx,idxBinLimit);
+if ~isempty(idx1),  
+    idx = idx1; 
+else
+    warning('idx1 is empty');
+end
+idx2 = intersect(idx,idxStrip);
+if ~isempty(idx2),  
+    idx = idx2; 
+else
+    warning('idx2 is empty');
+end
+
+%% 将idx剩余的返回到主函数
+if ~isempty(idx)
+    for tmpidx=1:length(idx)
+        daMax(tmpidx) = DaS(idx(tmpidx));
+        parMax(tmpidx) = Par(idx(tmpidx));
     end
+end
 
 end
 
 
-%% 计算下届
-% lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
+
+
+
+
 
 
 %% ********************** 下面是ts算法的代码 暂时不用 ****************

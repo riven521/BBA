@@ -44,6 +44,7 @@ function varargout = printstruct(S, varargin)
         'sortfields',           1,              ...
         'maxarraylength',       75              ...
     	};
+
     vals = setargs(def, varargin);
     if nargin==0, mfile_showhelp; fprintf('\t| - VARARGIN DEFAULTS - |\n'); disp(vals); return; end
     if iscell(S)
