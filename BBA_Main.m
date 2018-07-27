@@ -79,8 +79,8 @@ end
 % % % % rectangle('Position',[0 0 1 1],'EdgeColor','k','FaceColor',[0 .5 .5])
 close all
 r = 1;
-for i = 1:3 %1-3 best first next均可
-    for j=1:2 %1-2 排序可多选
+for i = 3:3 %1-3 best first next均可
+    for j=2:2 %1-2 排序可多选
         for k=1:1 %0-1 默认1可旋转
             for l=0:2 %0-2 0不好
                 for p =0:1
@@ -88,6 +88,8 @@ for i = 1:3 %1-3 best first next均可
                         tmppar =[i 1 j k l p o];
                         paArray(r) = changeStruct(tmppar);     %获取参数结构体
                         daArray(r) = getSolution(da,paArray(r));        %获取可行解结构体
+                        % 算法判断是否相同类型托盘相邻摆放
+                        flagArray(r) =  isAdjacent(daArray(r));         
                         r=r+1;
                     end
                 end
@@ -96,8 +98,22 @@ for i = 1:3 %1-3 best first next均可
     end
 end
 
-% 算法从多组可行解中选择最优结果
-[daMax,parMax] = getbestsol(daArray,paArray); 
+%  printstruct(daArray(1,1),'sortfields',0,'PRINTCONTENTS',1)
+% dirtable = struct2table(daArray(1,1).LUArray,'AsArray',true)
+% dirtable2 = struct2table(daArray(1,1))
+% x =dirtable2(1,1)
+
+% 555 算法首先排除bin内相同类型托盘不相邻的解
+daArray = daArray(1,logical(flagArray));
+paArray = paArray(1,logical(flagArray));
+
+% 算法其次从必定bin内相邻的多组可行解中选择最优结果
+if ~isempty(daArray)
+    [daMax,parMax] = getbestsol(daArray,paArray); 
+else
+    error('本算例内所有解都存在托盘不相邻的情况 \n');
+end
+
 
 for r = 1:length(parMax)
       getReturnBBA(daMax(r));
@@ -111,7 +127,7 @@ end
 %END MAIN
 
       
-%% ************************* 下面是嵌套函数  ************************
+%% ******* 嵌套函数  **********
 
 
     function getReturnBBA(daMax) 
@@ -152,13 +168,13 @@ end
 % lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
 %% ******* 局部函数 ****************
 function p = changeStruct(PARA)
-                        p.whichStripH = PARA(1);
-                        p.whichBinH = PARA(2);
-                        p.whichSortItemOrder = PARA(3);
-                        p.whichRotation = PARA(4);
-                        p.whichRotationHori = PARA(5);
-                        p.whichRotationAll = PARA(6);
-                        p.whichRotationBin = PARA(7);
+    p.whichStripH = PARA(1);
+    p.whichBinH = PARA(2);
+    p.whichSortItemOrder = PARA(3);
+    p.whichRotation = PARA(4);
+    p.whichRotationHori = PARA(5);
+    p.whichRotationAll = PARA(6);
+    p.whichRotationBin = PARA(7);
 end
 
 function plotSolution(da,par)
@@ -182,10 +198,10 @@ function [da] = getSolution(da,ParaArray)
 %         da.LUArray.LWH
         da = GcheckInput(da,ParaArray);
         %% 启发式: LU到Item的算法
-%         printstruct(da);
-        [da] = HLUtoItem(da,ParaArray);
+         printstruct(da);
+        [da] = HLUtoItem(da,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
         %% 启发式：Item到Strip的算法
-%         printstruct(da);
+        printstruct(da);
         [da] = HItemToStrip(da,ParaArray);
         %% 计算strip装载率
         da = computeLoadingRateStrip(da);
@@ -234,10 +250,10 @@ function [da] = getSolution(da,ParaArray)
             end
         end
         %% 启发式：Strip到Bin的算法
-%         printstruct(da);
+        printstruct(da);
         [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
-%         printstruct(da);
+        printstruct(da);
         [da] = HItemToBin(da);         
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
@@ -278,8 +294,53 @@ function [da] = getSolution(da,ParaArray)
                 da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
                 da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
             end
-        end    
+        end
+end
+
+    %% ************ 判断是否相同类型托盘相邻摆放
+    function flag = isAdjacent(d)
+        flag = 1;
+        printstruct(d);
+        % 每个bin中找出各类型ID所在Strip是否相邻
+        nBin = size(d.BinSArray.LW,2);
+        for iBin = 1:nBin
+            t = [d.ItemArray.ID; d.ItemArray.itemBeStripMatrix; d.ItemArray.itemBeBinMatrix ];
+            tiBin = t( : , t(4,:) == iBin );
+            nIdType = unique(tiBin(1,:)); %nIdType: 本iBin内包含的LU的ID类型
+            for iId = 1:nIdType
+                tiId = tiBin( : , tiBin(1,:) == iId );
+                nIdStrip = unique(tiId(2,:)); %nIdStrip: 本iBin及本iID下包含的Strip的序号
+                % 判断排序后的放入本ID类型的Strip序号是否相邻
+                if ~all(diff(sort(nIdStrip))==1)
+                    flag = 0;
+                end
+            end                    
+        end
     end
+% % %             % ns - 本bin内strip个数及顺序
+% % %             ns = d.StripArray.stripBeBinMatrix(2,d.StripArray.stripBeBinMatrix(1,:) == iBin);
+% % %             % ni - 本bin内item内LU类型及顺序
+% % %             d.ItemArray.itemBeBinMatrix(1,:) == iBin
+% % %             ni = d.ItemArray.ID(d.ItemArray.itemBeBinMatrix(1,:) == iBin);
+% % %             [a,b] = find(d.ItemArray.ID(d.ItemArray.itemBeBinMatrix(1,:) == iBin));
+% % %             ni_uni = unique(ni);
+% % %             for ini = 1:length(ni_uni)
+% % % %                 d.ItemArray.
+% % % %                 d.ItemArray.itemBeStripMatrix(:,
+% % %             end
+% % %             nStrip = length(ns);
+% % %             % i,j is adjacent strips(levels)
+% % %             for iStrip = 1:nStrip
+% % %                 for jStrip = (iStrip+1):(nStrip-1)
+% % %                 [is] = find(ns==iStrip); %第3个strip放第1层
+% % %                 [js] = find(ns==jStrip); %第1个strip放第2层
+% % %                 LUIDInis = d.ItemArray.ID(1,(d.ItemArray.itemBeStripMatrix(1,:)==is))
+% % %                 LUIDInjs = d.ItemArray.ID(1,(d.ItemArray.itemBeStripMatrix(1,:)==js))
+% % %                 
+% % %                 end
+% % %             end
+% % %         end
+% % %         
 
 %% **** 算法指标选择最优解 ****    
 function [daMax,parMax] = getbestsol(DaS,Par)
