@@ -3,6 +3,8 @@ function [] = plot2DBPP(da,ParaArray)
 % 初始化
 nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nThisItem = size(da.ItemArray.LWH,2);
+nIDType = unique(da.ItemArray.ID);
+nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
 widthBin = tmpUniqueBin(1);
 lengthBin = tmpUniqueBin(2);
@@ -12,6 +14,7 @@ clear tmpUniqueBin;
 itemBeBinMatrix = da.ItemArray.itemBeBinMatrix;
 CoordItemBin = da.ItemArray.CoordItemBin;
 itemLWH = da.ItemArray.LWH;
+itemID = da.ItemArray.ID;
 if ParaArray.whichRotation == 1    
     itemRotaFlag = da.ItemArray.itemRotaFlag; %增加rotation后增
 end
@@ -22,11 +25,12 @@ end
 itemBeBinMatrixSort = itemBeBinMatrix(:,binorder);
 CoordItemBinSort = CoordItemBin(:,binorder);
 itemLWHSort = itemLWH(:,binorder);
+itemIDSort = itemID(:,binorder);
 if ParaArray.whichRotation == 1    
     itemRotaFlagSort = itemRotaFlag(:,binorder); %增加rotation后增
 end
 
-%% 1 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
+% 1 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
 nBin = max(itemBeBinMatrix(1,:));
 DrawRectangle([widthBin*(nBin+1)/2 lengthBin/2 widthBin*(nBin+1) lengthBin 0],'--');
 hold on;
@@ -38,7 +42,8 @@ for iBin = 1:nBin
                %     drawBinMatrix = ppbelongItemBinMatrix(:,idxDrawItem);
     % 获取该索引下的变量
     drawItemCoordMatrix = CoordItemBinSort(:,idxDrawItem);
-    drawItemMatrix = itemLWHSort(:,idxDrawItem);
+    drawItemLWH = itemLWHSort(:,idxDrawItem);
+    drawItemId = itemIDSort(:,idxDrawItem);
     if ParaArray.whichRotation == 1    
         drawItemRotaMatrix = itemRotaFlagSort(:,idxDrawItem); %增加rotation后增
     end
@@ -47,21 +52,27 @@ for iBin = 1:nBin
     DrawRectangle([binCenter widthBin lengthBin 0],'--')    ;
     hold on;
     % 画图：逐个item
-    nThisItem = size(drawItemMatrix,2);
+    nThisItem = size(drawItemLWH,2);
     for iItem = 1:nThisItem
         % 画图：画本次iItem
-        itemWidth = drawItemMatrix(1,iItem);
-        itemLength = drawItemMatrix(2,iItem);
+        itemWidth = drawItemLWH(1,iItem);
+        itemLength = drawItemLWH(2,iItem);
         itemCenter = [iterWidth+drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
             drawItemCoordMatrix(2,iItem)+itemLength/2 ];
+
         % 增加对rotation的判断
         if ParaArray.whichRotation == 1 && drawItemRotaMatrix(iItem)
-            itemWidth = drawItemMatrix(2,iItem);
-            itemLength = drawItemMatrix(1,iItem);            
+            itemWidth = drawItemLWH(2,iItem);
+            itemLength = drawItemLWH(1,iItem);            
             itemCenter = [iterWidth+drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
                         drawItemCoordMatrix(2,iItem)+itemLength/2 ];
         end
-        DrawRectangle([itemCenter itemWidth itemLength 0],'r-');
+        
+        % 增加对本次iItem的类型（颜色）判断
+        itemID = drawItemId(iItem);
+        itemColor = 0.8*nColors(nIDType==itemID, : );        
+        
+        DrawRectangle([itemCenter itemWidth itemLength 0],  '-',  itemColor); 
         hold on;
     end
     % 递增本次bin的宽度

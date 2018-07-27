@@ -104,8 +104,8 @@ end
 % x =dirtable2(1,1)
 
 % 555 算法首先排除bin内相同类型托盘不相邻的解
-daArray = daArray(1,logical(flagArray));
-paArray = paArray(1,logical(flagArray));
+% % daArray = daArray(1,logical(flagArray));
+% % paArray = paArray(1,logical(flagArray));
 
 % 算法其次从必定bin内相邻的多组可行解中选择最优结果
 if ~isempty(daArray)

@@ -1,10 +1,13 @@
-function h = DrawRectangleWithXY(param,style)
+function h = DrawRectangleWithXY(param,style,color) %自增color颜色 hsv
 % 网络函数:画矩形图 来自网络
 
 if (nargin <1),
     error('Please see help for INPUT DATA.');
 elseif (nargin==1)
-    style='b-';
+    style='-';
+    color=[1,0,0];
+elseif (nargin==2)
+    color=[1,0,0];
 end;
 [m,n] = size(param);
 if(m ~= 1 || n ~= 5)
@@ -25,6 +28,7 @@ ct = cos(theta);
 st = sin(theta);
 R = [ct -st;st ct];
 P = R * P;
-h=plot(P(1,:)+a,P(2,:)+b,style);
+% h=plot(P(1,:)+a,P(2,:)+b,style);
+h=plot(P(1,:)+a,P(2,:)+b,style,'Color',color); %自增颜色
 axis equal;
 end
