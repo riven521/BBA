@@ -27,7 +27,7 @@ clear tmpUniqueBin;
     % getSortedITEM - 获取按order排序后的ITEM:sortedItemArray
     sortedItemArray = getSortedITEM(da.ItemArray.itemorder);
 %     printstruct(da) ;printstruct(sortedItemArray)    
-da.ItemArray
+% da.ItemArray
 %% 增对Rotation增加变量 
 itemorder = da.ItemArray.itemorder;
 % 获取1 LWHItemSort 排序后的ITEM的长宽高 2 itemRotaSort 排序后的FLAG 全部为0 不重要

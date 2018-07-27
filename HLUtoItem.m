@@ -38,7 +38,9 @@ clear tmpUniqueBin;
 % %     RotaFlagItem = ones(1,nItem)*5;   %Item的旋转flag（0和1,其它为未使用） TOBE
 % DELE
     LUBeItemArraySort = zeros(2,nLU); %dim1:属于第几个Item dim2:属于该Item第几个排放 555
+    
     getItem(); %555 转换
+    
     da.ItemArray.ID = IDItem(:,IDItem(1,:)>0); % 去除未使用的     
     da.ItemArray.Weight = WeightItem(:,WeightItem(1,:)>0); % 去除未使用的 
 % %     da.ItemArray.itemRotaFlag = RotaFlagItem(:,RotaFlagItem(1,:)<=1); %
@@ -63,6 +65,7 @@ clear tmpUniqueBin;
     function lu = getSortedLU(LUorder)
         lu = structfun(@(x) x(:,LUorder),da.LUArray,'UniformOutput',false);
     end
+
     function getItem()
         iItem = 1;
         itemBeLUArray = zeros(1,nItem);  % 每个Item内堆垛的LU数量 后期不用

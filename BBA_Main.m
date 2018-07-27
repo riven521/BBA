@@ -116,8 +116,13 @@ end
 
 
 for r = 1:length(parMax)
+
       getReturnBBA(daMax(r));
       plotSolution(daMax(r),parMax(r));
+      
+      % 仅计算最好的那个结果
+            x = getSolution(da,parMax(r));
+            plotSolution(x,parMax(r));
 end
 
 % printstruct(daSMax);
