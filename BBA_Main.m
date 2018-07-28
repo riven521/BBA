@@ -79,7 +79,7 @@ end
 % % % % rectangle('Position',[0 0 1 1],'EdgeColor','k','FaceColor',[0 .5 .5])
 close all
 r = 1;
-for i = 3:3 %1-3 best first next均可
+for i = 1:3 %1-3 best first next均可
     for j=2:2 %1-2 排序可多选
         for k=1:1 %0-1 默认1可旋转
             for l=0:2 %0-2 0不好
@@ -88,6 +88,7 @@ for i = 3:3 %1-3 best first next均可
                         tmppar =[i 1 j k l p o];
                         paArray(r) = changeStruct(tmppar);     %获取参数结构体
                         daArray(r) = getSolution(da,paArray(r));        %获取可行解结构体
+                        plotSolution(daArray(r),paArray(r));
                         % 算法判断是否相同类型托盘相邻摆放
                         flagArray(r) =  isAdjacent(daArray(r));         
                         r=r+1;

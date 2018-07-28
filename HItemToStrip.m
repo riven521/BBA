@@ -51,15 +51,20 @@ CoordItemStripSort = zeros(2,nItem); %Item在strip的坐标值
 % 注释：获取 FLAG        可放下当前item(iStrip)的至少一个level的集合） 
 % 注释：获取 thisLevel   从FLAG中找到按规则的那个thisLevel, 并执行 insert函数
 
-iLevel = 1; iStrip = 1;
+iLevel = 1; iStrip = 1; %iStrip代表item实质
 while 1
     if iStrip > nItem, break; end
     
-    thisLevel = getThisLevel();    
-    insertItemToStrip(thisLevel);    
+    % 依据不同规则找到能放入当前item的strips/levels中的一个
+    thisLevel = getThisLevel();     %iLevel会在次函数内不断递增，永远指示当前最新的level
+    insertItemToStrip(thisLevel);
+    
+%     plot2DStrip(); %迭代画图
     
     iStrip = iStrip + 1;
 end
+
+% plot2DStrip(); %一次性画图
 
 % 后处理 并赋值到da
         %Matalb code gerator use:
@@ -86,7 +91,7 @@ end
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
-    dap = rmfield(da, {'BinArray', 'LUArray'});  printstruct(dap);
+%     dap = rmfield(da, {'BinArray', 'LUArray'});  printstruct(dap);
 
 
     %% 嵌套函数        
@@ -118,17 +123,21 @@ end
                 flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
                     LWStrip(1,1:iLevel) >= LWHItemSortHori(2,iStrip));
             else
-                % 常规条件下的选择：find宽度足够的多个level,并安置在最小剩余宽度的
+                % 常规条件下的选择：find宽度足够的多个level,并安置在最小剩余水平宽度的
                 flag = find(LWStrip(1,1:iLevel) >= LWHItemSort(1,iStrip));
             end
             if isempty(flag)
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
                 thisLevel = getThisLevel();
             else
+                if length(flag)>1
+                    1
+                end
                 % 获取thisLevel: 唯一与FF区别从这到thisLevel的计算（选中满足条件且最小的）
                 tepAvailableLevelArray = LWStrip(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tepAvailableLevelArray
                 tepMinLeftWdith = min(tepAvailableLevelArray(flag));                      %找出tepAvailableLevelArray中可容纳本iITem的剩余水平宽度的最小值，更新为tepMinLeftWdith
-                thisLevel = find(tepAvailableLevelArray==tepMinLeftWdith);            %找出与最小值对应的那个(组）level
+                thisLevel = find(tepAvailableLevelArray==tepMinLeftWdith);            %找出与最小值对应的那个/些level
+                if ~all(ismember(thisLevel,flag)),           error('Not all thisLevel belongs to flag ');          end
                 if length(thisLevel)>1
                     thisLevel = thisLevel(1);
                 end
@@ -147,6 +156,9 @@ end
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
                  thisLevel = getThisLevel();
             else
+              if length(flag)>1
+                    1
+                end
                 thisLevel = flag(1);
             end
         elseif ParaArray.whichStripH == 3 % nextfit
@@ -161,9 +173,17 @@ end
             end
             if  isempty(flag) %注意与之前~flag的区别 FIXME ~flag
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
-                 thisLevel = getThisLevel();
+                thisLevel = getThisLevel();
             else
-                thisLevel = iLevel;
+                if length(flag)>1
+                    1
+                end
+                flag
+                iLevel
+                if ~all(ismember(iLevel,flag)),        
+                    warning('Not all thisLevel belongs to flag ');     
+                end
+                thisLevel = iLevel; % 即为
             end
         end
     end
@@ -187,7 +207,6 @@ end
                 LWStrip(1,thisLevel)
                 LWHItemSortHori(1,iStrip)
                 LWHItemSortHori(2,iStrip)
-                1
             end
             isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level
             flagLargerLengthHori = LWStrip(2,thisLevel) <  LWHItemSortHori(2,iStrip); %判断是否 要更新level长/高度
@@ -389,4 +408,59 @@ end
             fprintf('\n');
         end
     end
+
+    function plot2DStrip()
+        %% 初始化
+        wStrip = widthStrip;        
+        hStrip = sum(LWStrip(2,itemBeStripMatrixSort(2,:)>0));        
+        nstrip = sum(itemBeStripMatrixSort(2,:)>0);
+
+        nIDType = unique(sortedItemArray.ID);
+        nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
+        
+        %% 画图
+        % 1 画图：画本次Strip
+        DrawRectangle([wStrip/2 hStrip/2 wStrip hStrip 0],'--');
+        hold on;
+        % 2 画图：逐个strip/item 画图
+        for istrip = 1:nstrip
+            % 找出当前istrip的物品索引
+            idxDrawItem = find(itemBeStripMatrixSort(1,:)==istrip);
+            % 获取该索引下的变量
+            drawItemCoordMatrix = CoordItemStripSort(:,idxDrawItem);
+            drawItemLWH = LWHItemSortHori(:,idxDrawItem);
+            drawItemId = sortedItemArray.ID(:,idxDrawItem);
+
+            % 画图：逐个item
+            nThisItem = size(drawItemLWH,2);
+            for iItem = 1:nThisItem
+                % 画图：画本次iItem
+                itemWidth = drawItemLWH(1,iItem);
+                itemLength = drawItemLWH(2,iItem);
+                itemCenter = [drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
+                    drawItemCoordMatrix(2,iItem)+itemLength/2 ];
+                
+                % 增加对rotation的判断 内部嵌套函数不需要
+                %             if ParaArray.whichRotation == 1
+                %                 drawItemRotaMatrix = itemRotaSortHori(:,idxDrawItem); %增加rotation后增
+                %             end
+                
+                % %         if ParaArray.whichRotation == 1 && drawItemRotaMatrix(iItem)
+                % %             itemWidth = drawItemLWH(2,iItem);
+                % %             itemLength = drawItemLWH(1,iItem);
+                % %             itemCenter = [drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
+                % %                         drawItemCoordMatrix(2,iItem)+itemLength/2 ];
+                % %         end
+                
+                % 增加对本次iItem的类型（颜色）判断
+                itemID = drawItemId(iItem);
+                itemColor = 0.8*nColors(nIDType==itemID, : );
+                
+                DrawRectangle([itemCenter itemWidth itemLength 0],  '-',itemColor);
+                hold on;
+            end
+        end
+        % hold off;
+    end
 end
+
