@@ -82,15 +82,15 @@ r = 1;
 for i = 1:3 %1-3 best first next均可
     for j=1:1 %1-2 排序可多选
         for k=1:1 %0-1 默认1可旋转
-            for l=0:2 %0-2 0不好
-                for p =0:1
+            for l=2:2 %0-2 0不好
+                for p =0:0
                     for o = 0:0 %车辆rota不如物流rota
                         tmppar =[i 1 j k l p o];
                         paArray(r) = changeStruct(tmppar);     %获取参数结构体
                         daArray(r) = getSolution(da,paArray(r));        %获取可行解结构体
                         plotSolution(daArray(r),paArray(r));
                         % 算法判断是否相同类型托盘相邻摆放
-                        flagArray(r) =  isAdjacent(daArray(r));         
+                        flagArray(r) =  isAdjacent(daArray(r));
                         r=r+1;
                     end
                 end
@@ -170,8 +170,7 @@ end
 end
 
 
-%% 计算下届
-% lb = computerLB(da); fprintf('LB = %d \n', lb); %以某个bin类型为准
+
 %% ******* 局部函数 ****************
 function p = changeStruct(PARA)
     p.whichStripH = PARA(1);
@@ -203,9 +202,12 @@ function [da] = getSolution(da,ParaArray)
         %% 检验Input输入数据
 %         da.LUArray.LWH
         da = GcheckInput(da,ParaArray);
+        
         %% 启发式: LU到Item的算法
          printstruct(da);
         [da] = HLUtoItem(da,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
+        %% 计算下届
+        lb = computerLB(da);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
         printstruct(da);
         [da] = HItemToStrip(da,ParaArray);

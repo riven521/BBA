@@ -49,7 +49,9 @@ clear tmpUniqueBin;
     da.ItemArray.LWH = LWHItem(:,LWHItem(1,:)>0); % 去除未使用的 
     da.LUArray.LUBeItemArray(:,da.LUArray.order) = LUBeItemArraySort; % da.LUArray.LUBeItemArray : 每个排序后LU在哪个Item内  以及顺序
 
-    %% 测试script
+    %% 额外变量+测试script
+    % 额外变量
+    getITEMIDArray();
     % 输出主要结果:获得每个item包含的 原始 LU序号
     printscript();
     
@@ -90,6 +92,20 @@ clear tmpUniqueBin;
             end
             iItem =  iItem + 1;
         end
+    end
+
+    %%  获取ITEMID类型相关数据(同类型ID的体积，面积，重量)
+    function getITEMIDArray()
+%          printstruct(da);
+        da.ItemIDArray.ID = unique(da.ItemArray.ID);
+        nItemID = numel(da.ItemIDArray.ID);        
+
+        for iID = 1:nItemID
+        da.ItemIDArray.Weight(iID) = sum(da.ItemArray.Weight .* (da.ItemArray.ID == da.ItemIDArray.ID(iID)) );
+        da.ItemIDArray.Volume(iID) = sum(prod(da.ItemArray.LWH) .* (da.ItemArray.ID == da.ItemIDArray.ID(iID)) );
+        da.ItemIDArray.Area(iID) = sum(prod(da.ItemArray.LWH(1:2,:)) .* (da.ItemArray.ID == da.ItemIDArray.ID(iID)) );
+        end
+        
     end
 
     function printscript()

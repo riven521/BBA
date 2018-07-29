@@ -14,6 +14,7 @@ initCheck();
 inputExchange(); %333
 inputLUIDExchange(); %555
 deepCheck(); %333
+getLUIDArray(); %% 计算：LU类型相关数据
 printInput();
 
     %% 初步判断
@@ -47,6 +48,7 @@ printInput();
         % da.LUArray.LWH: 必须是matrix矩阵,列数为托盘数量,行数为3; 未考虑3行3列情形
         if size(da.LUArray.LWH,1)~=3,     da.LUArray.LWH=da.LUArray.LWH';     end
         
+        %LU的长宽颠倒（似乎意义不大）
         if ParaArray.whichRotationAll ==1
             tmp = da.LUArray.LWH;
             tmp(1,:) = da.LUArray.LWH(2,:);
@@ -54,6 +56,7 @@ printInput();
             da.LUArray.LWH = tmp;
         end
 
+        %BIN的长宽颠倒（横着放）
         if ParaArray.whichRotationBin ==1
             tmp = da.BinArray.LWH;
             tmp(1,:) = da.BinArray.LWH(2,:);
@@ -109,6 +112,19 @@ printInput();
         end
     end
     
+    %%  获取LUID类型相关数据(同类型ID的体积，重量)
+    function getLUIDArray()
+%         printstruct(da);
+        da.LUIDArray.ID = unique(da.LUArray.ID);
+        nLUID = numel(da.LUIDArray.ID);        
+
+        for iID = 1:nLUID
+        da.LUIDArray.Weight(iID) = sum(da.LUArray.Weight .* (da.LUArray.ID == da.LUIDArray.ID(iID)) );
+        da.LUIDArray.Volume(iID) = sum(prod(da.LUArray.LWH) .* (da.LUArray.ID == da.LUIDArray.ID(iID)) );
+        end
+       
+    end
+
    %% 打印Input数据
     function printInput()
         fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(da.BinArray.LWH','rows')');
