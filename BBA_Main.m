@@ -67,7 +67,7 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=50;da=getRandDa(n);save('rndDa.mat','da');
+     n=20;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat');
     %%
     %     load insLU3.mat;   % load ins.4at;
@@ -80,7 +80,7 @@ end
 close all
 r = 1;
 for i = 1:3 %1-3 best first next均可
-    for j=2:2 %1-2 排序可多选
+    for j=1:1 %1-2 排序可多选
         for k=1:1 %0-1 默认1可旋转
             for l=0:2 %0-2 0不好
                 for p =0:1

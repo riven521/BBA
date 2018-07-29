@@ -46,9 +46,11 @@ while 1
     thisBin = getThisBin();    % 获取Bin号
     
     insertStripToBin(); %插入strip到Bin
-    
+        
     iStrip = iStrip + 1;
 end
+
+% plot2DBin();
 
 % 后处理 并赋值到da
 % 获取stripBeBinMatrix: 每个strip在哪个bin内  以及顺序
@@ -97,6 +99,7 @@ printscript();
                 tepMin = LWBin(2,1:iBin);
                 tepMin = min(tepMin(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin
                 thisBin = find(LWBin(2,1:iBin)==tepMin); %找到该值tepMin对应的bin序号
+                if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');          end
                 if length(thisBin)>1
                     thisBin = thisBin(1);
                 end
@@ -111,21 +114,23 @@ printscript();
     end
 
     function insertStripToBin()
-        % 1 更新strip归属bin的信息 (stripBeBinMatrixSort)
-        binBeStripArray=binBeStripArray;stripBeBinMatrixSort=stripBeBinMatrixSort;LWBin=LWBin;
+%         binBeStripArray=binBeStripArray;stripBeBinMatrixSort=stripBeBinMatrixSort;LWBin=LWBin;
+
+        % 1 更新strip归属bin的信息 ：stripBeBinMatrixSort
         binBeStripArray(thisBin) = binBeStripArray(thisBin) + 1; %本bin下第几次安置strip
         stripBeBinMatrixSort(1,iStrip) = thisBin;
         stripBeBinMatrixSort(2,iStrip) = binBeStripArray(thisBin);
         
-        % 2 获取本iStrip内的item序号, 并更新Item归属信息
+       % 2 更新bin的剩余长和剩余高：LWBin
+       LWBin(1,thisBin) = min(LWBin(1,thisBin),LWStripSort(1,iStrip)); %更新bin剩余宽度的最小值
+       LWBin(2,thisBin) = LWBin(2,thisBin) - LWStripSort(2,iStrip);    %更新bin剩余高度
+            
+       %% 其余放到ItemToBin内计算
+        % 3 获取本iStrip内的item序号, 并更新Item归属信息
 %         idxItemStrip = find(ItemArray.itemBeStripMatrixSort(1,:)==iStrip);
 %         itemBeBinMatrixSort(1,idxItemStrip) = thisBin;    %第几个bin
 
-         % 3 更新LWBin
-            LWBin(1,thisBin) = min(LWBin(1,thisBin),LWStripSort(1,iStrip)); %更新bin剩余宽度的最小值
-            LWBin(2,thisBin) = LWBin(2,thisBin) - LWStripSort(2,iStrip);    %更新bin剩余高度
-%        binBeItemArray(thisBin) = binBeItemArray(thisBin) + length(idxItemStrip);                          %本bin下合计几个item
-            
+
             %更新xy坐标信息 x不变 y通过bin高度-bin剩余高度-本次strip高度
 %             CoordItemBinSort(1,idxItemStrip) = CoordItemBinSort(1,idxItemStrip);
 %             CoordItemBinSort(2,idxItemStrip) = uniBinDataMatrix(2,1) - (LWBin(2,thisBin) + LWStripSort(2,iStrip));
@@ -170,6 +175,41 @@ printscript();
             fprintf('( %d ) ', da.StripArray.LW(1:nDim,idx));fprintf('\n');
             fprintf('\n');
         end
+    end
+
+    % 未完成函数 TODO
+    function plot2DBin()
+    % 初始化
+            % 初始化
+        LWBin
+        LWStripSort
+        binBeStripArray
+        stripBeBinMatrixSort
+        sortedStripArray
+            %% 初始化
+        nThisItem = size(da.ItemArray.LWH,2);
+        nIDType = unique(da.ItemArray.ID);
+        nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
+        tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
+        wBin = tmpUniqueBin(1);
+        hBin = tmpUniqueBin(2);        
+    
+        nUsedBin = sum(stripBeBinMatrixSort(2,:)>0);
+
+        %% 画图
+        % 1 画个画布 宽度为nUsedBin+1个bin宽 长（高）度为bin高
+        figure();
+        DrawRectangle([wBin*(nUsedBin+1)/2 hBin/2 wBin*(nUsedBin+1) hBin 0],'--');
+        hold on;
+        % 2 逐个bin 画图
+        iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
+        for iBin = 1:nUsedBin
+            % 找出当前iBin的物品索引
+            idxDrawStrip = find(stripBeBinMatrixSort(1,:)==iBin);
+            % 。。。 由于没有Strip在bin内的Coord，此函数暂停
+        end
+        % 逐个strip画图
+        
     end
 
 end

@@ -59,7 +59,7 @@ while 1
     thisLevel = getThisLevel();     %iLevel会在次函数内不断递增，永远指示当前最新的level
     insertItemToStrip(thisLevel);
     
-%     plot2DStrip(); %迭代画图
+    plot2DStrip(); %迭代画图
     
     iStrip = iStrip + 1;
 end
@@ -68,7 +68,7 @@ end
 
 % 后处理 并赋值到da
         %Matalb code gerator use:
-        itemBeStripMatrix=itemBeStripMatrixSort;CoordItemStrip=CoordItemStripSort;
+        itemBeStripMatrix=itemBeStripMatrixSort; CoordItemStrip=CoordItemStripSort;
 
 % 获取itemBeStripMatrix : 每个Item在哪个Strip内  以及顺序
 % 获取CoordItemStrip : 每个Item在Strip的坐标
@@ -120,24 +120,21 @@ end
             % 增对Rotation增加变量
             if ParaArray.whichRotation == 1
                 % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
-                flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
+                flag = find(LWStrip(1, 1 : iLevel) >= LWHItemSortHori(1,iStrip) |  ...
                     LWStrip(1,1:iLevel) >= LWHItemSortHori(2,iStrip));
             else
                 % 常规条件下的选择：find宽度足够的多个level,并安置在最小剩余水平宽度的
-                flag = find(LWStrip(1,1:iLevel) >= LWHItemSort(1,iStrip));
+                flag = find(LWStrip(1, 1 : iLevel) >= LWHItemSort(1,iStrip));
             end
             if isempty(flag)
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
                 thisLevel = getThisLevel();
             else
-                if length(flag)>1
-                    1
-                end
                 % 获取thisLevel: 唯一与FF区别从这到thisLevel的计算（选中满足条件且最小的）
                 tepAvailableLevelArray = LWStrip(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tepAvailableLevelArray
                 tepMinLeftWdith = min(tepAvailableLevelArray(flag));                      %找出tepAvailableLevelArray中可容纳本iITem的剩余水平宽度的最小值，更新为tepMinLeftWdith
                 thisLevel = find(tepAvailableLevelArray==tepMinLeftWdith);            %找出与最小值对应的那个/些level
-                if ~all(ismember(thisLevel,flag)),           error('Not all thisLevel belongs to flag ');          end
+                if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
                 if length(thisLevel)>1
                     thisLevel = thisLevel(1);
                 end
@@ -146,241 +143,106 @@ end
             % 增对Rotation增加变量
             if ParaArray.whichRotation == 1
                 % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
-                flag = find(LWStrip(1,1:iLevel) >= LWHItemSortHori(1,iStrip) |  ...
+                flag = find(LWStrip(1, 1 : iLevel) >= LWHItemSortHori(1,iStrip) |  ...
                     LWStrip(1,1:iLevel) >= LWHItemSortHori(2,iStrip));
             else
                 % 常规条件下的选择：find宽度足够的多个level,并安置在第一个遇到的 唯一区别是thisLevel的获取
-                flag = find(LWStrip(1,1:iLevel) >= LWHItemSort(1,iStrip));
+                flag = find(LWStrip(1, 1 : iLevel) >= LWHItemSort(1,iStrip));
             end
             if isempty(flag)
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
                  thisLevel = getThisLevel();
             else
-              if length(flag)>1
-                    1
-                end
                 thisLevel = flag(1);
+                if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
             end
-        elseif ParaArray.whichStripH == 3 % nextfit
+        elseif ParaArray.whichStripH == 3 % nextfit 
             % 增对Rotation增加变量
             if ParaArray.whichRotation == 1 % nextfit下不能直接套用bestfit的代码 FIXME
-                % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
-                flag = find(LWStrip(1,iLevel) >= LWHItemSortHori(1,iStrip) |  ...
+                % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以
+                flaged = find(LWStrip(1,iLevel) >= LWHItemSortHori(1,iStrip) |  ...
                     LWStrip(1,iLevel) >= LWHItemSortHori(2,iStrip));
             else
                 % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽
-                flag = find(LWStrip(1,iLevel) >= LWHItemSort(1,iStrip) );
+                flaged = find(LWStrip(1,iLevel) >= LWHItemSort(1,iStrip) );
             end
-            if  isempty(flag) %注意与之前~flag的区别 FIXME ~flag
+            if  isempty(flaged)  %注意与之前~flag的区别
                 iLevel = iLevel + 1;% 如果宽度不满足，则level升级
                 thisLevel = getThisLevel();
             else
-                if length(flag)>1
-                    1
-                end
-                flag
-                iLevel
-                if ~all(ismember(iLevel,flag)),        
-                    warning('Not all thisLevel belongs to flag ');     
-                end
-                thisLevel = iLevel; % 即为
+                if  isempty(flaged) ,   error(' 不可能的错误 ');      end
+                thisLevel = iLevel; % 当前level一定放的下
             end
         end
     end
 
     function insertItemToStrip(thisLevel)
-        CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
-        itemRotaSortHori=itemRotaSortHori;LWHItemSortHori=LWHItemSortHori;
-        stripBeItemArray=stripBeItemArray;itemBeStripMatrixSort=itemBeStripMatrixSort;
+%         CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
+%         %为了matlab的coder 无用
+%         itemRotaSortHori=itemRotaSortHori;LWHItemSortHori=LWHItemSortHori;
+%         stripBeItemArray=stripBeItemArray;itemBeStripMatrixSort=itemBeStripMatrixSort;
         
         % 1 更新CoordItemStripSort
         CoordItemStripSort(1,iStrip) = widthStrip - LWStrip(1,thisLevel);  %更新x坐标
         CoordItemStripSort(2,iStrip) = sum(LWStrip(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
         
-        % 2 更新stripBeItemArray
         % 2 更新LWStrip
-        if ParaArray.whichRotation == 1 && ParaArray.whichRotationHori == 0
-            % 判断语句
-            flagHori = LWStrip(1,thisLevel) >=  LWHItemSortHori(1,iStrip); %判断是否 wleft >= longest
-            flagVert = LWStrip(1,thisLevel) >= LWHItemSortHori(2,iStrip);  %判断是否 wleft >= shortest
-            if ~flagVert & ~flagVert
-                LWStrip(1,thisLevel)
-                LWHItemSortHori(1,iStrip)
-                LWHItemSortHori(2,iStrip)
-            end
+        % 2 更新stripBeItemArray
+        if ParaArray.whichRotation == 1
+            % 判断语句: 5个
+            isflagHori = LWStrip(1,thisLevel) >=  LWHItemSortHori(1,iStrip); %判断是否 wleft >= longest
+            isflagVert = LWStrip(1,thisLevel) >= LWHItemSortHori(2,iStrip);  %判断是否 wleft >= shortest
             isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level
-            flagLargerLengthHori = LWStrip(2,thisLevel) <  LWHItemSortHori(2,iStrip); %判断是否 要更新level长/高度
-            flagLargerLengthVert = LWStrip(2,thisLevel) <  LWHItemSortHori(1,iStrip); %判断是否 要更新level长/高度
             
             % 更新strip信息
-            % 如果新level,优先按照horizontally方式(即默认方式安置)
             if isNewLevel
-                if flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end
-                elseif flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
-                    end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                else      %如果wleft <shorter edge
-                    error('数据错误,无论横竖都放不下');
+                if ParaArray.whichRotationHori == 2 % 新level, 必定按照vertical方式(安置)
+                    if ~isflagVert,  error('1'); end
+                    updateStripVertical();
+                else % 0-1 ：% 新level, 必定按照horizontally方式(即默认方式安置)
+                    if ~isflagHori,  error('1'); end
+                    updateStripHorizontal();
                 end
-            else  % 如果非level,优先按照vertically方式放
-                if flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
+            else % 如果非新level
+                if ParaArray.whichRotationHori == 1 % 非新level, 优先按照horizontall方式(安置)
+                    if isflagHori
+                        updateStripHorizontal();
+                    elseif isflagVert
+                        updateStripVertical();
+                    else
+                        error('level选择错误,无论横竖都放不下');
                     end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                elseif flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end
-                else
-                    error('level选择错误,无论横竖都放不下');
-                end               
+                else % 0/2 : 非新level, 必定按照vertical方式(安置) v一定可以，h不一定可以 (注意v可以，而h不可以的可能性，如初始都未hotizntal orientation就不可能)
+                    if ~isflagVert,  error('1');  end
+                    updateStripVertical();
+                end
             end
-            stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1
-        end
-        
-        if ParaArray.whichRotation == 1 && ParaArray.whichRotationHori == 1
-           % 判断语句
-            flagHori = LWStrip(1,thisLevel) >=  LWHItemSortHori(1,iStrip); %判断是否 wleft >= longest
-            flagVert = LWStrip(1,thisLevel) >= LWHItemSortHori(2,iStrip);  %判断是否 wleft >= shortest
-            isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level
-            flagLargerLengthHori = LWStrip(2,thisLevel) <  LWHItemSortHori(2,iStrip); %判断是否 要更新level长/高度
-            flagLargerLengthVert = LWStrip(2,thisLevel) <  LWHItemSortHori(1,iStrip); %判断是否 要更新level长/高度
-            
+        elseif ParaArray.whichRotation == 0
             % 更新strip信息
-            % 如果新level,优先按照horizontally方式(即默认方式安置)
-            if isNewLevel
-                if flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end
-                elseif flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
-                    end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                else      %如果wleft <shorter edge
-                    error('数据错误,无论横竖都放不下');
-                end
-            else  % 如果非level,优先按照vertically方式放
-                if flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end                    
-                elseif flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
-                    end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                else
-                    error('level选择错误,无论横竖都放不下');
-                end
-            end
-            stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1            
-        end
-        
-        if ParaArray.whichRotation == 1 && ParaArray.whichRotationHori == 2
-           % 判断语句
-            flagHori = LWStrip(1,thisLevel) >=  LWHItemSortHori(1,iStrip); %判断是否 wleft >= longest
-            flagVert = LWStrip(1,thisLevel) >= LWHItemSortHori(2,iStrip);  %判断是否 wleft >= shortest
-            isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level
-            flagLargerLengthHori = LWStrip(2,thisLevel) <  LWHItemSortHori(2,iStrip); %判断是否 要更新level长/高度
-            flagLargerLengthVert = LWStrip(2,thisLevel) <  LWHItemSortHori(1,iStrip); %判断是否 要更新level长/高度
-            
-            % 更新strip信息
-            % 如果新level,优先按照horizontally方式(即默认方式安置)
-            if isNewLevel
-                if flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
-                    end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                elseif flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end
-                else      %如果wleft <shorter edge
-                    error('数据错误,无论横竖都放不下');
-                end
-            else  % 如果非level,优先按照vertically方式放
-                if flagVert
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
-                    if flagLargerLengthVert
-                        LWStrip(2,thisLevel) = LWHItemSortHori(1,iStrip); %更新strip高度lleft
-                    end
-                    % 当flagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-                    itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
-                    tep = LWHItemSortHori(1,iStrip);
-                    LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
-                    LWHItemSortHori(2,iStrip) = tep;
-                elseif flagHori
-                    LWStrip(1,thisLevel) = LWStrip(1,thisLevel) ...
-                        - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
-                    if flagLargerLengthHori
-                        LWStrip(2,thisLevel) = LWHItemSortHori(2,iStrip); %更新strip高度lleft
-                    end                    
-                else
-                    error('level选择错误,无论横竖都放不下');
-                end
-            end
-            stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1            
-        end
-        
-        if ParaArray.whichRotation == 0
-            % 555更新strip信息
             LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSort(1,iStrip); %更新wleft
-            if LWHItemSort(2,iStrip) > LWStrip(2,thisLevel)         % 如果物品高度>本strip高度
-                LWStrip(2,thisLevel) = LWHItemSort(2,iStrip); %更新strip高度lleft
-            end
-            stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1
+            LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel),LWHItemSort(2,iStrip)); % 如果物品高度>本strip高度->更新strip高度lleft
         end
-
-        % 3 更新item归属strip信息
+        
+        % 3 更新item归属strip信息itemBeStripMatrixSort + 更新stripBeItemArray
+        stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1
         itemBeStripMatrixSort(1,iStrip) = thisLevel;    %第几个level
         itemBeStripMatrixSort(2,iStrip) = stripBeItemArray(thisLevel); %本level下第几次安置
+        
+        % 4 二级嵌套函数
+        function updateStripVertical()
+            LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSortHori(2,iStrip); %更新wleft by Vertically
+            LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel), LWHItemSortHori(1,iStrip)); %更新strip高度lleft(取最大值)
+            % 当isflagVert==1 不仅标记 还要把物品真正的rotation(反)过去
+            itemRotaSortHori(iStrip) = ~itemRotaSortHori(iStrip);
+            tep = LWHItemSortHori(1,iStrip);
+            LWHItemSortHori(1,iStrip) = LWHItemSortHori(2,iStrip);
+            LWHItemSortHori(2,iStrip) = tep;
+        end
+        function updateStripHorizontal()
+            LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - LWHItemSortHori(1,iStrip); %更新wleft by Horizontally
+            LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel), LWHItemSortHori(2,iStrip)); %更新strip高度lleft(取最大值)
+        end
+            
     end
     
     function printscript()

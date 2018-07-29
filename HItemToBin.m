@@ -78,6 +78,8 @@ da.ItemArray.CoordItemBin=CoordItemBin;
     da.LUArray.LUBeBinMatrix= LUBeBinMatrix;
     da.LUArray.CoordLUBin = CoordLUBin;
     da.LUArray.LURotaFlag = LURotaFlag;
+    
+    
 % printstruct(da);
 % 输出主要结果:获得从1开始每个bin包含的item数据
 % CoordItemBin itemBeBinMatrix
