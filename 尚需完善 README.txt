@@ -19,3 +19,49 @@ V12 180710
 % 输入间隙的转换
 % 输入转换2: 增加间隙后的转换
 3 
+
+V0730
+重要更新可能bug；允许个性化LU旋转设置
+1 增加函数：getLUIDArray 获取LUID类型相关数据(同类型ID的体积，重量，是否可旋转)
+2 增加函数：getITEMIDArray 获取ItemID类型相关数据(同类型ItemID的体积，面积，重量，item是否可旋转)
+3 修改函数：Main()->ParameterInitialize 初始化不同参数后的算法计算
+4 删除：ParaArray.whichRotationAll ParaArray.whichRotationBin LU和BIN颠倒
+
+大幅度修订：
+5 增加/修改有关旋转的配置：
+	5.1 LU和ITEM增加isRota：LU/ITEM是否允许ROTATE的标记（statistical）默认1均可旋转,0表示不可以旋转
+	5.2 LU和ITEM增加Rotaed：LU/ITEM是否做了ROTATE的标记（dynamic）
+	5.3 LU和ITEM的LWH：LU/ITEM做了ROTATE后的LWH（dynamic）（NOTE:不保留原始LWH）
+	5.4 whichRotation = 1/0 全部允许/禁止ROTATE的标记用途不大；依据LU/ITEM的ISROTA判断
+	5.5 增加函数: placeItemHori (按照Hori/Vert方式摆放,返回是否需要对LU/Item旋转)+ getRotaedLWH（依据返回值对LU/ITEM+BUFF进行更新）
+
+
+
+
+1 whichRotation == 1 等 whichRotationHori = 0 等调整 DONE
+2 Rotation旋转等变化 DONE 使用到placeItemHori的地方都有getRotaedLWH -> 即在获取必须旋转的标记后，对LWH进行调整，包括对BUFF的调整；
+	在HItemToStrip增加如下：调整LU的Rotaed更新->后期无需更新
+
+    % LUArray旋转相关,及时更新    
+    nbItem=length(d.ItemArray.Rotaed);
+    % 循环每个item
+    for idxItem=1:nbItem
+        flagThisItem = (d.LUArray.LUBeItemArray(1,:)==idxItem );
+        % 对应位置LU.Rotaed更新
+        if d.ItemArray.Rotaed(idxItem)
+            d.LUArray.Rotaed(flagThisItem) = ~d.LUArray.Rotaed(flagThisItem);
+            % 对应位置LU.LWH更新
+            d.LUArray.LWH(1, flagThisItem) = d.ItemArray.LWH(1, idxItem);
+            d.LUArray.LWH(2, flagThisItem) = d.ItemArray.LWH(2, idxItem);
+        end
+    end
+
+3 Main函数对LU的返回 OK
+4 PLOT问题 OK
+
+TODO
+5 增加数据核对函数（重要部分）
+
+
+        if ParaArray.whichRotation == 1 %TODO 
+            da.LUArray.isRota = ones(size(da.LUArray.isRota));

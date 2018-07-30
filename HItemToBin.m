@@ -14,7 +14,8 @@ LUBeItemArray = da.LUArray.LUBeItemArray;
 stripBeBinMatrix = da.StripArray.stripBeBinMatrix;
 itemBeStripMatrix = da.ItemArray.itemBeStripMatrix;
 
-itemRotaFlag = da.ItemArray.itemRotaFlag;
+itemRotaed = da.ItemArray.Rotaed;
+% % itemRotaFlag = da.ItemArray.itemRotaFlag;
 CoordItemStrip = da.ItemArray.CoordItemStrip;
 
 LWStrip = da.StripArray.LW; % LWStripSort = da.StripArray.LW(:,da.StripArray.striporder);
@@ -25,7 +26,7 @@ CoordItemBin=zeros(2,nItem);
 
 LUBeBinMatrix=zeros(2,nLU);
 CoordLUBin=zeros(2,nLU);
-LURotaFlag=zeros(1,nLU);
+LURotaed=zeros(1,nLU);
     
 % 循环每个bin
 for iBin=1:max(stripBeBinMatrix(1,:))
@@ -61,8 +62,8 @@ for iBin=1:max(stripBeBinMatrix(1,:))
                 [~,thisLU] = find(LUBeItemArray(1,:)==thisItem & LUBeItemArray(2,:)==iLU);
                 if ~isscalar(thisLU), error('意外错误');  end
                 
-                % 更新LURotaFlag 555
-                LURotaFlag(1,thisLU)=itemRotaFlag(1,thisItem);
+                % 更新LURotaed 555
+                LURotaed(1,thisLU)=itemRotaed(1,thisItem);
                 % 更新LUBeBinMatrix 555
                 LUBeBinMatrix(1,thisLU)=iBin;
                 LUBeBinMatrix(2,thisLU)=tmpLUSeq;
@@ -84,9 +85,13 @@ da.ItemArray.CoordItemBin=CoordItemBin;
 
 da.LUArray.LUBeBinMatrix= LUBeBinMatrix;
 da.LUArray.CoordLUBin = CoordLUBin;
-da.LUArray.LURotaFlag = LURotaFlag;
-    
-    
+
+%NOTE: 此处把LU在ITEM阶段的旋转赋值给LU了   
+%GcheekInput放入的对比的是与原始值，此次要替换为再一次相对原始值.
+%% % 下面不需要了, 因为LUArray.Rotaed已经再HItemToStrip更新过了
+% da.LUArray.Rotaed = LURotaed;
+
+
 % printstruct(da);
 % 输出主要结果:获得从1开始每个bin包含的item数据
 % CoordItemBin itemBeBinMatrix
@@ -104,7 +109,7 @@ for iBin = 1:max(da.ItemArray.itemBeBinMatrix(1,:))
     fprintf('%d ',idx);fprintf('\n');
     fprintf('{%d} ',idxSeq);fprintf('\n');
     fprintf(' (%d %d %d) ', da.ItemArray.LWH(1:nDim,idx));fprintf('\n');
-    fprintf(' [%d]     ', da.ItemArray.itemRotaFlag(:,idx));fprintf('\n');
+    fprintf(' [%d]     ', da.ItemArray.Rotaed(:,idx));fprintf('\n');
     fprintf(' {%d %d %d} ', da.ItemArray.CoordItemBin(:,idx));fprintf('\n');
     fprintf('\n');
     
@@ -116,10 +121,10 @@ for iBin = 1:max(da.ItemArray.itemBeBinMatrix(1,:))
     fprintf('{%d} ',idxLUSeq);fprintf('\n');
     fprintf('[%d] ',idxLUItem);fprintf('\n');
     fprintf(' (%d %d %d) ', da.LUArray.LWH(1:nDim,idxLU));fprintf('\n');
-    fprintf(' [%d]     ', da.LUArray.LURotaFlag(:,idxLU));fprintf('\n');
+    fprintf(' [%d]     ', da.LUArray.Rotaed(:,idxLU));fprintf('\n');
     fprintf(' {%d %d %d} ', da.LUArray.CoordLUBin(:,idxLU));fprintf('\n');
     fprintf('\n');
-    
+
     % 按安放顺序展示
     % %     [~,x]=sort(da.LUArray.LUBeBinMatrix(2,idxLU));
     % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq

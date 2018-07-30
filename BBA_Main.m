@@ -67,7 +67,7 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=20;da=getRandDa(n);save('rndDa.mat','da');
+     n=25;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat');
     %%
     %     load insLU3.mat;   % load ins.4at;
@@ -78,60 +78,71 @@ end
 % % % % rectangle('Position',[0.5 0.5 0.3 0.4])
 % % % % rectangle('Position',[0 0 1 1],'EdgeColor','k','FaceColor',[0 .5 .5])
 close all
-r = 1;
+%% Initialize Parameter
+nAlg = 1;
 for i = 1:3 %1-3 best first next均可
-    for j=1:1 %1-2 排序可多选
-        for k=1:1 %0-1 默认1可旋转
-            for l=2:2 %0-2 0不好
-                for p =0:0
-                    for o = 0:0 %车辆rota不如物流rota
-                        tmppar =[i 1 j k l p o];
-                        paArray(r) = changeStruct(tmppar);     %获取参数结构体
-                        daArray(r) = getSolution(da,paArray(r));        %获取可行解结构体
-                        plotSolution(daArray(r),paArray(r));
-                        % 算法判断是否相同类型托盘相邻摆放
-                        flagArray(r) =  isAdjacent(daArray(r));
-                        r=r+1;
-                    end
-                end
+    for j=1:1 %1-2 排序:1 高度（仅保留） 2 最短边
+        for k=1:2 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
+            for l=2:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert
+                % paArray nAlg 
+                paArray(nAlg) = ParameterInitialize( ...
+                             'whichStripH', i,...
+                             'whichBinH',1, ...
+                             'whichSortItemOrder',j, ...
+                             'whichRotation',k, ...
+                             'whichRotationHori', l);
+                 nAlg=nAlg+1;
             end
         end
     end
 end
+nAlg = nAlg - 1;
+
+%% Simulate
+
+fprintf(1,'\nRunning the simulation...\n');
+
+% Run ALL algorithm configure
+for iAlg = 1:nAlg
+    daArray(iAlg) = RunAlgorithm(da,paArray(iAlg));        %获取可行解结构体
+    
+    %   plotSolution(daArray(r),paArray(r));
+    
+    % 算法判断是否相同类型托盘相邻摆放
+    flagArray(iAlg) =  isAdjacent(daArray(iAlg));
+end
 
 %  printstruct(daArray(1,1),'sortfields',0,'PRINTCONTENTS',1)
-% dirtable = struct2table(daArray(1,1).LUArray,'AsArray',true)
-% dirtable2 = struct2table(daArray(1,1))
-% x =dirtable2(1,1)
 
 % 555 算法首先排除bin内相同类型托盘不相邻的解
 % % daArray = daArray(1,logical(flagArray));
 % % paArray = paArray(1,logical(flagArray));
 
-% 算法其次从必定bin内相邻的多组可行解中选择最优结果
+% 从多次算法结果中选出从必定bin内相邻的最优结果
 if ~isempty(daArray)
-    [daMax,parMax] = getbestsol(daArray,paArray); 
+    [daBest,paBest] = getbestsol(daArray,paArray); 
 else
     error('本算例内所有解都存在托盘不相邻的情况 \n');
 end
 
 
-for r = 1:length(parMax)
-
-      getReturnBBA(daMax(r));
-      plotSolution(daMax(r),parMax(r));
-      
-      % 仅计算最好的那个结果
-            x = getSolution(da,parMax(r));
-            plotSolution(x,parMax(r));
+% Return length(parMax) 个 solutions to BBA
+if ~isempty(daBest)
+    bestOne = 1;
+    getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
+    plotSolution(daBest(bestOne),paBest(bestOne)); % == plotSolution(RunAlgorithm(da,paBest(bestOne)) ,paBest(bestOne));    
+else
+    error('本算例内未找出最优解返回BBA \n');
 end
+
+fprintf(1,'Simulation done.\n');
+
+%END MAIN
 
 % printstruct(daSMax);
 % % if nargin ==0,   plotSolution(daSMax);  end
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % close all;
-%END MAIN
-
       
 %% ******* 嵌套函数  **********
 
@@ -147,10 +158,15 @@ end
         Res2_CoordLUBin=daMax.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
         
         % 参数3 - LU的长宽高(旋转后)
-        % 增加间隙-修订LWHRota为减小Buffer后的实际数据变量
-        daMax.LUArray.LWHRota = daMax.LUArray.LWHRota - daMax.LUArray.BUFF;
-        Res3_LWHRota=daMax.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
-        
+        % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
+        % 以下是V2      
+        daMax.LUArray.LWHOriRota = daMax.LUArray.LWH - daMax.LUArray.BUFF;
+        Res3_LWHRota=daMax.LUArray.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+            % 以下是V1
+            %         daMax.LUArray.LWHRota = daMax.LUArray.LWHRota - daMax.LUArray.BUFF;
+            %         Res3_LWHRota=daMax.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+
+       
         % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
         LUBeItemArray=daMax.LUArray.LUBeItemArray(1,:);
         LUID=daMax.LUArray.ID;
@@ -172,15 +188,54 @@ end
 
 
 %% ******* 局部函数 ****************
-function p = changeStruct(PARA)
-    p.whichStripH = PARA(1);
-    p.whichBinH = PARA(2);
-    p.whichSortItemOrder = PARA(3);
-    p.whichRotation = PARA(4);
-    p.whichRotationHori = PARA(5);
-    p.whichRotationAll = PARA(6);
-    p.whichRotationBin = PARA(7);
+
+%%PARAMETERNITIALIZE Initialize the parameter data structure.
+%
+%% Form
+%  p = ParameterInitialize( varargin )
+%
+%% Description
+% Initializes the algorithm's parameter data structure using parameter pairs.
+%
+%% Inputs
+% varargin:  ('parameter',value,...)
+%
+% 'whichStripH'                             (1,1) 
+% 'whichBinH'                               (1,1) 
+% 'whichSortItemOrder'               (1,1)
+% 'whichRotation'                         (1,1)
+% 'whichRotationHori'                  (1,1)
+%
+%% Outputs
+%   p	(.)  Data structure
+function p = ParameterInitialize( varargin )
+
+% Defaults
+p.whichStripH = 1;
+p.whichBinH = 1;
+p.whichSortItemOrder = 1;
+p.whichRotation = 1;
+p.whichRotationHori = 1;
+
+n = length(varargin);
+
+for k = 1:2:length(varargin)
+    switch varargin{k}
+        case 'whichStripH'
+            p.whichStripH                        = varargin{k+1};
+        case 'whichBinH'
+            p.whichBinH                         = varargin{k+1};
+        case 'whichSortItemOrders'
+            p.whichSortItemOrder          = varargin{k+1};
+        case 'whichRotation'
+            p.whichRotation                 = varargin{k+1};
+        case 'whichRotationHori'
+            p.whichRotationHori         = varargin{k+1};
+    end
 end
+
+end
+
 
 function plotSolution(da,par)
 %% 画图
@@ -197,12 +252,13 @@ da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size
 plot2DBPP(da,par);
 end
 
-function [da] = getSolution(da,ParaArray)
+function [da] = RunAlgorithm(da,ParaArray)
         
         %% 检验Input输入数据
 %         da.LUArray.LWH
+
         da = GcheckInput(da,ParaArray);
-        
+        da.LUArray.Rotaed
         %% 启发式: LU到Item的算法
          printstruct(da);
         [da] = HLUtoItem(da,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
@@ -210,8 +266,10 @@ function [da] = getSolution(da,ParaArray)
         lb = computerLB(da);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
         printstruct(da);
+        printstruct(da.ItemArray);
         [da] = HItemToStrip(da,ParaArray);
         %% 计算strip装载率
+        printstruct(da);
         da = computeLoadingRateStrip(da);
         function da = computeLoadingRateStrip(da)
             % 初始化
@@ -251,7 +309,7 @@ function [da] = getSolution(da,ParaArray)
                     %内部Item的itemRotaFlag调整 
                     idxItem = find(da.ItemArray.itemBeStripMatrix(1,:)==tmpset );
                     if isscalar(idxItem)
-                        da.ItemArray.itemRotaFlag(idxItem) = ~da.ItemArray.itemRotaFlag(idxItem);
+                        da.ItemArray.itemRotaFlag(idxItem) = ~da.ItemArray.Rotaed(idxItem);
                     end                    
                     %内部LU的LURotaFlag 不調 還未到 %内部Item的CoordItemStrip不調                    
                 end
@@ -262,7 +320,7 @@ function [da] = getSolution(da,ParaArray)
         [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
         printstruct(da);
-        [da] = HItemToBin(da);         
+        [da] = HItemToBin(da);
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
          % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
@@ -294,15 +352,22 @@ function [da] = getSolution(da,ParaArray)
             %每个bin的有限装载比率
             da.BinSArray.ItemloadingrateLimit =  da.BinSArray.Itemvolume ./ da.BinSArray.BinvolumeLimit;
         end
-        %% 修正输出结果（增加LWHRota:旋转后的LWH,考虑减去buffer因素)
-        da.LUArray.LWHRota = da.LUArray.LWH;
-        nLU = numel(da.LUArray.LURotaFlag);
-        for iLU=1:nLU
-            if da.LUArray.LURotaFlag(iLU)
-                da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
-                da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
-            end
-        end
+        %% 修正输出结果(纯粹为了返回给刘)（原da仅有Item的Rota,现增加LWHRota:旋转后的LWH,考虑减去buffer因素)
+        printstruct(da);
+        
+        % 似乎无用, 因为在GcheckInput中的LWH已经是Rota后的值了 直接返回LWH即可???
+        % 似乎不可以, LU到Item处还是做了Rota, 应该把Item的Rotaed返回到LU
+        % 似乎此处是返回了最原始的LWH值, 
+        % 此处无需 - 因为LWH已经是旋转后的最终值了
+% % %         da.LUArray.LWHRota = da.LUArray.LWH;
+% % %         nLU = numel(da.LUArray.Rotaed);
+% % %         for iLU=1:nLU
+% % %             if da.LUArray.Rotaed(iLU)
+% % %                 da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
+% % %                 da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
+% % %             end
+% % %         end
+%         printstruct(da);
 end
 
     %% ************ 判断是否相同类型托盘相邻摆放
@@ -380,8 +445,13 @@ idxBinLimit=find(resLoadingRateBinLimit==max(resLoadingRateBinLimit));
 % % if isempty(intersect(idxBin,idxStrip))
 idx =idxBin;
 if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
-idx =intersect(idx,idxStripLimit);
-if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
+idx0 =intersect(idx,idxStripLimit);
+if ~isempty(idx0),  
+    idx = idx0; 
+else
+    warning('idx0 is empty');
+end
+% if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
 idx1 = intersect(idx,idxBinLimit);
 if ~isempty(idx1),  
     idx = idx1; 
@@ -404,11 +474,6 @@ if ~isempty(idx)
 end
 
 end
-
-
-
-
-
 
 
 

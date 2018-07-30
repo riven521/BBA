@@ -1,4 +1,5 @@
 function [] = plot2DBPP(da,ParaArray)
+
 % 作图函数:二维BPP
 % 初始化
 nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
@@ -15,9 +16,9 @@ itemBeBinMatrix = da.ItemArray.itemBeBinMatrix;
 CoordItemBin = da.ItemArray.CoordItemBin;
 itemLWH = da.ItemArray.LWH;
 itemID = da.ItemArray.ID;
-if ParaArray.whichRotation == 1    
-    itemRotaFlag = da.ItemArray.itemRotaFlag; %增加rotation后增
-end
+% if ParaArray.whichRotation == 1    
+    ItemRotaed = da.ItemArray.Rotaed; %增加rotation后增 itemRotaFlag
+% end
 
 % sort 排序按bin的顺序 逐个bin画图
 [~,binorder] = sort(itemBeBinMatrix(1,:),'ascend');
@@ -26,9 +27,9 @@ itemBeBinMatrixSort = itemBeBinMatrix(:,binorder);
 CoordItemBinSort = CoordItemBin(:,binorder);
 itemLWHSort = itemLWH(:,binorder);
 itemIDSort = itemID(:,binorder);
-if ParaArray.whichRotation == 1    
-    itemRotaFlagSort = itemRotaFlag(:,binorder); %增加rotation后增
-end
+% if ParaArray.whichRotation == 1    
+    ItemRotaedSort = ItemRotaed(:,binorder); %增加rotation后增
+% end
 
 % 1 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
 nBin = max(itemBeBinMatrix(1,:));
@@ -44,9 +45,9 @@ for iBin = 1:nBin
     drawItemCoordMatrix = CoordItemBinSort(:,idxDrawItem);
     drawItemLWH = itemLWHSort(:,idxDrawItem);
     drawItemId = itemIDSort(:,idxDrawItem);
-    if ParaArray.whichRotation == 1    
-        drawItemRotaMatrix = itemRotaFlagSort(:,idxDrawItem); %增加rotation后增
-    end
+%     if ParaArray.whichRotation == 1    
+% %         drawItemRotaMatrix = ItemRotaedSort(:,idxDrawItem); %增加rotation后增
+%     end
     % 画图：画本次iBin
     binCenter = [iterWidth+widthBin/2 lengthBin/2];
     DrawRectangle([binCenter widthBin lengthBin 0],'--')    ;
@@ -61,12 +62,12 @@ for iBin = 1:nBin
             drawItemCoordMatrix(2,iItem)+itemLength/2 ];
 
         % 增加对rotation的判断
-        if ParaArray.whichRotation == 1 && drawItemRotaMatrix(iItem)
-            itemWidth = drawItemLWH(2,iItem);
-            itemLength = drawItemLWH(1,iItem);            
-            itemCenter = [iterWidth+drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
-                        drawItemCoordMatrix(2,iItem)+itemLength/2 ];
-        end
+%         if ParaArray.whichRotation == 1 && drawItemRotaMatrix(iItem)
+%             itemWidth = drawItemLWH(2,iItem);
+%             itemLength = drawItemLWH(1,iItem);            
+%             itemCenter = [iterWidth+drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
+%                         drawItemCoordMatrix(2,iItem)+itemLength/2 ];
+%         end
         
         % 增加对本次iItem的类型（颜色）判断
         itemID = drawItemId(iItem);
