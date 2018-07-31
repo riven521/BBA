@@ -25,8 +25,8 @@ function [da] = getRandDa(n)
                                                 da.BinArray.LWH = [2400   5000   2400];%[2400   12750   2400];
     da.BinArray.BUFF = [50;50;0];
     da.LUArray.BUFF = [100;100];%[2;2];
-%     da.BinArray.LWH = da.BinArray.LWHREAL - da.BinArray.BUFF;
-%     da.LUArray.LWH = da.LUArray.LWHREAL + da.LUArray.BUFF;
+                    %     da.BinArray.LWH = da.BinArray.LWHREAL - da.BinArray.BUFF;
+                    %     da.LUArray.LWH = da.LUArray.LWHREAL + da.LUArray.BUFF;
     da.BinArray.Weight = 1000;
     da.LUArray.Weight = da.LUArray.LWH(1,:);
 end

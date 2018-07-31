@@ -1,86 +1,52 @@
-function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
-    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF)
-% 输入六个参数 LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF
-%  LUID - 行向量(n列) 托盘类型 相同数字表明同一类型,允许堆垛
-%  LULWH - 矩阵(3行*n列) 托盘长宽高 画图使用该值
-%  BINLWH - 列向量(3行) 车辆长宽高 目前仅考虑单车型 TODO 后期增加到多车型按顺序使用
-%  PARA_whichRotationHori - 标量(1*1) 允许rotation,但考虑rotation的差异
-%  LUBUFF - 列向量(2行) 托盘间长宽的总间隙(2倍的单边长宽间隙) 可用托盘长宽高=每个托盘的实际长宽高+增加的buff
-%  BINBUFF - 列向量(3行) 车辆的长宽高的总间隙(2倍的单边长宽间隙,1倍的高度间隙) 可用车型长宽高=车型的实际长宽高-BINBUFF
-% 输出四个参数 Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq
-%  Res1_LUBeBinMatrix - 矩阵(2*n列)
-%  Res2_CoordLUBin - double矩阵(3*n列)
-%  Res3_LWHRota - 矩阵(*n列)
-%  Res4_DrawSeq - double矩阵(2*n列)
+%% BBA_MAIN demo
+%% Form
+%    [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ... 
+%    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+%
+%% Description
+%   BBA_Main.
+%
+%% Inputs
+%   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛
+%   LULWH                (3,n)   托盘宽长高 
+%   BINLWH              (3,1)   车型宽长高（目前仅考虑单车型 TODO 后期增加到多车型按顺序使用）
+%   PARANOUSE       (1,1)   标量(1*1) 允许rotation,但考虑rotation的差异
+%   LUBUFF               (2,1)   托盘间宽长的总间隙(2倍的单边宽长间隙) 可用托盘长宽高=每个托盘的实际长宽高+增加的buff
+%   LUWEIGHT           (1,n)  托盘重量
+%   BINWEIGHT         (1,1)  车型最大承载重量
+%   LUISROTA            (1,n)  托盘是否允许旋转
+%
+%% Outputs
+%   Res1_LUBeBinMatrix	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
+%   Res2_CoordLUBin      (3,n)    每个LU的X,Y,Z
+%   Res3_LWHRota          (3,n)    每个LU的宽长高（旋转后的：实际值）
+%   Res4_LUBeItemID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
+%
 
-%% Call 本函数:
+function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
+    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+
+%% Initialize Data Sturcture
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
-% LUArray = struct('ID',[],'LWH',[],...
-%     'weight',[],'Lbuffer',[],'Wbuffer',[],'Type',[],'Material',[]);
-% ItemArray = struct('ID',[],'LWH',[],...
-%     'weight',[],'Lbuffer',[],'Wbuffer',[]);
-% StripArray = struct('ID',[],'LWH',[],... %ONLY LW
-%     'weight',[],'Lbuffer',[],'Wbuffer',[]);
-% BinArray = struct('ID',[],'LWH',[],...
-%    'Capacity',[],'Lbuffer',[],'Wbuffer',[],'Hbuffer',[]);
-% da = struct('LUArray',LUArray,'ItemArray',ItemArray,'StripArray',StripArray,'BinArray',BinArray);
-%% 1参数初始化
-% whichStripH 1 best 2 first 3 next; whichBinH 1 best; TODO 增加其它分批方式
-% whichSortItemOrder 1 长高递减 2 最短边递减; 
-% whichRotation 1:允许rotation 0:禁止
-% rotation组合 1 1 2 1 0 (1 1 2 1 1 )(1 1 2 1 2) % 非rotation组合 1 1 1 0 0 （2/3 1 1 0 0）
-% whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
-% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
-% % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
-% %     'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
-%% 2结构体da赋值
-if nargin ~=0 %如果参数不为空
-    da.LUArray.ID = LUID;
-    da.LUArray.LWH = LULWH;   %LWHREAL 真实尺寸    
-    da.BinArray.LWH = BINLWH; %LWHREAL 真实尺寸    
-    % 增加间隙 -
-    da.LUArray.BUFF = LUBUFF; %BUFF 托盘LU的间隙
-    da.BinArray.BUFF = BINBUFF; %BUFF 车辆BIN的间隙
-    % 增加重量 -
-    da.BinArray.Weight = 1000;
-    da.LUArray.Weight = ones(numel(LUID),1);       
-else
-%%
-%     da.LUArray.ID = [1 1 2 2];
-%     da.BinArray.LWH = [5;20;4]';
-%     da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
-%     da.LUArray.BUFF = [0,0];
-%     da.BinArray.BUFF = [0,0,0];
-%     da.BinArray.Weight = 1000;
-%     da.LUArray.Weight = da.LUArray.LWH(1,:);
-    
-% %         da.LUArray.ID = [5236934585 4 5236934585 5236934585];
-% %     da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
-% %     da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
-% %     
-% %     da.LUArray.BUFF = [0,0]';
-% %     da.BinArray.BUFF = [0,0,0]'; 
-            
-         % 增加重量 -
-%          da.BinArray.Weight = 1000;
-%     da.LUArray.Weight = da.LUArray.LWH(1,:);
-    %% 产生随机算例
-     n=500;da=getRandDa(n);save('rndDa.mat','da');
-     load('rndDa.mat');
-    %%
-    %     load insLU3.mat;   % load ins.4at;
-    %     da.LUArray.ID = LUid;%     da.LUArray.LWH = w;%     da.BinArray.LWH = W;
-    %     clear LUid w W;%     error('No input! ');
-end
-%% Matlab画矩阵
-% % % % rectangle('Position',[0.5 0.5 0.3 0.4])
-% % % % rectangle('Position',[0 0 1 1],'EdgeColor','k','FaceColor',[0 .5 .5])
 close all
+if nargin ~=0
+    da = DataInitialize( ...
+        'LUID', LUID,...
+        'LULWH',LULWH, ...
+        'LUBUFF',LUBUFF, ...
+        'LUWEIGHT', LUWEIGHT, ...
+        'LUISROTA', LUISROTA, ...
+        'BINLWH',BINLWH, ...
+        'BINBUFF', BINBUFF, ...
+        'BINWEIGHT', LUWEIGHT);
+else
+    da = DataInitialize(5); %0 默认值; >0 随机产生托盘n个算例
+end
+
 %% Initialize Parameter
 nAlg = 1;
-for i = 1:3 %1-3 best first next均可
+for i = 1:1 %1-3 best first next均可
     for j=1:1 %1-2 排序:1 高度（仅保留） 2 最短边
         for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
             for l=2:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert
@@ -100,7 +66,7 @@ for i = 1:3 %1-3 best first next均可
 end
 nAlg = nAlg - 1;
 
-%% Simulate
+%% Simulate - All ALGORITHM
 
 fprintf(1,'\nRunning the simulation...\n');
 
@@ -108,7 +74,7 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     daArray(iAlg) = RunAlgorithm(da,paArray(iAlg));        %获取可行解结构体
     
-    plotSolution(daArray(iAlg),paArray(iAlg));
+%     plotSolution(daArray(iAlg),paArray(iAlg));
     
     % 算法判断是否相同类型托盘相邻摆放
     flagArray(iAlg) =  isAdjacent(daArray(iAlg));
@@ -116,6 +82,7 @@ end
 
 %  printstruct(daArray(1,1),'sortfields',0,'PRINTCONTENTS',1)
 
+%% Simulate - CHOOSE BEST ONE
 % 555 算法首先排除bin内相同类型托盘不相邻的解
 % % daArray = daArray(1,logical(flagArray));
 % % paArray = paArray(1,logical(flagArray));
@@ -127,7 +94,7 @@ else
     error('本算例内所有解都存在托盘不相邻的情况 \n');
 end
 
-
+%% POST PROCESSING
 % Return length(parMax) 个 solutions to BBA
 if ~isempty(daBest)
     bestOne = 1;
@@ -139,16 +106,13 @@ end
 
 fprintf(1,'Simulation done.\n');
 
+% mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
+% d = rmfield(d, {'BinArray', 'LUArray'});
+
 %END MAIN
 
-% printstruct(daSMax);
-% % if nargin ==0,   plotSolution(daSMax);  end
-% mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-% close all;
-% d = rmfield(d, {'BinArray', 'LUArray'});
       
 %% ******* 嵌套函数  **********
-
 
     function getReturnBBA(daMax) 
         %% 返回输出结果(原始顺序) 输出4个参数
@@ -164,7 +128,7 @@ fprintf(1,'Simulation done.\n');
         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
         % 以下是V2      
         daMax.LUArray.LWHOriRota = daMax.LUArray.LWH - daMax.LUArray.BUFF;
-        Res3_LWHRota=daMax.LUArray.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        Res3_LWH=daMax.LUArray.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
             % 以下是V1
             %         daMax.LUArray.LWHRota = daMax.LUArray.LWHRota - daMax.LUArray.BUFF;
             %         Res3_LWHRota=daMax.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
@@ -173,7 +137,7 @@ fprintf(1,'Simulation done.\n');
         % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
         LUBeItemArray=daMax.LUArray.LUBeItemArray(1,:);
         LUID=daMax.LUArray.ID;
-        Res4_DrawSeq = [LUBeItemArray; LUID];
+        Res4_LUBeItemID = [LUBeItemArray; LUID];
         
         % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
         %% 返回输出结果(安放顺序)
@@ -191,6 +155,76 @@ end
 
 
 %% ******* 局部函数 ****************
+
+%%DATAITIALIZE Initialize the DATA data structure.
+%
+%% Form
+%  d = DataInitialize( varargin )
+%
+%% Description
+% Initializes the INPUT data structure using parameter pairs.
+%
+%% Inputs
+% varargin:  ('parameter',value,...)
+% varargin:  (value) value's random LU input
+%
+%% Outputs
+%   d	(.) DATA data structure
+function d = DataInitialize( varargin )
+
+% Defaults
+d.LUArray.ID = [1 1 2 2];
+d.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
+d.LUArray.isRota = [1 1 1 1];
+d.BinArray.LWH = [5;20;4]';
+
+%     da.LUArray.ID = [1 1 2 2];
+%     da.BinArray.LWH = [5;20;4]';
+%      d.LUArray.isRota = [1 1 1 1];
+%     da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
+    
+% %     da.LUArray.ID = [5236934585 4 5236934585 5236934585];
+% %     d.LUArray.isRota = [1 1 1];
+% %     da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
+% %     da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
+
+d.LUArray.BUFF = [0,0];
+d.BinArray.BUFF = [0,0,0];
+d.BinArray.Weight = 1000;
+d.LUArray.Weight = d.LUArray.LWH(1,:);
+   
+
+
+n = length(varargin);
+
+if n == 1 && varargin{1}~=0
+    d=getRandDa(varargin{1});
+%     save('rndDa.mat','d');
+%     load('rndDa.mat');
+end
+
+for k = 1:2:length(varargin)
+    switch varargin{k}
+        case 'LUID'
+            d.LUArray.ID                        = varargin{k+1};
+        case 'LULWH'
+            d.LUArray.LWH                    = varargin{k+1};
+        case 'LUBUFF'
+            d.LUArray.BUFF                   = varargin{k+1};
+        case 'LUWEIGHT'
+            d.LUArray.Weight                = varargin{k+1};            
+        case 'LUISROTA'
+            d.LUArray.isRota                = varargin{k+1};            
+        case 'BINLWH'
+            d.BinArray.LWH                  = varargin{k+1};
+        case 'BINBUFF'
+            d.BinArray.BUFF                 = varargin{k+1};
+        case 'BINWEIGHT'
+            d.BinArray.Weight              = varargin{k+1};            
+    end
+end
+
+end
 
 %%PARAMETERNITIALIZE Initialize the parameter data structure.
 %
@@ -1008,3 +1042,26 @@ end
 % % binLeftMatrix
 % % pcoordItemBinMatrix
 % % end
+%% Call 本函数:
+% clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
+% rng('default');rng(1); % NOTE 是否随机的标志
+% LUArray = struct('ID',[],'LWH',[],...
+%     'weight',[],'Lbuffer',[],'Wbuffer',[],'Type',[],'Material',[]);
+% ItemArray = struct('ID',[],'LWH',[],...
+%     'weight',[],'Lbuffer',[],'Wbuffer',[]);
+% StripArray = struct('ID',[],'LWH',[],... %ONLY LW
+%     'weight',[],'Lbuffer',[],'Wbuffer',[]);
+% BinArray = struct('ID',[],'LWH',[],...
+%    'Capacity',[],'Lbuffer',[],'Wbuffer',[],'Hbuffer',[]);
+% da = struct('LUArray',LUArray,'ItemArray',ItemArray,'StripArray',StripArray,'BinArray',BinArray);
+
+% 1参数初始化
+% whichStripH 1 best 2 first 3 next; whichBinH 1 best; TODO 增加其它分批方式
+% whichSortItemOrder 1 长高递减 2 最短边递减; 
+% whichRotation 1:允许rotation 0:禁止
+% rotation组合 1 1 2 1 0 (1 1 2 1 1 )(1 1 2 1 2) % 非rotation组合 1 1 1 0 0 （2/3 1 1 0 0）
+% whichRotationHori 0:在安置顺序时按FBS_{RG}方式; 1：New/NoNew按Horizon方式 2：New/NoNew按Vertical方式
+% ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+%     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
+% % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
+% %     'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
