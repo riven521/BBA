@@ -89,25 +89,37 @@ printscript();
     function thisBin = getThisBin()        
         if ParaArray.whichBinH == 1 % 1 bestfit
             % 条件: 寻找 bin的剩余高度 >= 本strip的高度 集合中的最小值
-            flag = find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip), 1);
-            
+            flag = find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip));
             if isempty(flag)
-                iBin = iBin + 1;
-                thisBin = getThisBin();
-                
+                iBin = iBin + 1; % 如果高度不满足，则bin升级
+                thisBin = getThisBin();                
             else
-                tepMin = LWBin(2,1:iBin);
-                tepMin = min(tepMin(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin
-                thisBin = find(LWBin(2,1:iBin)==tepMin); %找到该值tepMin对应的bin序号
-                if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');          end
+                tepBins = LWBin(2,1 : iBin); %获取所有已安排或新安排的bin的剩余高度向量tepBins
+                tepMin = min(tepBins(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin
+                thisBin = find(LWBin(2,1:iBin)==tepMin); %找到该值tepMin对应的那个/些bin序号
+                if ~all(ismember(thisBin,flag)),      error('Not all thisBin belongs to flag ');        end
                 if length(thisBin)>1
                     thisBin = thisBin(1);
                 end
             end
         elseif ParaArray.whichBinH == 2 % 1 firstfit
-            
+            flag =  find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip));
+            if isempty(flag)
+                iBin = iBin + 1; 
+                thisBin = getThisBin();  
+            else
+                thisBin = flag(1);
+                if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');       end
+            end
         elseif ParaArray.whichBinH == 3 % 1 nextfit
-            
+            flaged = find(LWBin(2, iBin) >= LWStripSort(2,iStrip) );
+            if  isempty(flaged)  %注意与之前~flag的区别
+                iBin = iBin + 1; 
+                thisBin = getThisBin();  
+            else
+                if  isempty(flaged) ,   error(' 不可能的错误 ');      end
+                thisBin = iBin; % 当前bin一定放的下
+            end
         else
             error('错误参数设置');
         end

@@ -50,16 +50,7 @@ ItemLWRotaSort = sortedItemArray.LWH(1:nDim,:); %ItemLWSortHori
 ItemRotaedSort = sortedItemArray.Rotaed; % ItemRotaSortHori % itemRotaSort = zeros(1,size(d.ItemArray.LWH,2));
 ItemisRotaSort = sortedItemArray.isRota;
 Itemorder = d.ItemArray.itemorder;
-                    % 获取1 ItemLWSort 排序后的ITEM的长宽高 2 itemRotaSort 排序后的FLAG 全部为0 不重要
-                    % if ParaArray.whichRotation == 0
-                    %     ItemLWSort = sortedItemArray.LWH(1:nDim,:); 
-                    %     itemRotaSort = zeros(1,size(d.ItemArray.LWH,2));
-                    % end %itemRotaSort = sortedItemArray.itemRotaFlag; 
-                    % 获取1 ItemLWSort Hori orienting后LWH （长边平行与bottom后）
-                    % 2 ItemRotaSort 原始item是否rotation  0 代表horizontal orientation 1 代表 vertical orientation
-                    % if ParaArray.whichRotation == 1,
-                    %     [ItemLWSort, ItemRotaSort] = horiOrient(ItemLWSort); 
-                    % end
+
 %%
 % 获取itemBeStripMatrixSort: 每个排序后Item在哪个Strip内  以及顺序
 % 获取LWStrip:  新生成的Strip的长宽
@@ -80,12 +71,10 @@ while 1
     if iItem > nItem, break; end
     
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
-
     thisLevel = getThisLevel();     %iLevel会在次函数内不断递增，永远指示当前最新的level
     insertItemToStrip(thisLevel);
     
-%      plot2DStrip(); %迭代画图
-    
+%      plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
 
@@ -136,19 +125,11 @@ end
 % LWStrip
 % 获取LWStrip:  新生成的strip的长宽
 
-    d.StripArray.LW = LWStrip(:,LWStrip(2,:)>0); % 没有顺序 + 去除未使用的Strip
-    
-                % % % 即使没有RotationFlage 也有该数组 判断是否Rotation TO BE DELE
-                %     if ParaArray.whichRotation == 0,   itemRotaFlag(:,Itemorder) = itemRotaSort;  end
-                %     if ParaArray.whichRotation == 1,   itemRotaFlag(:,Itemorder) = ItemRotaedSort;   end
-                %     d.ItemArray.itemRotaFlag = itemRotaFlag;
-
+    d.StripArray.LW = LWStrip(:,LWStrip(2,:)>0); % 没有顺序 + 去除未使用的Strip    
     
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
-%     dap = rmfield(d, {'BinArray', 'LUArray'});  printstruct(dap);
-
 
     %% 嵌套函数        
     function order = getITEMorder()        
@@ -168,25 +149,6 @@ end
        end        
         if ~isrow(order), order=order'; end
     end
-
-% %     function order = getITEMorder()
-% %         ItemLWRota
-% %         tmpLWHItem = d.ItemArray.LWH(1:nDim,:);
-% %         tmpIDItem =     d.ItemArray.ID(1,:);
-% %         if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
-% %             tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
-% %             [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
-% %         end
-% %         if ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
-% %             tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
-% %             [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
-% %              %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
-% %         end
-% %         if ParaArray.whichSortItemOrder == 3  %Descend of total area 总表面积  ->
-% % %             printstruct(d);
-% %        end        
-% %         if ~isrow(order), order=order'; end
-% %     end
 
     function item = getSortedITEM(order)
         item = structfun(@(x) x(:,order),d.ItemArray,'UniformOutput',false);
@@ -210,7 +172,7 @@ end
                 thisLevel = getThisLevel();
             else
                 % 获取thisLevel: 唯一与FF区别从这到thisLevel的计算（选中满足条件且最小的）
-                tmpLevels = LWStrip(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tepAvailableLevelArray
+                tmpLevels = LWStrip(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tmpLevels
                 tepMinLeftWdith = min(tmpLevels(flag));                      %找出tepAvailableLevelArray中可容纳本iITem的剩余水平宽度的最小值，更新为tepMinLeftWdith
                 thisLevel = find(tmpLevels==tepMinLeftWdith);            %找出与最小值对应的那个/些level
                 if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
@@ -256,8 +218,8 @@ end
     end
 
     function insertItemToStrip(thisLevel)
-%         CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
 %         %为了matlab的coder 无用
+%         CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
 %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
 %         stripBeItemArray=stripBeItemArray;itemBeStripMatrixSort=itemBeStripMatrixSort;
         
@@ -269,27 +231,19 @@ end
         % 2 更新stripBeItemArray
         if ItemisRotaSort(iItem) == 1 %此Item可以旋转
             % 判断语句: 2个
-                                    %             isflagHori = LWStrip(1,thisLevel) >=  ItemLWSort(1,iItem); %判断是否 wleft >= longest
-                                    %             isflagVert = LWStrip(1,thisLevel) >= ItemLWSort(2,iItem);  %判断是否 wleft >= shortest
-            isflagCurr = LWStrip(1,thisLevel) >=  ItemLWRotaSort(1,iItem); %判断是否current's strip剩余宽度 >= 当前高度
+            isflagCurr = LWStrip(1,thisLevel) >=  ItemLWRotaSort(1,iItem); %判断是否current's strip剩余宽度 >= 当前高度（非旋转）
             isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level            
             % 更新strip信息
             if isNewLevel %无论如何,均可以放入,无论何种摆放,因此:直接更新（Item已按Hori/Vert摆放过）
-%                 if ParaArray.whichRotationHori == 1 % 新level, 必定按照horizontally方式摆放
-%                     updateLWStrip();               
-%                 elseif ParaArray.whichRotationHori == 2 % 新level, 必定按照vertical方式摆放
                     updateLWStrip();
-            else % 如果非新level 如可以摆放,放入; 否则,调换大小放入
-%                 if ParaArray.whichRotationHori == 1 % 非新level, 优先按照horizontall方式(安置)
+            else % 如果非新level 如可以摆放,放入; 否则,调换长宽（旋转）后放入
                     if isflagCurr
                         updateLWStrip();
                     else
                         rotateItem();
                         updateLWStrip();
                     end
-    %                 elseif ParaArray.whichRotationHori == 2 % 2 : 非新level, 优先按照vertical方式(安置)
-                        %v一定可以，h不一定可以 (注意v可以，而h不可以的可能性，如初始都未hotizntal orientation就不可能)
-                end            
+             end            
         elseif ItemisRotaSort(iItem) == 0 %此Item不可以旋转
             % 更新strip信息
             updateLWStrip();
@@ -373,18 +327,6 @@ end
                 itemLength = drawItemLWH(2,iplotItem);
                 itemCenter = [drawItemCoordMatrix(1,iplotItem)+itemWidth/2 ...
                     drawItemCoordMatrix(2,iplotItem)+itemLength/2 ];
-                
-                % 增加对rotation的判断 内部嵌套函数不需要
-                %             if ParaArray.whichRotation == 1
-                %                 drawItemRotaMatrix = ItemRotaSort(:,idxDrawItem); %增加rotation后增
-                %             end
-                
-                % %         if ParaArray.whichRotation == 1 && drawItemRotaMatrix(iItem)
-                % %             itemWidth = drawItemLWH(2,iItem);
-                % %             itemLength = drawItemLWH(1,iItem);
-                % %             itemCenter = [drawItemCoordMatrix(1,iItem)+itemWidth/2 ...
-                % %                         drawItemCoordMatrix(2,iItem)+itemLength/2 ];
-                % %         end
                 
                 % 增加对本次iItem的类型（颜色）判断
                 itemID = drawItemId(iplotItem);

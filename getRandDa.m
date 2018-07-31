@@ -2,7 +2,7 @@ function [da] = getRandDa(n)
 % 普通函数:随机产生输入数据
       rng(1);
 %      rng('default');
-                                                ID = randi([11,13],1,n); %ID类型数
+                                                ID = randi([11,18],1,n); %ID类型数
     LWH = zeros(n,3);
     isRota = zeros(1,n);
     [uniID] = unique(ID);
@@ -10,8 +10,8 @@ function [da] = getRandDa(n)
     isRotaId = randi([0,1], 1, nUniId);
     for i=1: nUniId
     idx = find(ID(:)==uniID(i));
-                                                LWH(idx,1) = randi([800,1000]);
-                                                LWH(idx,2) = randi([1000,1200]);
+                                                LWH(idx,1) = randi([100,1000]);
+                                                LWH(idx,2) = randi([100,1000]);
                                                 isRota(1,idx) = isRotaId(i);
         for j=1:length(idx)
                                                 LWH(idx(j),3) = randi([500,1000]);%randi([1000,1500]);
@@ -23,8 +23,8 @@ function [da] = getRandDa(n)
     
     da.LUArray.LWH = LWH';
                                                 da.BinArray.LWH = [2400   5000   2400];%[2400   12750   2400];
-    da.BinArray.BUFF = [0;0;0];
-    da.LUArray.BUFF = [10;20];%[2;2];
+    da.BinArray.BUFF = [50;50;0];
+    da.LUArray.BUFF = [100;100];%[2;2];
 %     da.BinArray.LWH = da.BinArray.LWHREAL - da.BinArray.BUFF;
 %     da.LUArray.LWH = da.LUArray.LWHREAL + da.LUArray.BUFF;
     da.BinArray.Weight = 1000;

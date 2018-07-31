@@ -67,7 +67,7 @@ else
 %          da.BinArray.Weight = 1000;
 %     da.LUArray.Weight = da.LUArray.LWH(1,:);
     %% 产生随机算例
-     n=25;da=getRandDa(n);save('rndDa.mat','da');
+     n=500;da=getRandDa(n);save('rndDa.mat','da');
      load('rndDa.mat');
     %%
     %     load insLU3.mat;   % load ins.4at;
@@ -82,16 +82,18 @@ close all
 nAlg = 1;
 for i = 1:3 %1-3 best first next均可
     for j=1:1 %1-2 排序:1 高度（仅保留） 2 最短边
-        for k=1:2 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
+        for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
             for l=2:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert
+                for m=3:3 %1-3 best first next均可
                 % paArray nAlg 
                 paArray(nAlg) = ParameterInitialize( ...
                              'whichStripH', i,...
-                             'whichBinH',1, ...
+                             'whichBinH',m, ...
                              'whichSortItemOrder',j, ...
                              'whichRotation',k, ...
                              'whichRotationHori', l);
                  nAlg=nAlg+1;
+                end
             end
         end
     end
@@ -106,7 +108,7 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     daArray(iAlg) = RunAlgorithm(da,paArray(iAlg));        %获取可行解结构体
     
-    %   plotSolution(daArray(r),paArray(r));
+    plotSolution(daArray(iAlg),paArray(iAlg));
     
     % 算法判断是否相同类型托盘相邻摆放
     flagArray(iAlg) =  isAdjacent(daArray(iAlg));
@@ -143,6 +145,7 @@ fprintf(1,'Simulation done.\n');
 % % if nargin ==0,   plotSolution(daSMax);  end
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % close all;
+% d = rmfield(d, {'BinArray', 'LUArray'});
       
 %% ******* 嵌套函数  **********
 
