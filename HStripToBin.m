@@ -1,27 +1,27 @@
-function [da]= HStripToBin(da,ParaArray)
+function [d]= HStripToBin(d,ParaArray)
 % 重要函数:Strip放入Bin中 %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  Strip:  
 % Output --- Strip: 
-% Output --- Bin: 
+% Output --- Veh: 
 
 %% 初始化
 % nDim strip维度(2) 
-nDim = size(da.StripArray.LW,1);  
-nStrip = size(da.StripArray.LW,2); %具体使用的Strip的数量 
+nDim = size(d.Strip.LW,1);  
+nStrip = size(d.Strip.LW,2); %具体使用的Strip的数量 
 nBin = nStrip;
-uniBinDataMatrix = unique((da.BinArray.LWH(1:nDim,:))','rows')';
+uniBinDataMatrix = unique((d.Veh.LWH(1:nDim,:))','rows')';
 
-% % printstruct(da);
+% % printstruct(d);
 
 %% Strip排序 555 (如何确保相同托盘类型的相邻摆放？？？ TODO FIX ME)
-% 获取striporder = da.StripArray.striporder
+% 获取striporder = d.Strip.striporder
 % 获取sortedStripArray 
     % getStriporder - 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
     % Strip两排序方式 高度/长度递减
-    da.StripArray.striporder = getStriporder(); 
+    d.Strip.striporder = getStriporder(); 
     % getSortedStrip - 获取按order排序后的Strip :sortedStripArray
-    sortedStripArray = getSortedStrip(da.StripArray.striporder);
-%     printstruct(da) ;printstruct(sortedStripArray)    
+    sortedStripArray = getSortedStrip(d.Strip.striporder);
+%     printstruct(d) ;printstruct(sortedStripArray)    
     
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
@@ -59,12 +59,12 @@ end
 % 获取LWBin:  新生成的bin的剩余长宽
 % 获取striporder: strip的排序
 stripBeBinMatrix=stripBeBinMatrixSort;
-stripBeBinMatrix( : , da.StripArray.striporder) = stripBeBinMatrixSort;
-da.StripArray.stripBeBinMatrix = stripBeBinMatrix;
+stripBeBinMatrix( : , d.Strip.striporder) = stripBeBinMatrixSort;
+d.Strip.stripBeBinMatrix = stripBeBinMatrix;
 
 LWBin = LWBin(:,LWBin(2,:)~=uniBinDataMatrix(2));  % LWBin = LWBin(:,LWBin(2,:)~=uniBinDataMatrix(2));
-da.BinSArray.LW = LWBin; % 去除未使用的Strip
-da.BinSArray.Weight = BinWeight(BinWeight(:)>0); % 没有顺序 + 去除未使用的Bin
+d.Bin.LW = LWBin; % 去除未使用的Strip
+d.Bin.Weight = BinWeight(BinWeight(:)>0); % 没有顺序 + 去除未使用的Bin
 
     
 %% 测试script
@@ -74,10 +74,10 @@ printscript();
 
 %% 嵌套函数
     function order = getStriporder()
-%         tmpLWStrip = da.StripArray.LW(1:nDim,:);
+%         tmpLWStrip = d.Strip.LW(1:nDim,:);
 %         [~,order] = sort(tmpLWStrip(nDim,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
 
-        tmpSort = [da.StripArray.LW(1:nDim,:); da.StripArray.loadingrateLimit;da.StripArray.loadingrate];
+        tmpSort = [d.Strip.LW(1:nDim,:); d.Strip.loadingrateLimit;d.Strip.loadingrate];
         [~,order] = sortrows(tmpSort',[2 3 4 ],{'descend','descend','descend'}); %对strip进行排序;按第nDim=2行排序（长/高度)，再看strip内部loadingrateLimit
        
 %         tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
@@ -89,14 +89,14 @@ printscript();
     end
 
     function strip = getSortedStrip(order)
-        strip = structfun(@(x) x(:,order),da.StripArray,'UniformOutput',false);
+        strip = structfun(@(x) x(:,order),d.Strip,'UniformOutput',false);
     end
 
     function thisBin = getThisBin()        
         if ParaArray.whichBinH == 1 % 1 bestfit
             % 条件: 寻找 bin的剩余高度 >= 本strip的高度 &且 bin的剩余重量 >= 本strip的重量 (集合中的最小值)
             flag = find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip)  & ...
-                da.BinArray.Weight - BinWeight(1 : iBin) >= StripWeightSort(iStrip) );
+                d.Veh.Weight - BinWeight(1 : iBin) >= StripWeightSort(iStrip) );
             if isempty(flag)
                 iBin = iBin + 1; % 如果高度不满足，则bin升级
                 thisBin = getThisBin();                
@@ -111,7 +111,7 @@ printscript();
             end
         elseif ParaArray.whichBinH == 2 % 1 firstfit
             flag = find(LWBin(2,1:iBin) >= LWStripSort(2,iStrip)  & ...
-                da.BinArray.Weight - BinWeight(1 : iBin) >= StripWeightSort(iStrip) );            
+                d.Veh.Weight - BinWeight(1 : iBin) >= StripWeightSort(iStrip) );            
             if isempty(flag)
                 iBin = iBin + 1; 
                 thisBin = getThisBin();  
@@ -121,7 +121,7 @@ printscript();
             end
         elseif ParaArray.whichBinH == 3 % 1 nextfit
             flaged = find(LWBin(2, iBin) >= LWStripSort(2,iStrip) & ...
-                da.BinArray.Weight - BinWeight(iBin) >= StripWeightSort(iStrip) );            
+                d.Veh.Weight - BinWeight(iBin) >= StripWeightSort(iStrip) );            
             if  isempty(flaged)  %注意与之前~flag的区别
                 iBin = iBin + 1; 
                 thisBin = getThisBin();  
@@ -156,7 +156,7 @@ printscript();
    
        %% 其余放到ItemToBin内计算
         % 3 获取本iStrip内的item序号, 并更新Item归属信息
-%         idxItemStrip = find(ItemArray.itemBeStripMatrixSort(1,:)==iStrip);
+%         idxItemStrip = find(Item.itemBeStripMatrixSort(1,:)==iStrip);
 %         itemBeBinMatrixSort(1,idxItemStrip) = thisBin;    %第几个bin
 
 
@@ -181,27 +181,27 @@ printscript();
 % % %             binBeItemArray(thisBin) = binBeItemArray(thisBin) + length(idxItemStrip);                          %本bin下合计几个item
 % %             
 % %             %更新xy坐标信息 x不变 y通过bin高度-bin剩余高度-本次strip高度
-% % %          CoordItemBinSort(1,idxItemStrip) = ItemArray.itemCoordMatrixSort(1,idxItemStrip);        %
+% % %          CoordItemBinSort(1,idxItemStrip) = Item.itemCoordMatrixSort(1,idxItemStrip);        %
 % % %          CoordItemBinSort(2,idxItemStrip) = uniBinDataMatrix(2,1) - (LWBin(2,thisBin) + LWStripSort(2,iStrip));
 % %         end        
     end
 
     function printscript()
         % 输出主要结果:获得从1开始每个bin包含的数据
-        % da.StripArray.stripBeBinMatrix
-        for iBin = 1:max(da.StripArray.stripBeBinMatrix(1,:))
-            [~,idx] = find(da.StripArray.stripBeBinMatrix(1,:)==iBin); %本iBin下的strip索引号
-            idxSeq = da.StripArray.stripBeBinMatrix(2,idx); %本iBin内strip放入顺序Seq
+        % d.Strip.stripBeBinMatrix
+        for iBin = 1:max(d.Strip.stripBeBinMatrix(1,:))
+            [~,idx] = find(d.Strip.stripBeBinMatrix(1,:)==iBin); %本iBin下的strip索引号
+            idxSeq = d.Strip.stripBeBinMatrix(2,idx); %本iBin内strip放入顺序Seq
             fprintf('bin 的宽+长为: ' );
             fprintf(' %d  ',uniBinDataMatrix);
             fprintf('\n');
             fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);
-            fprintf('( %d ) ',da.BinSArray.LW(:,iBin));
+            fprintf('( %d ) ',d.Bin.LW(:,iBin));
             fprintf('\n');
             fprintf('bin %d 包含 original strip 索引号{顺序}(长宽)为  \n  ',iBin);
             fprintf('%d ',idx);fprintf('\n');
             fprintf('{%d} ',idxSeq);fprintf('\n');
-            fprintf('( %d ) ', da.StripArray.LW(1:nDim,idx));fprintf('\n');
+            fprintf('( %d ) ', d.Strip.LW(1:nDim,idx));fprintf('\n');
             fprintf('\n');
         end
     end
@@ -216,10 +216,10 @@ printscript();
         stripBeBinMatrixSort
         sortedStripArray
             %% 初始化
-        nThisItem = size(da.ItemArray.LWH,2);
-        nIDType = unique(da.ItemArray.ID);
+        nThisItem = size(d.Item.LWH,2);
+        nIDType = unique(d.Item.ID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
-        tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
+        tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
         wBin = tmpUniqueBin(1);
         hBin = tmpUniqueBin(2);        
     

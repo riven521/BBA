@@ -52,7 +52,8 @@ TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
 2：增加matlab画图功能，可视化每一步
 3：改输入参数为非nested structure,并不在内部取structure
-
+4：初始化每个struct结构，采用initilize方式
+5：采用ployshape函数画图，和表示strip代替系数?
 
 sign
 Y = sign(x) 返回与 x 大小相同的数组 Y，其中 Y 的每个元素是：

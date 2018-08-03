@@ -1,26 +1,26 @@
-function [] = plot3DBPP(da,ParaArray)
+function [] = plot3DBPP(d,ParaArray)
 % 作图函数:三维BPP
 % 初始化
-nDim = size(da.ItemArray.LWH,1);
-nThisItem = size(da.ItemArray.LWH,2);
-tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
+nDim = size(d.ItemArray.LWH,1);
+nThisItem = size(d.ItemArray.LWH,2);
+tmpUniqueBin = unique(d.BinArray.LWH(1:nDim,:)','rows')';
 widthBin = tmpUniqueBin(1);
 lengthBin = tmpUniqueBin(2);
 heightBin = tmpUniqueBin(3);
 clear tmpUniqueBin;
 
 %% Item结构体提取
-itemBeBinMatrix = da.ItemArray.itemBeBinMatrix;
-CoordItemBin = da.ItemArray.CoordItemBin;
-itemLWH = da.ItemArray.LWH;
+Item_Bin = d.ItemArray.Item_Bin;
+CoordItemBin = d.ItemArray.CoordItemBin;
+itemLWH = d.ItemArray.LWH;
 if ParaArray.whichRotation == 1    
-    itemRotaFlag = da.ItemArray.itemRotaFlag; %增加rotation后增
+    itemRotaFlag = d.ItemArray.itemRotaFlag; %增加rotation后增
 end
 
 % sort 排序按bin的顺序 逐个bin画图
-[~,binorder] = sort(itemBeBinMatrix(1,:),'ascend');
+[~,binorder] = sort(Item_Bin(1,:),'ascend');
 % 获取排序后的各个变量
-itemBeBinMatrixSort = itemBeBinMatrix(:,binorder);
+itemBeBinMatrixSort = Item_Bin(:,binorder);
 CoordItemBinSort = CoordItemBin(:,binorder);
 itemLWHSort = itemLWH(:,binorder);
 if ParaArray.whichRotation == 1    
@@ -28,17 +28,17 @@ if ParaArray.whichRotation == 1
 end
 
 %% LU结构体提取
-LUBeItemArray = da.LUArray.LUBeItemArray;
-CoordLUBin = da.LUArray.CoordLUBin;
-LULWH = da.LUArray.LWH;
+LU_Item = d.LUArray.LU_Item;
+CoordLUBin = d.LUArray.CoordLUBin;
+LULWH = d.LUArray.LWH;
 if ParaArray.whichRotation == 1    
-    LURotaFlag = da.LUArray.LURotaFlag; %增加rotation后增
+    LURotaFlag = d.LUArray.LURotaFlag; %增加rotation后增
 end
 
 % % sort 排序按bin的顺序 逐个bin画图
-% [~,itemorder] = sort(LUBeItemArray(1,:),'ascend');
+% [~,itemorder] = sort(LU_Item(1,:),'ascend');
 % % 获取排序后的各个变量
-% LUBeItemArraySort = LUBeItemArray(:,itemorder);
+% LUBeItemArraySort = LU_Item(:,itemorder);
 % CoordLUBinSort = CoordLUBin(:,itemorder);
 % LULWHSort = LULWH(:,itemorder);
 % if ParaArray.whichRotation == 1    
@@ -47,7 +47,7 @@ end
 
 
 %% 1 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
-nThisBin = max(itemBeBinMatrix(1,:));
+nThisBin = max(Item_Bin(1,:));
 axis([0 lengthBin 0 widthBin 0 heightBin]);
 hold on;
 % 2 逐个bin 画图
@@ -70,7 +70,7 @@ for iBin = 1:nThisBin
     nThisItem = size(drawItemMatrix,2);
     for iItem = 1:nThisItem
         % 找出当前iItme的托盘所有
-        idxDrawLU = find(LUBeItemArray(1,:)==iItem);
+        idxDrawLU = find(LU_Item(1,:)==iItem);
          % 获取该索引下的变量
         drawLUCoordMatrix = CoordLUBin(:,idxDrawLU); %CoordLUBinSort no use
         drawLUMatrix = LULWH(:,idxDrawLU); %LULWHSort
@@ -109,21 +109,21 @@ hold off;
 end
 
 %%
-% % function [] = plot2DBPP(da,ParaArray)
-% % BinArray=da.BinSArray;
-% % ItemArray=da.ItemArray;
+% % function [] = plot2DBPP(d,ParaArray)
+% % BinArray=d.BinSArray;
+% % ItemArray=d.ItemArray;
 % % 
 % % nDim = size(ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
 % % nItem = size(ItemArray.LWH,2);
 % % nStrip = nItem;
 % % 
-% % % itemDataMatrix = da.ItemArray.LWH(1:nDim,:);
-% % tmpbinDataMatrix = da.BinArray.LWH(1:nDim,:); tmpUniqueBin = unique(tmpbinDataMatrix','rows')';
+% % % itemDataMatrix = d.ItemArray.LWH(1:nDim,:);
+% % tmpbinDataMatrix = d.BinArray.LWH(1:nDim,:); tmpUniqueBin = unique(tmpbinDataMatrix','rows')';
 % % widthBin = tmpUniqueBin(1);
 % % lengthBin = tmpUniqueBin(2);
 % % 
 % % %%
-% % % printstruct(da);
+% % % printstruct(d);
 % % pbelongItemBinMatrix = ItemArray.itemBeBinMatrixSort;
 % % pcoordItemBinMatrix = ItemArray.itemCoordMatrixSort;
 % % pitemMatrix = ItemArray.LWHSort;

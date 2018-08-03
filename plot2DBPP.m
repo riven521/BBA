@@ -1,29 +1,29 @@
-function [] = plot2DBPP(da,ParaArray)
+function [] = plot2DBPP(d,ParaArray)
 
 % 作图函数:二维BPP
 % 初始化
-nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
-nThisItem = size(da.ItemArray.LWH,2);
-nIDType = unique(da.ItemArray.ID);
+nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+nThisItem = size(d.Item.LWH,2);
+nIDType = unique(d.Item.ID);
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
-tmpUniqueBin = unique(da.BinArray.LWH(1:nDim,:)','rows')';
+tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
 widthBin = tmpUniqueBin(1);
 lengthBin = tmpUniqueBin(2);
 clear tmpUniqueBin;
 
 %% 结构体提取
-itemBeBinMatrix = da.ItemArray.itemBeBinMatrix;
-CoordItemBin = da.ItemArray.CoordItemBin;
-itemLWH = da.ItemArray.LWH;
-itemID = da.ItemArray.ID;
+Item_Bin = d.Item.Item_Bin;
+CoordItemBin = d.Item.CoordItemBin;
+itemLWH = d.Item.LWH;
+itemID = d.Item.ID;
 % if ParaArray.whichRotation == 1    
-    ItemRotaed = da.ItemArray.Rotaed; %增加rotation后增 itemRotaFlag
+    ItemRotaed = d.Item.Rotaed; %增加rotation后增 itemRotaFlag
 % end
 
 % sort 排序按bin的顺序 逐个bin画图
-[~,binorder] = sort(itemBeBinMatrix(1,:),'ascend');
+[~,binorder] = sort(Item_Bin(1,:),'ascend');
 % 获取排序后的各个变量
-itemBeBinMatrixSort = itemBeBinMatrix(:,binorder);
+itemBeBinMatrixSort = Item_Bin(:,binorder);
 CoordItemBinSort = CoordItemBin(:,binorder);
 itemLWHSort = itemLWH(:,binorder);
 itemIDSort = itemID(:,binorder);
@@ -32,7 +32,7 @@ itemIDSort = itemID(:,binorder);
 % end
 
 % 1 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
-nBin = max(itemBeBinMatrix(1,:));
+nBin = max(Item_Bin(1,:));
 DrawRectangle([widthBin*(nBin+1)/2 lengthBin/2 widthBin*(nBin+1) lengthBin 0],'--');
 hold on;
 % 2 逐个bin 画图
@@ -84,26 +84,26 @@ hold off;
 end
 
 %%
-% % function [] = plot2DBPP(da,ParaArray)
-% % BinArray=da.BinSArray;
-% % ItemArray=da.ItemArray;
+% % function [] = plot2DBPP(d,ParaArray)
+% % Veh=d.Bin;
+% % Item=d.Item;
 % % 
-% % nDim = size(ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
-% % nItem = size(ItemArray.LWH,2);
+% % nDim = size(Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+% % nItem = size(Item.LWH,2);
 % % nStrip = nItem;
 % % 
-% % % itemDataMatrix = da.ItemArray.LWH(1:nDim,:);
-% % tmpbinDataMatrix = da.BinArray.LWH(1:nDim,:); tmpUniqueBin = unique(tmpbinDataMatrix','rows')';
+% % % itemDataMatrix = d.Item.LWH(1:nDim,:);
+% % tmpbinDataMatrix = d.Veh.LWH(1:nDim,:); tmpUniqueBin = unique(tmpbinDataMatrix','rows')';
 % % widthBin = tmpUniqueBin(1);
 % % lengthBin = tmpUniqueBin(2);
 % % 
 % % %%
-% % % printstruct(da);
-% % pbelongItemBinMatrix = ItemArray.itemBeBinMatrixSort;
-% % pcoordItemBinMatrix = ItemArray.itemCoordMatrixSort;
-% % pitemMatrix = ItemArray.LWHSort;
+% % % printstruct(d);
+% % pbelongItemBinMatrix = Item.itemBeBinMatrixSort;
+% % pcoordItemBinMatrix = Item.itemCoordMatrixSort;
+% % pitemMatrix = Item.LWHSort;
 % % if ParaArray.whichRotation == 1    
-% %     pitemRotaMatrix = ItemArray.itemRotaSortHori; %增加rotation后增
+% %     pitemRotaMatrix = Item.itemRotaSortHori; %增加rotation后增
 % % end
 % % % sort 排序按bin的顺序 逐个bin画图
 % % [~,binord] = sort(pbelongItemBinMatrix(1,:),'ascend');
@@ -131,8 +131,8 @@ end
 % %         drawItemRotaMatrix = ppitemRotaMatrix(:,idxDrawItem); %增加rotation后增
 % %     end
 % %     % 画图：画本次iBin
-% % %     binWidth = BinArray.LWH(1,1);
-% % %     binLength = BinArray.LWH(2,1);
+% % %     binWidth = Veh.LWH(1,1);
+% % %     binLength = Veh.LWH(2,1);
 % %     binCenter = [iterWidth+widthBin/2 lengthBin/2];
 % %     DrawRectangle([binCenter widthBin lengthBin 0],'--')    ;
 % %     hold on;
@@ -163,7 +163,7 @@ end
 
 
 %% 非结构体画图
-% % function [] = plot2DBPP(pbelongItemBinMatrix,pcoordItemBinMatrix,pitemMatrix,BinArray)
+% % function [] = plot2DBPP(pbelongItemBinMatrix,pcoordItemBinMatrix,pitemMatrix,Veh)
 % % % sort 排序按bin的顺序 逐个bin画图
 % % [~,binord] = sort(pbelongItemBinMatrix(1,:),'ascend');
 % % % 获取排序后的各个变量
@@ -172,7 +172,7 @@ end
 % % ppitemMatrix = pitemMatrix(:,binord);
 % % % 画个画布 宽度为nBin+1个bin宽 长（高）度为bin高
 % % nBin = max(pbelongItemBinMatrix(1,:));
-% % DrawRectangle([BinArray.LWH(1,1)*(nBin+1)/2 BinArray.LWH(2,1)/2 BinArray.LWH(1,1)*(nBin+1) BinArray.LWH(2,1) 0],'--');
+% % DrawRectangle([Veh.LWH(1,1)*(nBin+1)/2 Veh.LWH(2,1)/2 Veh.LWH(1,1)*(nBin+1) Veh.LWH(2,1) 0],'--');
 % % hold on;
 % % % 画图：逐个bin
 % % iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
@@ -184,8 +184,8 @@ end
 % %     drawItemCoordMatrix = ppcoordItemBinMatrix(:,idxDrawItem);
 % %     drawItemMatrix = ppitemMatrix(:,idxDrawItem);
 % %     % 画图：画本次iBin
-% %     binWidth = BinArray.LWH(1,1);
-% %     binLength = BinArray.LWH(2,1);
+% %     binWidth = Veh.LWH(1,1);
+% %     binLength = Veh.LWH(2,1);
 % %     binCenter = [iterWidth+binWidth/2 binLength/2];
 % %     DrawRectangle([binCenter binWidth binLength 0],'--')    ;
 % %     hold on;

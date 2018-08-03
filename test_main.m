@@ -79,14 +79,14 @@ clc;  clear;  close all;
                             [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
                             BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
                         
-% %      n=5;da=getRandDa(n);save('rndDa.mat','da');
+% %      n=5;d=getRandDa(n);save('rndDa.mat','d');
 % %      load('rndDa.mat')
-% %          LUID =da.LUArray.ID ; 
-% %     LULWH=da.LUArray.LWH ;   %LWHREAL 真实尺寸    
-% %     BINLWH =da.BinArray.LWH ; %LWHREAL 真实尺寸    
+% %          LUID =d.LUArray.ID ; 
+% %     LULWH=d.LUArray.LWH ;   %LWHREAL 真实尺寸    
+% %     BINLWH =d.BinArray.LWH ; %LWHREAL 真实尺寸    
 % %     % 增加间隙 -
-% %     LUBUFF= da.LUArray.BUFF ; %BUFF 托盘LU的间隙
-% %     BINBUFF=da.BinArray.BUFF ; %BUFF 车辆BIN的间隙
+% %     LUBUFF= d.LUArray.BUFF ; %BUFF 托盘LU的间隙
+% %     BINBUFF=d.BinArray.BUFF ; %BUFF 车辆BIN的间隙
 
      
 % % % res = zeros(1,36);
@@ -100,9 +100,9 @@ clc;  clear;  close all;
 % % %                     for o = 0:0 %车辆rota不如物流rota
 % % %                         PARA = [i 1 j k l p o];
 % % %                         figure('name',num2str(PARA));
-% % %                         [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
+% % %                         [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,d] = ...
 % % %                             BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
-% % %                         res(1,r) = mean(da.StripArray.ItemloadingrateLimit); %Itemloadingrate
+% % %                         res(1,r) = mean(d.Strip.ItemloadingrateLimit); %Itemloadingrate
 % % %                         respara(:,r) = PARA';
 % % %                         r=r+1;
 % % %                     end
@@ -118,7 +118,7 @@ clc;  clear;  close all;
 % % % for b=1:length(a)
 % % %     PARA=respara(:,a(b));
 % % %     figure('name',num2str(PARA)); %figure从1开始i排序
-% % %     [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,da] = ...
+% % %     [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq,d] = ...
 % % %         BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
 % % % end
 

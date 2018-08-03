@@ -35,7 +35,7 @@ function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
 close all
 if nargin ~= 0
     if nargin <= 6 
-        da = DataInitialize( ...
+        d = DataInitialize( ...
             'LUID', varargin{1},...
             'LULWH',varargin{2}, ...
             'LUBUFF',varargin{5}, ...
@@ -43,7 +43,7 @@ if nargin ~= 0
             'BINBUFF', varargin{6});
         
     else
-        da = DataInitialize( ...
+        d = DataInitialize( ...
             'LUID', varargin{1},...
             'LULWH',varargin{2}, ...
             'LUBUFF',varargin{5}, ...
@@ -54,7 +54,7 @@ if nargin ~= 0
             'BINWEIGHT', varargin{8});
     end
 else
-    da = DataInitialize(50); %0 默认值; >0 随机产生托盘n个算例
+    d = DataInitialize(5); %0 默认值; >0 随机产生托盘n个算例
 end
 
 %% Initialize Parameter
@@ -85,7 +85,7 @@ fprintf(1,'\nRunning the simulation...\n');
 
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
-    daArray(iAlg) = RunAlgorithm(da,paArray(iAlg));        %获取可行解结构体
+    daArray(iAlg) = RunAlgorithm(d,paArray(iAlg));        %获取可行解结构体
     
 %     plotSolution(daArray(iAlg),paArray(iAlg));
     
@@ -112,7 +112,7 @@ end
 if ~isempty(daBest)
     bestOne = 1;
     getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
-    plotSolution(daBest(bestOne),paBest(bestOne)); % == plotSolution(RunAlgorithm(da,paBest(bestOne)) ,paBest(bestOne));    
+    plotSolution(daBest(bestOne),paBest(bestOne)); % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));    
 else
     error('本算例内未找出最优解返回BBA \n');
 end
@@ -120,7 +120,7 @@ end
 fprintf(1,'Simulation done.\n');
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-% d = rmfield(d, {'BinArray', 'LUArray'});
+% d = rmfield(d, {'Veh', 'LU'});
 
 %END MAIN
 
@@ -130,33 +130,33 @@ fprintf(1,'Simulation done.\n');
     function getReturnBBA(daMax) 
         % 返回输出结果(原始顺序) 输出4个参数
         % 参数1 - 行1:Bin序号；行2：该bin内顺序
-        Res1_LUBeBinMatrix=daMax.LUArray.LUBeBinMatrix;
+        Res1_LUBeBinMatrix=daMax.LU.LU_Bin;
         
         % 参数2 - LU在Bin内的坐标
         % 增加间隙-增加CoordLUBinWithBuff变量
-        daMax.LUArray.CoordLUBinWithBuff = daMax.LUArray.CoordLUBin + daMax.LUArray.BUFF./2;
-        Res2_CoordLUBin=daMax.LUArray.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+        daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.BUFF./2;
+        Res2_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
         
         % 参数3 - LU的长宽高(旋转后)
         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
         % 以下是V2      
-        daMax.LUArray.LWHOriRota = daMax.LUArray.LWH - daMax.LUArray.BUFF;
-        Res3_LWH=daMax.LUArray.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.BUFF;
+        Res3_LWH=daMax.LU.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
             % 以下是V1
-            %         daMax.LUArray.LWHRota = daMax.LUArray.LWHRota - daMax.LUArray.BUFF;
-            %         Res3_LWHRota=daMax.LUArray.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+            %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
+            %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
 
        
         % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
-        LUBeItemArray=daMax.LUArray.LUBeItemArray(1,:);
-        LUID=daMax.LUArray.ID;
-        Res4_LUBeItemID = [LUBeItemArray; LUID];
+        LU_Item=daMax.LU.LU_Item(1,:);
+        LUID=daMax.LU.ID;
+        Res4_LUBeItemID = [LU_Item; LUID];
         
-        % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
+        % Res5_BinLWH = d.Veh.LWH; %减去Buffer后实际可用的长宽高
         % 返回输出结果(安放顺序)
         % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
         % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
-        % % LUBeItemArray=LUBeItemArray(1,x)
+        % % LU_Item=LU_Item(1,x)
         % % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
         % % Res3_LWHRota=Res3_LWHRota(:,x)
         % % fprintf('本算例计算全部完成 \n');
@@ -186,23 +186,23 @@ end
 function d = DataInitialize( varargin )
 
 % Defaults
-d.LUArray.ID = [1 1 2 2];
-d.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4]';
-d.BinArray.LWH = [5;20;4]';
+d.LU.ID = [1 1 2 2];
+d.LU.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4]';
+d.Veh.LWH = [5;20;4]';
 
-%     da.LUArray.ID = [1 1 2 2];
-%     da.BinArray.LWH = [5;20;4]';
-%      d.LUArray.isRota = [1 1 1 1];
-%     da.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
+%     d.LU.ID = [1 1 2 2];
+%     d.Veh.LWH = [5;20;4]';
+%      d.LU.isRota = [1 1 1 1];
+%     d.LU.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
     
-% %     da.LUArray.ID = [5236934585 4 5236934585 5236934585];
-% %     d.LUArray.isRota = [1 1 1];
-% %     da.BinArray.LWH = [8;10;4];  %[6; 10; 4];
-% %     da.LUArray.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
+% %     d.LU.ID = [5236934585 4 5236934585 5236934585];
+% %     d.LU.isRota = [1 1 1];
+% %     d.Veh.LWH = [8;10;4];  %[6; 10; 4];
+% %     d.LU.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
 
-d.LUArray.BUFF = [0,0];
-d.BinArray.BUFF = [0,0,0];
-d.BinArray.Weight = 1000;
+d.LU.BUFF = [0,0];
+d.Veh.BUFF = [0,0,0];
+d.Veh.Weight = 1000;
 
 n = length(varargin);
 
@@ -215,27 +215,27 @@ end
 for k = 1 : 2 : length(varargin)
     switch varargin{k}
         case 'LUID'
-            d.LUArray.ID                        = varargin{k+1};
+            d.LU.ID                        = varargin{k+1};
         case 'LULWH'
-            d.LUArray.LWH                    = varargin{k+1};
+            d.LU.LWH                    = varargin{k+1};
         case 'LUBUFF'
-            d.LUArray.BUFF                   = varargin{k+1};
+            d.LU.BUFF                   = varargin{k+1};
         case 'LUWEIGHT'
-            d.LUArray.Weight                = varargin{k+1};            
+            d.LU.Weight                = varargin{k+1};            
         case 'LUISROTA'
-            d.LUArray.isRota                = varargin{k+1};            
+            d.LU.isRota                = varargin{k+1};            
         case 'BINLWH'
-            d.BinArray.LWH                  = varargin{k+1};
+            d.Veh.LWH                  = varargin{k+1};
         case 'BINBUFF'
-            d.BinArray.BUFF                 = varargin{k+1};
+            d.Veh.BUFF                 = varargin{k+1};
         case 'BINWEIGHT'
-            d.BinArray.Weight              = varargin{k+1};            
+            d.Veh.Weight              = varargin{k+1};            
     end
 end
 
 % 如下为默认随机值
-d.LUArray.Weight = randi([1,10],1,numel(d.LUArray.ID));
-d.LUArray.isRota = randi([0,1],1,numel(d.LUArray.ID));
+d.LU.Weight = randi([1,10],1,numel(d.LU.ID));
+d.LU.isRota = randi([0,1],1,numel(d.LU.ID));
 
 end
 
@@ -287,119 +287,119 @@ end
 end
 
 
-function plotSolution(da,par)
+function plotSolution(d,par)
 %% 画图
-%     printstruct(da);
-%     plot3DBPP(da,ParaArray);
+%     printstruct(d);
+%     plot3DBPP(d,ParaArray);
 % 以下修订纯为画图使用
 
 fields = fieldnames(par);
 aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 figure('name',num2str(aField));
-da.ItemArray.LWH = da.ItemArray.LWH - da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2));
-da.ItemArray.CoordItemBin = da.ItemArray.CoordItemBin + da.LUArray.BUFF(:,1:size(da.ItemArray.LWH,2))/2;
-plot2DBPP(da,par);
+d.Item.LWH = d.Item.LWH - d.LU.BUFF(:,1:size(d.Item.LWH,2));
+d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.BUFF(:,1:size(d.Item.LWH,2))/2;
+plot2DBPP(d,par);
 end
 
-function [da] = RunAlgorithm(da,ParaArray)
+function [d] = RunAlgorithm(d,ParaArray)
         
         %% 检验Input输入数据
-        da = GcheckInput(da,ParaArray);
+        d = GcheckInput(d,ParaArray);
         %% 启发式: LU到Item的算法
-          printstruct(da);
-        [da] = HLUtoItem(da,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
-                  printstruct(da);
+          printstruct(d);
+        [d] = HLUtoItem(d,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
+                  printstruct(d);
         %% 计算下届
-        lb = computerLB(da);   fprintf('LB = %d \n', lb); %以某个bin类型为准
+        lb = computerLB(d);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
-%         printstruct(da);
-%         printstruct(da.ItemArray);
-        [da] = HItemToStrip(da,ParaArray);
+%         printstruct(d);
+%         printstruct(d.Item);
+        [d] = HItemToStrip(d,ParaArray);
         %% 计算strip装载率
-%         printstruct(da);
-        da = computeLoadingRateStrip(da);
-        function da = computeLoadingRateStrip(da)
+%         printstruct(d);
+        d = computeLoadingRateStrip(d);
+        function d = computeLoadingRateStrip(d)
             % 初始化
-            nStrip = size(da.StripArray.LW,2);
-            da.StripArray.Stripvolume = zeros(1,nStrip);
-            da.StripArray.StripvolumeLimit = zeros(1,nStrip);
-            da.StripArray.Itemvolume = zeros(1,nStrip);
-            da.StripArray.loadingrate = zeros(1,nStrip);
-            da.StripArray.loadingrateLimit = zeros(1,nStrip);
+            nStrip = size(d.Strip.LW,2);
+            d.Strip.Stripvolume = zeros(1,nStrip);
+            d.Strip.StripvolumeLimit = zeros(1,nStrip);
+            d.Strip.Itemvolume = zeros(1,nStrip);
+            d.Strip.loadingrate = zeros(1,nStrip);
+            d.Strip.loadingrateLimit = zeros(1,nStrip);
             
             % 计算每个strip的装载率
             %每个strip的可用体积 = 高度*宽度(车辆的宽度)
-            da.StripArray.Stripvolume = da.StripArray.LW(2,:)*da.BinArray.LWH(1,1);
+            d.Strip.Stripvolume = d.Strip.LW(2,:)*d.Veh.LWH(1,1);
             %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
-            da.StripArray.StripvolumeLimit = da.StripArray.LW(2,:) .* (da.BinArray.LWH(1,1) - da.StripArray.LW(1,:));
-            a = da.ItemArray.LWH;
-            b = da.ItemArray.itemBeStripMatrix;
+            d.Strip.StripvolumeLimit = d.Strip.LW(2,:) .* (d.Veh.LWH(1,1) - d.Strip.LW(1,:));
+            a = d.Item.LWH;
+            b = d.Item.Item_Strip;
             for iStrip =1:nStrip
                 %每个strip的装载体积
-                da.StripArray.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
+                d.Strip.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
             end
             %每个strip的装载比率
-            da.StripArray.loadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
+            d.Strip.loadingrate =  d.Strip.Itemvolume ./ d.Strip.Stripvolume;
             %每个strip的有限装载比率
-            da.StripArray.loadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
+            d.Strip.loadingrateLimit =  d.Strip.Itemvolume ./ d.Strip.StripvolumeLimit;
         end
         %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
-         da = modifyStripWithOneItem(da);
-        function da = modifyStripWithOneItem(da)
-            stripheight = da.StripArray.LW(2,:);
-            binwidth = da.BinArray.LWH(1,1);
-            stripleftwidth = da.StripArray.LW(1,:);
+         d = modifyStripWithOneItem(d);
+        function d = modifyStripWithOneItem(d)
+            stripheight = d.Strip.LW(2,:);
+            binwidth = d.Veh.LWH(1,1);
+            stripleftwidth = d.Strip.LW(1,:);
             stripwidth = ( binwidth - stripleftwidth );
             [tmpset] = find(stripheight > stripwidth);
             if ~isempty(tmpset)
                 if isscalar(tmpset) %对该strip调换内部仅有1个Item方可,多个调整涉及CoordItemStrip
-                    da.StripArray.LW(:,tmpset) = [binwidth-stripheight(tmpset),stripwidth(tmpset)];    %strip的长宽调整
+                    d.Strip.LW(:,tmpset) = [binwidth-stripheight(tmpset),stripwidth(tmpset)];    %strip的长宽调整
                     %内部Item的itemRotaFlag调整 
-                    idxItem = find(da.ItemArray.itemBeStripMatrix(1,:)==tmpset );
+                    idxItem = find(d.Item.Item_Strip(1,:)==tmpset );
                     if isscalar(idxItem)
-                        da.ItemArray.itemRotaFlag(idxItem) = ~da.ItemArray.Rotaed(idxItem);
+                        d.Item.itemRotaFlag(idxItem) = ~d.Item.Rotaed(idxItem);
                     end                    
                     %内部LU的LURotaFlag 不調 還未到 %内部Item的CoordItemStrip不調                    
                 end
             end
         end
         %% 启发式：Strip到Bin的算法
-%         printstruct(da);
-        [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
+%         printstruct(d);
+        [d] = HStripToBin(d,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
-%         printstruct(da);
-        [da] = HItemToBin(da);
+%         printstruct(d);
+        [d] = HItemToBin(d);
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
          % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
-         da = computeLoadingRateBin(da);
-        function da = computeLoadingRateBin(da)
+         d = computeLoadingRateBin(d);
+        function d = computeLoadingRateBin(d)
             % 初始化
-            nBin = size(da.BinSArray.LW,2);
-            da.BinSArray.Binvolume = zeros(1,nBin);
-            da.BinSArray.Itemvolume = zeros(1,nBin);
-            da.BinSArray.Itemloadingrate = zeros(1,nBin);
-            da.BinSArray.ItemloadingrateLimit = zeros(1,nBin);
+            nBin = size(d.Bin.LW,2);
+            d.Bin.Binvolume = zeros(1,nBin);
+            d.Bin.Itemvolume = zeros(1,nBin);
+            d.Bin.Itemloadingrate = zeros(1,nBin);
+            d.Bin.ItemloadingrateLimit = zeros(1,nBin);
             % 计算每个Bin的装载率            
-            BinWidth = da.BinArray.LWH(1,:);
-            BinHeight = da.BinArray.LWH(2,:);
+            BinWidth = d.Veh.LWH(1,:);
+            BinHeight = d.Veh.LWH(2,:);
             BinVolume = BinWidth .* BinHeight;
             %每个Bin的可用体积 = 车辆高度*车辆宽度
-            da.BinSArray.Binvolume = repmat(BinVolume,1,nBin);            
+            d.Bin.Binvolume = repmat(BinVolume,1,nBin);            
             %每个Bin 的有限可用体积 = 宽度(bin使用宽度=车辆宽度-bin剩余宽度) *高度(bin使用高度=车辆高度-bin剩余高度)
-            da.BinSArray.BinvolumeLimit = (BinWidth - da.BinSArray.LW(1,:)) .* (BinHeight - da.BinSArray.LW(2,:));
+            d.Bin.BinvolumeLimit = (BinWidth - d.Bin.LW(1,:)) .* (BinHeight - d.Bin.LW(2,:));
             
-            a = da.ItemArray.LWH;
-            b = da.ItemArray.itemBeBinMatrix;
+            a = d.Item.LWH;
+            b = d.Item.Item_Bin;
             for iBin =1:nBin
                 %每个Bin的装载体积
-                da.BinSArray.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
+                d.Bin.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
             end
             %每个bin的装载比率
-            da.BinSArray.loadingrate =  da.BinSArray.Itemvolume ./ da.BinSArray.Binvolume;
+            d.Bin.loadingrate =  d.Bin.Itemvolume ./ d.Bin.Binvolume;
             %每个bin的有限装载比率
-            da.BinSArray.loadingrateLimit =  da.BinSArray.Itemvolume ./ da.BinSArray.BinvolumeLimit;
+            d.Bin.loadingrateLimit =  d.Bin.Itemvolume ./ d.Bin.BinvolumeLimit;
         end
 
 end
@@ -409,9 +409,9 @@ end
         flag = 1;
         printstruct(d);
         % 每个bin中找出各类型ID所在Strip是否相邻
-        nBin = size(d.BinSArray.LW,2);
+        nBin = size(d.Bin.LW,2);
         for iBin = 1:nBin
-            t = [d.ItemArray.ID; d.ItemArray.itemBeStripMatrix; d.ItemArray.itemBeBinMatrix ];
+            t = [d.Item.ID; d.Item.Item_Strip; d.Item.Item_Bin ];
             tiBin = t( : , t(4,:) == iBin );
             nIdType = unique(tiBin(1,:)); %nIdType: 本iBin内包含的LU的ID类型
             for iId = 1:nIdType
@@ -425,15 +425,15 @@ end
         end
     end
 % % %             % ns - 本bin内strip个数及顺序
-% % %             ns = d.StripArray.stripBeBinMatrix(2,d.StripArray.stripBeBinMatrix(1,:) == iBin);
+% % %             ns = d.Strip.stripBeBinMatrix(2,d.Strip.stripBeBinMatrix(1,:) == iBin);
 % % %             % ni - 本bin内item内LU类型及顺序
-% % %             d.ItemArray.itemBeBinMatrix(1,:) == iBin
-% % %             ni = d.ItemArray.ID(d.ItemArray.itemBeBinMatrix(1,:) == iBin);
-% % %             [a,b] = find(d.ItemArray.ID(d.ItemArray.itemBeBinMatrix(1,:) == iBin));
+% % %             d.Item.Item_Bin(1,:) == iBin
+% % %             ni = d.Item.ID(d.Item.Item_Bin(1,:) == iBin);
+% % %             [a,b] = find(d.Item.ID(d.Item.Item_Bin(1,:) == iBin));
 % % %             ni_uni = unique(ni);
 % % %             for ini = 1:length(ni_uni)
-% % % %                 d.ItemArray.
-% % % %                 d.ItemArray.itemBeStripMatrix(:,
+% % % %                 d.Item.
+% % % %                 d.Item.Item_Strip(:,
 % % %             end
 % % %             nStrip = length(ns);
 % % %             % i,j is adjacent strips(levels)
@@ -441,8 +441,8 @@ end
 % % %                 for jStrip = (iStrip+1):(nStrip-1)
 % % %                 [is] = find(ns==iStrip); %第3个strip放第1层
 % % %                 [js] = find(ns==jStrip); %第1个strip放第2层
-% % %                 LUIDInis = d.ItemArray.ID(1,(d.ItemArray.itemBeStripMatrix(1,:)==is))
-% % %                 LUIDInjs = d.ItemArray.ID(1,(d.ItemArray.itemBeStripMatrix(1,:)==js))
+% % %                 LUIDInis = d.Item.ID(1,(d.Item.Item_Strip(1,:)==is))
+% % %                 LUIDInjs = d.Item.ID(1,(d.Item.Item_Strip(1,:)==js))
 % % %                 
 % % %                 end
 % % %             end
@@ -454,10 +454,10 @@ function [daMax,parMax] = getbestsol(DaS,Par)
 
 %获取评价指标和对应参数
 for r=1:length(DaS)
-    resLoadingRateStrip(r) = mean(DaS(r).StripArray.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateStripLimit(r) = mean(DaS(r).StripArray.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBinLimit(r) = mean(DaS(r).BinSArray.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBin(r) = mean(DaS(r).BinSArray.loadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStrip(r) = mean(DaS(r).Strip.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStripLimit(r) = mean(DaS(r).Strip.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBinLimit(r) = mean(DaS(r).Bin.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
 %     Par(r);
 end
 
@@ -513,8 +513,8 @@ end
 
 %% ********************** 下面是ts算法的代码 暂时不用 ****************
 
-% [ub,x,b] = HnextFit(ItemArray,BinArray);
-% [ub,x,b] = HnextFit_origin(ItemArray,BinArray);
+% [ub,x,b] = HnextFit(Item,Veh);
+% [ub,x,b] = HnextFit_origin(Item,Veh);
 % disp(b');
 % disp(x);
 % fprintf('UB = %d \n', ub);
@@ -553,13 +553,13 @@ elseif which == 100
 end
 end
 
-    function [ub,px,pb]  = HnextFit(ItemArray,BinArray)
+    function [ub,px,pb]  = HnextFit(Item,Veh)
         % Initialize
-        d = size(ItemArray.LWH,1)-1;
-        n = size(ItemArray.LWH,2);
+        d = size(Item.LWH,1)-1;
+        n = size(Item.LWH,2);
         nn = n + 1;
-        w = ItemArray.LWH(1:d,:);
-        W = BinArray.LWH(1:d,:);
+        w = Item.LWH(1:d,:);
+        W = Veh.LWH(1:d,:);
         x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
         
         %/* sort the items */
@@ -621,16 +621,16 @@ end
         ub = ub +1;
     end
 
-    function [ub,px,pb]  = HnextFit_origin(ItemArray,BinArray)
+    function [ub,px,pb]  = HnextFit_origin(Item,Veh)
         % Initialize
-        d = size(ItemArray.LWH,1);
+        d = size(Item.LWH,1);
         if d==3
             d=d-1;
         end
-        n = size(ItemArray.LWH,2);
+        n = size(Item.LWH,2);
         nn = n + 1;
-        w = ItemArray.LWH(1:d,:);
-        W = BinArray.LWH(1:d,:);
+        w = Item.LWH(1:d,:);
+        W = Veh.LWH(1:d,:);
         x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
         
         %/* sort the items */
@@ -683,10 +683,10 @@ end
         
     end
 
-    function [ lb ] = computerLB(da)
-        sum1 = sum(prod(da.ItemArray.LWH,1));
+    function [ lb ] = computerLB(d)
+        sum1 = sum(prod(d.Item.LWH,1));
         % todo 增加判断是否所有的BinArray中所有的bin是相同的 如果是 则继续执行
-        sum2 = prod(da.BinArray.LWH(:,1));
+        sum2 = prod(d.Veh.LWH(:,1));
         lb = ceil(sum1/sum2);
         if lb <=0, error('EEE');end
     end
@@ -707,16 +707,16 @@ end
 
 %% 结构体的三种strip算法
 
-% % %% function [StripSolutionSort] = HnextFitDH(da)
-% % function [StripSolutionSort] = HnextFitDH(da)
-% % % 输入: da
+% % %% function [StripSolutionSort] = HnextFitDH(d)
+% % function [StripSolutionSort] = HnextFitDH(d)
+% % % 输入: d
 % % % 输出: StripSolutionSort
 % % %% 提取单类型bin,二维item数据
 % % % nDim nItem nBin
 % % % itemDataMatrix uniBinDataMatrix
-% % nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
-% % itemDataMatrix = da.ItemArray.LWH(1:nDim,:);
-% % tmpbinDataMatrix = da.BinArray.LWH(1:nDim,:);
+% % nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+% % itemDataMatrix = d.Item.LWH(1:nDim,:);
+% % tmpbinDataMatrix = d.Veh.LWH(1:nDim,:);
 % % uniBinDataMatrix = unique(tmpbinDataMatrix','rows')';
 % % nItem = size(itemDataMatrix,2);  nBin = nItem;
 % % if size(uniBinDataMatrix,2)==1
@@ -758,16 +758,16 @@ end
 % % printstruct(StripSolutionSort);
 % % end
 % % 
-% % %% function [StripSolutionSort] = HfirstFitDH(da)
-% % function [StripSolutionSort] = HfirstFitDH(da)
-% % % 输入: da
+% % %% function [StripSolutionSort] = HfirstFitDH(d)
+% % function [StripSolutionSort] = HfirstFitDH(d)
+% % % 输入: d
 % % % 输出: StripSolutionSort
 % % %% 提取单类型bin,二维item数据
 % % % nDim nItem nBin
 % % % itemDataMatrix uniBinDataMatrix
-% % nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
-% % itemDataMatrix = da.ItemArray.LWH(1:nDim,:);
-% % tmpbinDataMatrix = da.BinArray.LWH(1:nDim,:);
+% % nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+% % itemDataMatrix = d.Item.LWH(1:nDim,:);
+% % tmpbinDataMatrix = d.Veh.LWH(1:nDim,:);
 % % uniBinDataMatrix = unique(tmpbinDataMatrix','rows')';
 % % nItem = size(itemDataMatrix,2);  nBin = nItem;
 % % if size(uniBinDataMatrix,2)==1
@@ -809,16 +809,16 @@ end
 % % printstruct(StripSolutionSort);
 % % end
 % % 
-% % %% function [StripSolutionSort] = HbestFitDH(da)
-% % function [StripSolutionSort] = HbestFitDH(da)
-% % % 输入: da
+% % %% function [StripSolutionSort] = HbestFitDH(d)
+% % function [StripSolutionSort] = HbestFitDH(d)
+% % % 输入: d
 % % % 输出: StripSolutionSort
 % % %% 提取单类型bin,二维item数据
 % % % nDim nItem nBin
 % % % itemDataMatrix uniBinDataMatrix
-% % nDim = size(da.ItemArray.LWH,1);  if nDim ==3, nDim = nDim-1;end
-% % itemDataMatrix = da.ItemArray.LWH(1:nDim,:);
-% % tmpbinDataMatrix = da.BinArray.LWH(1:nDim,:);
+% % nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+% % itemDataMatrix = d.Item.LWH(1:nDim,:);
+% % tmpbinDataMatrix = d.Veh.LWH(1:nDim,:);
 % % uniBinDataMatrix = unique(tmpbinDataMatrix','rows')';
 % % nItem = size(itemDataMatrix,2);  nBin = nItem;
 % % if size(uniBinDataMatrix,2)==1
@@ -872,15 +872,15 @@ end
 % % 
 
 %% 非结构体的HfirstFitDH2算法
-% % function [stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,ord]  = HfirstFitDH2(ItemArray,BinArray)
+% % function [stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,ord]  = HfirstFitDH2(Item,Veh)
 % % % 输入参数初始化
-% % nDim = size(ItemArray.LWH,1);
+% % nDim = size(Item.LWH,1);
 % % if nDim ==3, nDim = nDim-1;end
-% % nItem = size(ItemArray.LWH,2);
+% % nItem = size(Item.LWH,2);
 % % nBin = nItem;
 % % % nn = n + 1;
-% % itemMatrix = ItemArray.LWH(1:nDim,:);
-% % binMatrix = BinArray.LWH(1:nDim,:);
+% % itemMatrix = Item.LWH(1:nDim,:);
+% % binMatrix = Veh.LWH(1:nDim,:);
 % % % 输出参数初始化
 % % coordMatrix = zeros(nDim,nItem);
 % % stripWidth = binMatrix(1,1); %只需要strip的宽度,dim1为宽度
@@ -915,15 +915,15 @@ end
 % % end
 
 %% 非结构体的HbesttFitDH2算法
-% % function [stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,ord]  = HbestFitDH2(ItemArray,BinArray)
+% % function [stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,ord]  = HbestFitDH2(Item,Veh)
 % % % 输入参数初始化
-% % nDim = size(ItemArray.LWH,1);
+% % nDim = size(Item.LWH,1);
 % % if nDim ==3, nDim = nDim-1;end
-% % nItem = size(ItemArray.LWH,2);
+% % nItem = size(Item.LWH,2);
 % % nBin = nItem;
 % % % nn = n + 1;
-% % itemMatrix = ItemArray.LWH(1:nDim,:);
-% % binMatrix = BinArray.LWH(1:nDim,:);
+% % itemMatrix = Item.LWH(1:nDim,:);
+% % binMatrix = Veh.LWH(1:nDim,:);
 % % % 输出参数初始化
 % % coordMatrix = zeros(nDim,nItem);
 % % stripWidth = binMatrix(1,1); %只需要strip的宽度,dim1为宽度
@@ -967,16 +967,16 @@ end
 % % end
 
 %% 非结构体的HbestFitBinDH算法
-% % function [pbelongItemBinMatrix,pbelongStripBinMatrix,pcoordItemBinMatrix,binLeftMatrix ] = HbestFitBinDH(stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,ItemArray,BinArray)
+% % function [pbelongItemBinMatrix,pbelongStripBinMatrix,pcoordItemBinMatrix,binLeftMatrix ] = HbestFitBinDH(stripLeftMatrix,pbelongMatrix,pitemMatrix,pcoordMatrix,Item,Veh)
 % % % 输入参数初始化
-% % nDim = size(ItemArray.LWH,1);
+% % nDim = size(Item.LWH,1);
 % % if nDim == 3, nDim = nDim-1;end
-% % nItem = size(ItemArray.LWH,2);
+% % nItem = size(Item.LWH,2);
 % % nBin = nItem;
 % % 
 % % nStrip = sum(stripLeftMatrix(3,:)>0); %具体使用的Strip的数量
 % % % nn = n + 1;
-% % binMatrix = BinArray.LWH(1:nDim,:);
+% % binMatrix = Veh.LWH(1:nDim,:);
 % % 
 % % stripWidth = binMatrix(1,1); %只需要strip的宽度,dim1为宽度
 % % % 输出参数初始化
@@ -1042,15 +1042,15 @@ end
 %% Call 本函数:
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
-% LUArray = struct('ID',[],'LWH',[],...
+% LU = struct('ID',[],'LWH',[],...
 %     'weight',[],'Lbuffer',[],'Wbuffer',[],'Type',[],'Material',[]);
-% ItemArray = struct('ID',[],'LWH',[],...
+% Item = struct('ID',[],'LWH',[],...
 %     'weight',[],'Lbuffer',[],'Wbuffer',[]);
-% StripArray = struct('ID',[],'LWH',[],... %ONLY LW
+% Strip = struct('ID',[],'LWH',[],... %ONLY LW
 %     'weight',[],'Lbuffer',[],'Wbuffer',[]);
-% BinArray = struct('ID',[],'LWH',[],...
+% Veh = struct('ID',[],'LWH',[],...
 %    'Capacity',[],'Lbuffer',[],'Wbuffer',[],'Hbuffer',[]);
-% da = struct('LUArray',LUArray,'ItemArray',ItemArray,'StripArray',StripArray,'BinArray',BinArray);
+% d = struct('LU',LU,'Item',Item,'Strip',Strip,'Veh',Veh);
 
 % 1参数初始化
 % whichStripH 1 best 2 first 3 next; whichBinH 1 best; TODO 增加其它分批方式

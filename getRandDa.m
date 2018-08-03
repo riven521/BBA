@@ -1,4 +1,4 @@
-function [da] = getRandDa(n)
+function [d] = getRandDa(n)
 % 普通函数:随机产生输入数据
       rng(1);
 %      rng('default');
@@ -18,21 +18,21 @@ function [da] = getRandDa(n)
         end            
     end
     
-    da.LUArray.ID = ID;
-    da.LUArray.isRota = isRota; %isRota: 判断某类型LU是否可以旋转,默认均可旋转,0表示不可以旋转
+    d.LU.ID = ID;
+    d.LU.isRota = isRota; %isRota: 判断某类型LU是否可以旋转,默认均可旋转,0表示不可以旋转
     
-    da.LUArray.LWH = LWH';
-                                                da.BinArray.LWH = [2400   5000   2400];%[2400   12750   2400];
-    da.BinArray.BUFF = [50;50;0];
-    da.LUArray.BUFF = [100;100];%[2;2];
-                    %     da.BinArray.LWH = da.BinArray.LWHREAL - da.BinArray.BUFF;
-                    %     da.LUArray.LWH = da.LUArray.LWHREAL + da.LUArray.BUFF;
-    da.BinArray.Weight = 1000;
-    da.LUArray.Weight = da.LUArray.LWH(1,:);
+    d.LU.LWH = LWH';
+                                                d.Veh.LWH = [2400   5000   2400];%[2400   12750   2400];
+    d.Veh.BUFF = [50;50;0];
+    d.LU.BUFF = [100;100];%[2;2];
+                    %     d.Veh.LWH = d.Veh.LWHREAL - d.Veh.BUFF;
+                    %     d.LU.LWH = d.LU.LWHREAL + d.LU.BUFF;
+    d.Veh.Weight = 1000;
+    d.LU.Weight = d.LU.LWH(1,:);
 end
 
 
-% function [da] = getRandDa(n)
+% function [d] = getRandDa(n)
 % % 普通函数:随机产生输入数据
 %      rng(222121);
 % %      rng('default');
@@ -47,13 +47,13 @@ end
 %                                                 LWH(idx(j),3) = randi([1,8]);
 %         end            
 %     end
-%     da.LUArray.ID = ID;
-%     da.LUArray.LWH = LWH';
-%                                                 da.BinArray.LWH = [53; 55; 10];
-%     da.BinArray.BUFF = [0;0;0];
-%     da.LUArray.BUFF = [0.1;0.1];%[2;2];
-% %     da.BinArray.LWH = da.BinArray.LWHREAL - da.BinArray.BUFF;
-% %     da.LUArray.LWH = da.LUArray.LWHREAL + da.LUArray.BUFF;
-%     da.BinArray.Weight = 1000;
-%     da.LUArray.Weight = da.LUArray.LWH(1,:);
+%     d.LU.ID = ID;
+%     d.LU.LWH = LWH';
+%                                                 d.Veh.LWH = [53; 55; 10];
+%     d.Veh.BUFF = [0;0;0];
+%     d.LU.BUFF = [0.1;0.1];%[2;2];
+% %     d.Veh.LWH = d.Veh.LWHREAL - d.Veh.BUFF;
+% %     d.LU.LWH = d.LU.LWHREAL + d.LU.BUFF;
+%     d.Veh.Weight = 1000;
+%     d.LU.Weight = d.LU.LWH(1,:);
 % end
