@@ -6,7 +6,7 @@ function [d] = HItemToStrip(d,ParaArray)
 % d.ItemArray (1 LWH (已知)
 % d.ItemArray (2 itemBeStripMatrix  (dim1:序号item在某个strip dim2:item进入顺序(左->右) 
 % d.ItemArray (3 CoordItemStrip Item在strip的坐标) 
-% d.ItemArray (4 itemorder 函数内Item排序顺序)
+% d.ItemArray (4 itemo rder 函数内Item排序顺序)
 % d.StripArray (1 LW )
 
 %% 初始化
@@ -42,13 +42,15 @@ d.ItemArray.LWH = getRotaedLWH(d.ItemArray.LWH, d.ItemArray.Rotaed, d.LUArray.BU
     if ParaArray.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
         [ sortedItemArray.Rotaed] = placeItemHori(sortedItemArray.LWH,sortedItemArray.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
     end
-     sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LUArray.BUFF); 
+    sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LUArray.BUFF); 
      
 %% 55 LU->Item->Strip转换 
 % 提取变量 此处只使用LWHRota和Rotaed; 不使用LWH
 ItemLWRotaSort = sortedItemArray.LWH(1:nDim,:); %ItemLWSortHori
 ItemRotaedSort = sortedItemArray.Rotaed; % ItemRotaSortHori % itemRotaSort = zeros(1,size(d.ItemArray.LWH,2));
 ItemisRotaSort = sortedItemArray.isRota;
+ItemWeightSort = sortedItemArray.Weight;
+
 Itemorder = d.ItemArray.itemorder;
 
 %%
@@ -58,6 +60,8 @@ Itemorder = d.ItemArray.itemorder;
 LWStrip = zeros(nDim,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,current 高度)
 LWStrip(1,:) = widthStrip;   %dim1-宽度剩余 
 stripBeItemArray = zeros(1,nStrip);  % 每个Strip内的Item数量 后期不用
+StripWeight = zeros(1,nStrip); % 初始赋值
+    
 itemBeStripMatrixSort = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
 CoordItemStripSort = zeros(2,nItem); %Item在strip的坐标值
 
@@ -124,13 +128,16 @@ end
 % Strip相关: 无顺序概念
 % LWStrip
 % 获取LWStrip:  新生成的strip的长宽
+% 获取StripWeight:  新生成的strip的重量
 
     d.StripArray.LW = LWStrip(:,LWStrip(2,:)>0); % 没有顺序 + 去除未使用的Strip    
+    d.StripArray.Weight = StripWeight(StripWeight(:)>0); % 没有顺序 + 去除未使用的Strip    
     
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
-
+%     printstruct(d);
+    
     %% 嵌套函数        
     function order = getITEMorder()        
         tmpLWHItem = d.ItemArray.LWH(1:nDim,:);
@@ -223,12 +230,13 @@ end
 %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
 %         stripBeItemArray=stripBeItemArray;itemBeStripMatrixSort=itemBeStripMatrixSort;
         
-        % 1 更新CoordItemStripSort
+        % 1 更新Item相关Sort数据
+        %  1.1 更新CoordItemStripSort
         CoordItemStripSort(1,iItem) = widthStrip - LWStrip(1,thisLevel);  %更新x坐标
         CoordItemStripSort(2,iItem) = sum(LWStrip(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
         
-        % 2 更新LWStrip
-        % 2 更新stripBeItemArray
+        % 2 更新Strip相关数据（非排序）
+        %  2.1 更新LWStrip        
         if ItemisRotaSort(iItem) == 1 %此Item可以旋转
             % 判断语句: 2个
             isflagCurr = LWStrip(1,thisLevel) >=  ItemLWRotaSort(1,iItem); %判断是否current's strip剩余宽度 >= 当前高度（非旋转）
@@ -248,9 +256,13 @@ end
             % 更新strip信息
             updateLWStrip();
         end
-        
-        % 3 更新item归属strip信息itemBeStripMatrixSort + 更新stripBeItemArray
+        %  2.2 更新stripBeItemArray
         stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1
+        
+        %  2.3 更新本level对应的StripWeight: 
+        StripWeight(thisLevel) =  StripWeight(thisLevel) + ItemWeightSort(iItem);
+        
+        %  1.3 更新item归属strip信息itemBeStripMatrixSort
         itemBeStripMatrixSort(1,iItem) = thisLevel;    %第几个level
         itemBeStripMatrixSort(2,iItem) = stripBeItemArray(thisLevel); %本level下第几次安置
         

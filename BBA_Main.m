@@ -7,7 +7,7 @@
 %   BBA_Main.
 %
 %% Inputs
-%   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛
+%   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
 %   LULWH                (3,n)   托盘宽长高 
 %   BINLWH              (3,1)   车型宽长高（目前仅考虑单车型 TODO 后期增加到多车型按顺序使用）
 %   PARANOUSE       (1,1)   标量(1*1) 允许rotation,但考虑rotation的差异
@@ -15,6 +15,7 @@
 %   LUWEIGHT           (1,n)  托盘重量
 %   BINWEIGHT         (1,1)  车型最大承载重量
 %   LUISROTA            (1,n)  托盘是否允许旋转
+%   LUZWID               (1,n)  托盘是否属于重物
 %
 %% Outputs
 %   Res1_LUBeBinMatrix	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
@@ -24,33 +25,45 @@
 %
 
 function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
-    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+    BBA_Main(varargin)
+% function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
+%     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
 
-%% Initialize Data Sturcture
+%% Initialize Data Structure
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all
-if nargin ~=0
-    da = DataInitialize( ...
-        'LUID', LUID,...
-        'LULWH',LULWH, ...
-        'LUBUFF',LUBUFF, ...
-        'LUWEIGHT', LUWEIGHT, ...
-        'LUISROTA', LUISROTA, ...
-        'BINLWH',BINLWH, ...
-        'BINBUFF', BINBUFF, ...
-        'BINWEIGHT', LUWEIGHT);
+if nargin ~= 0
+    if nargin <= 6 
+        da = DataInitialize( ...
+            'LUID', varargin{1},...
+            'LULWH',varargin{2}, ...
+            'LUBUFF',varargin{5}, ...
+            'BINLWH',varargin{3}, ...
+            'BINBUFF', varargin{6});
+        
+    else
+        da = DataInitialize( ...
+            'LUID', varargin{1},...
+            'LULWH',varargin{2}, ...
+            'LUBUFF',varargin{5}, ...
+            'LUWEIGHT', varargin{7}, ...
+            'LUISROTA', varargin{9}, ...
+            'BINLWH',varargin{3}, ...
+            'BINBUFF', varargin{6}, ...
+            'BINWEIGHT', varargin{8});
+    end
 else
-    da = DataInitialize(5); %0 默认值; >0 随机产生托盘n个算例
+    da = DataInitialize(50); %0 默认值; >0 随机产生托盘n个算例
 end
 
 %% Initialize Parameter
 nAlg = 1;
-for i = 1:1 %1-3 best first next均可
+for i = 1:3 %1-3 best first next均可
     for j=1:1 %1-2 排序:1 高度（仅保留） 2 最短边
         for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
-            for l=2:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert
-                for m=3:3 %1-3 best first next均可
+            for l=1:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
+                for m=1:3 %1-3 best first next均可
                 % paArray nAlg 
                 paArray(nAlg) = ParameterInitialize( ...
                              'whichStripH', i,...
@@ -115,7 +128,7 @@ fprintf(1,'Simulation done.\n');
 %% ******* 嵌套函数  **********
 
     function getReturnBBA(daMax) 
-        %% 返回输出结果(原始顺序) 输出4个参数
+        % 返回输出结果(原始顺序) 输出4个参数
         % 参数1 - 行1:Bin序号；行2：该bin内顺序
         Res1_LUBeBinMatrix=daMax.LUArray.LUBeBinMatrix;
         
@@ -140,7 +153,7 @@ fprintf(1,'Simulation done.\n');
         Res4_LUBeItemID = [LUBeItemArray; LUID];
         
         % Res5_BinLWH = da.BinArray.LWH; %减去Buffer后实际可用的长宽高
-        %% 返回输出结果(安放顺序)
+        % 返回输出结果(安放顺序)
         % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
         % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
         % % LUBeItemArray=LUBeItemArray(1,x)
@@ -174,8 +187,7 @@ function d = DataInitialize( varargin )
 
 % Defaults
 d.LUArray.ID = [1 1 2 2];
-d.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
-d.LUArray.isRota = [1 1 1 1];
+d.LUArray.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4]';
 d.BinArray.LWH = [5;20;4]';
 
 %     da.LUArray.ID = [1 1 2 2];
@@ -191,9 +203,6 @@ d.BinArray.LWH = [5;20;4]';
 d.LUArray.BUFF = [0,0];
 d.BinArray.BUFF = [0,0,0];
 d.BinArray.Weight = 1000;
-d.LUArray.Weight = d.LUArray.LWH(1,:);
-   
-
 
 n = length(varargin);
 
@@ -203,7 +212,7 @@ if n == 1 && varargin{1}~=0
 %     load('rndDa.mat');
 end
 
-for k = 1:2:length(varargin)
+for k = 1 : 2 : length(varargin)
     switch varargin{k}
         case 'LUID'
             d.LUArray.ID                        = varargin{k+1};
@@ -223,6 +232,10 @@ for k = 1:2:length(varargin)
             d.BinArray.Weight              = varargin{k+1};            
     end
 end
+
+% 如下为默认随机值
+d.LUArray.Weight = randi([1,10],1,numel(d.LUArray.ID));
+d.LUArray.isRota = randi([0,1],1,numel(d.LUArray.ID));
 
 end
 
@@ -292,29 +305,28 @@ end
 function [da] = RunAlgorithm(da,ParaArray)
         
         %% 检验Input输入数据
-%         da.LUArray.LWH
-
         da = GcheckInput(da,ParaArray);
-        da.LUArray.Rotaed
         %% 启发式: LU到Item的算法
-         printstruct(da);
+          printstruct(da);
         [da] = HLUtoItem(da,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
+                  printstruct(da);
         %% 计算下届
         lb = computerLB(da);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
-        printstruct(da);
-        printstruct(da.ItemArray);
+%         printstruct(da);
+%         printstruct(da.ItemArray);
         [da] = HItemToStrip(da,ParaArray);
         %% 计算strip装载率
-        printstruct(da);
+%         printstruct(da);
         da = computeLoadingRateStrip(da);
         function da = computeLoadingRateStrip(da)
             % 初始化
             nStrip = size(da.StripArray.LW,2);
             da.StripArray.Stripvolume = zeros(1,nStrip);
+            da.StripArray.StripvolumeLimit = zeros(1,nStrip);
             da.StripArray.Itemvolume = zeros(1,nStrip);
-            da.StripArray.Itemloadingrate = zeros(1,nStrip);
-            da.StripArray.ItemloadingrateLimit = zeros(1,nStrip);
+            da.StripArray.loadingrate = zeros(1,nStrip);
+            da.StripArray.loadingrateLimit = zeros(1,nStrip);
             
             % 计算每个strip的装载率
             %每个strip的可用体积 = 高度*宽度(车辆的宽度)
@@ -328,9 +340,9 @@ function [da] = RunAlgorithm(da,ParaArray)
                 da.StripArray.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
             end
             %每个strip的装载比率
-            da.StripArray.Itemloadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
+            da.StripArray.loadingrate =  da.StripArray.Itemvolume ./ da.StripArray.Stripvolume;
             %每个strip的有限装载比率
-            da.StripArray.ItemloadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
+            da.StripArray.loadingrateLimit =  da.StripArray.Itemvolume ./ da.StripArray.StripvolumeLimit;
         end
         %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
          da = modifyStripWithOneItem(da);
@@ -353,10 +365,10 @@ function [da] = RunAlgorithm(da,ParaArray)
             end
         end
         %% 启发式：Strip到Bin的算法
-        printstruct(da);
+%         printstruct(da);
         [da] = HStripToBin(da,ParaArray); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
-        printstruct(da);
+%         printstruct(da);
         [da] = HItemToBin(da);
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
@@ -385,26 +397,11 @@ function [da] = RunAlgorithm(da,ParaArray)
                 da.BinSArray.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
             end
             %每个bin的装载比率
-            da.BinSArray.Itemloadingrate =  da.BinSArray.Itemvolume ./ da.BinSArray.Binvolume;
+            da.BinSArray.loadingrate =  da.BinSArray.Itemvolume ./ da.BinSArray.Binvolume;
             %每个bin的有限装载比率
-            da.BinSArray.ItemloadingrateLimit =  da.BinSArray.Itemvolume ./ da.BinSArray.BinvolumeLimit;
+            da.BinSArray.loadingrateLimit =  da.BinSArray.Itemvolume ./ da.BinSArray.BinvolumeLimit;
         end
-        %% 修正输出结果(纯粹为了返回给刘)（原da仅有Item的Rota,现增加LWHRota:旋转后的LWH,考虑减去buffer因素)
-        printstruct(da);
-        
-        % 似乎无用, 因为在GcheckInput中的LWH已经是Rota后的值了 直接返回LWH即可???
-        % 似乎不可以, LU到Item处还是做了Rota, 应该把Item的Rotaed返回到LU
-        % 似乎此处是返回了最原始的LWH值, 
-        % 此处无需 - 因为LWH已经是旋转后的最终值了
-% % %         da.LUArray.LWHRota = da.LUArray.LWH;
-% % %         nLU = numel(da.LUArray.Rotaed);
-% % %         for iLU=1:nLU
-% % %             if da.LUArray.Rotaed(iLU)
-% % %                 da.LUArray.LWHRota(1,iLU)=da.LUArray.LWH(2,iLU);
-% % %                 da.LUArray.LWHRota(2,iLU)=da.LUArray.LWH(1,iLU);
-% % %             end
-% % %         end
-%         printstruct(da);
+
 end
 
     %% ************ 判断是否相同类型托盘相邻摆放
@@ -457,10 +454,10 @@ function [daMax,parMax] = getbestsol(DaS,Par)
 
 %获取评价指标和对应参数
 for r=1:length(DaS)
-    resLoadingRateStrip(r) = mean(DaS(r).StripArray.Itemloadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateStripLimit(r) = mean(DaS(r).StripArray.ItemloadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBinLimit(r) = mean(DaS(r).BinSArray.ItemloadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBin(r) = mean(DaS(r).BinSArray.Itemloadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStrip(r) = mean(DaS(r).StripArray.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStripLimit(r) = mean(DaS(r).StripArray.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBinLimit(r) = mean(DaS(r).BinSArray.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBin(r) = mean(DaS(r).BinSArray.loadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
 %     Par(r);
 end
 
@@ -491,13 +488,13 @@ end
 % if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
 idx1 = intersect(idx,idxBinLimit);
 if ~isempty(idx1),  
-    idx = idx1; 
+%     idx = idx1; 
 else
     warning('idx1 is empty');
 end
 idx2 = intersect(idx,idxStrip);
 if ~isempty(idx2),  
-    idx = idx2; 
+%     idx = idx2; 
 else
     warning('idx2 is empty');
 end

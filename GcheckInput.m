@@ -1,14 +1,19 @@
+%% GCHECKINPUT 重要函数:输入数据da转换+输入数据da核对
+%% Form
+%    [da] = GcheckInput(da,ParaArray)
+%% Descripttion
+%    输入数据检验
+%
+%% Inputs
+%    da                      (1,1)    结构体：用户输入数据
+%    ParaArray          (1,1)    结构体：算法测试参数
+%
+%% Outputs
+%    da                     (1,1)
+%
+
 function [da] = GcheckInput(da,ParaArray)
-% 重要函数:输入数据da转换+输入数据da核对
-% Input --- 
-% Output ---
-%  行数:长宽高(row); 
-%  列数:托盘数量(coloum);
-% initCheck();
-% inputExchange();
-% inputLUIDExchange();
-% deepCheck();
-% printInput();
+%  行数:长宽高(row);  列数:托盘数量(coloum);
 
 initCheck();
 inputExchange(); %333
@@ -17,19 +22,29 @@ deepCheck(); %333
 getLUIDArray(); %% 计算：LU类型相关数据
 printInput();
 
-    %% 初步判断
+    %% 嵌套函数
+    %% initCheck 输入数据初步检验    
     function initCheck()
         % 初步判断输入: da.BinArray
-        if numel(da.BinArray.LWH(:))~=numel(da.BinArray.BUFF(:)) || numel(da.BinArray.LWH(:)) ~= 3 || ~isscalar(da.BinArray.Weight)
+        if numel(da.BinArray.LWH(:))~=numel(da.BinArray.BUFF(:)) || numel(da.BinArray.LWH(:)) ~= 3 ||...
+                ~isscalar(da.BinArray.Weight)
             error('本算例da.BinArray错误,超出预期 \n');
         end
+        if any(da.BinArray.LWH(:)<=0) || any(da.BinArray.Weight(:)<=0) || any(da.BinArray.BUFF(:)<0)
+            error('本算例da.BinArray存在异常输入,请核验数据 \n');
+        end
         % 初步判断输入: da.LUArray
-        if numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) || numel(da.LUArray.BUFF(:)) ~= 2 || numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) || ~ismatrix(da.LUArray.LWH)
-            numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) 
-            numel(da.LUArray.BUFF(:)) ~= 2 
-            numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) 
-            ~ismatrix(da.LUArray.LWH)           
+        if numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) || numel(da.LUArray.BUFF(:)) ~= 2 || ...
+                numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) || ~ismatrix(da.LUArray.LWH)
+                        %             numel(da.LUArray.ID(:))~=numel(da.LUArray.Weight(:)) 
+                        %             numel(da.LUArray.BUFF(:)) ~= 2 
+                        %             numel(da.LUArray.ID(:))*3~=numel(da.LUArray.LWH(:)) 
+                        %             ~ismatrix(da.LUArray.LWH)           
             error('本算例da.LUArray错误,超出预期 \n');
+        end
+        if any(da.LUArray.LWH(:)<=0) || any(da.LUArray.Weight(:)<=0)  || any(da.LUArray.BUFF(:)<0) || ...
+                any(da.LUArray.isRota(:)<0) || any(da.LUArray.isRota(:)>1)
+            error('本算例da.BinArray存在异常输入,请核验数据 \n');
         end
     end
 
@@ -90,7 +105,6 @@ printInput();
         end
         da.LUArray.ID=tmpLUID;
     end
-
 
     %% 深入判断
     function deepCheck()        

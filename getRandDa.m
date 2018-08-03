@@ -2,7 +2,7 @@ function [da] = getRandDa(n)
 % 普通函数:随机产生输入数据
       rng(1);
 %      rng('default');
-                                                ID = randi([11,18],1,n); %ID类型数
+                                                ID = randi([11,18],1,n); %ID 类型数
     LWH = zeros(n,3);
     isRota = zeros(1,n);
     [uniID] = unique(ID);

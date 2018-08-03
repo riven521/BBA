@@ -35,6 +35,51 @@ V0730
 	5.4 whichRotation = 1/0 全部允许/禁止ROTATE的标记用途不大；依据LU/ITEM的ISROTA判断
 	5.5 增加函数: placeItemHori (按照Hori/Vert方式摆放,返回是否需要对LU/Item旋转)+ getRotaedLWH（依据返回值对LU/ITEM+BUFF进行更新）
 
+V0731-1
+1 增加代码：HStripToBin-> 增加first/next 安排strip到bin
+V0731-2
+1 增加代码：BBA_MAIN-> 注释格式化
+2 增加函数:BBA_MAIN-> d = DataInitialize( varargin )
+
+V0801-1
+1 修改代码: BBA_MAIN-> (输入改用varargin)
+2 增加变量: StripWeight重量增加到HItemToStrip中
+3 增加变量: BinWeight重量增加到HStripToBin中
+4 增加bin重量：不超过车辆最大重量（best选bin过程是否考虑重量,目前仅考虑维度）
+
+
+TODO
+1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
+2：增加matlab画图功能，可视化每一步
+3：改输入参数为非nested structure,并不在内部取structure
+
+
+sign
+Y = sign(x) 返回与 x 大小相同的数组 Y，其中 Y 的每个元素是：
+    1，前提是 x 的对应元素大于 0。
+    0，前提是 x 的对应元素等于 0。
+    -1，前提是 x 的对应元素小于 0。
+false
+
+v = v(:).'; % Make sure v is a row vector.
+lh ~= zeros(size(lh))
+ones(length(r),1);
+r = find(x)
+idxs(r,:)
+find(unvisited,1);
+visited = nextpt; unvisited(startour) = 0; % update unvisited points
+size/find/reshape/error/double/prod/round/drawnow
+idx/true
+
+
+1 同一类型的托盘，前提：一辆车可以放下该类型托盘；可否分开放入多辆车？
+2 同一供应商的托盘，前提：一辆车可以放下该类型托盘；可否分开放入多辆车？
+3 最小的托盘的长宽/最大的托盘长宽（是否超过车型的宽度）
+4 每家供应商的托盘类型最多数量（）
+5 重物的定义
+
+5 增加数据核对函数（重要部分）
+
 
 
 
@@ -58,11 +103,6 @@ V0730
 
 3 Main函数对LU的返回 OK
 4 PLOT问题 OK
-
-TODO
-5 增加数据核对函数（重要部分）
-1 同一类型的托盘，前提：一辆车可以放下该类型托盘；可否分开放入多辆车？
-2 同一供应商的托盘，前提：一辆车可以放下该类型托盘；可否分开放入多辆车？
 
 
 
