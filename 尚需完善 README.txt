@@ -41,13 +41,29 @@ V0731-2
 1 增加代码：BBA_MAIN-> 注释格式化
 2 增加函数:BBA_MAIN-> d = DataInitialize( varargin )
 
-V0801-1
+V0803-1
 1 修改代码: BBA_MAIN-> (输入改用varargin)
 2 增加变量: StripWeight重量增加到HItemToStrip中
 3 增加变量: BinWeight重量增加到HStripToBin中
 4 增加bin重量：不超过车辆最大重量（best选bin过程是否考虑重量,目前仅考虑维度）
 
+V0803-2
+函数无变化,仅命名做了调整
+1 find and replace 所有文件 替换**Array -> **
+2 find and replace 所有文件 替换**BE-- -> **_--
+3 find and replace 所有文件 替换da -> d
 
+V0803-3
+函数无变化,仅命名做了调整
+1 find and replace paArray -> pA  daArray -> dA flagArray -> flagA
+1 find and replace 4个output
+1 find and replace
+
+1 d初始化
+2 所有子函数不传递d,传递d.LU等具体子struc
+
+% luarray LUArray .LUArray
+find_and_replace(dir('BBA_Main.m'), 'LUArray', 'LU');
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
 2：增加matlab画图功能，可视化每一步

@@ -1,6 +1,6 @@
 %% BBA_MAIN demo
 %% Form
-%    [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ... 
+%    [output_LU_Bin,output_CoordLUBin,output_LU_LWH,Res4_DrawSeq] = ... 
 %    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
 %
 %% Description
@@ -18,15 +18,15 @@
 %   LUZWID               (1,n)  托盘是否属于重物
 %
 %% Outputs
-%   Res1_LUBeBinMatrix	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
-%   Res2_CoordLUBin      (3,n)    每个LU的X,Y,Z
-%   Res3_LWHRota          (3,n)    每个LU的宽长高（旋转后的：实际值）
-%   Res4_LUBeItemID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
+%   output_LU_Bin	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
+%   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
+%   output_LU_LWH          (3,n)    每个LU的宽长高（旋转后的：实际值）
+%   output_LU_Item_ID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
 %
 
-function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
+function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
     BBA_Main(varargin)
-% function [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWH,Res4_LUBeItemID] = ...
+% function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
 %     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
 
 %% Initialize Data Structure
@@ -64,8 +64,8 @@ for i = 1:3 %1-3 best first next均可
         for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
             for l=1:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
                 for m=1:3 %1-3 best first next均可
-                % paArray nAlg 
-                paArray(nAlg) = ParameterInitialize( ...
+                % pA nAlg 
+                pA(nAlg) = ParameterInitialize( ...
                              'whichStripH', i,...
                              'whichBinH',m, ...
                              'whichSortItemOrder',j, ...
@@ -85,24 +85,24 @@ fprintf(1,'\nRunning the simulation...\n');
 
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
-    daArray(iAlg) = RunAlgorithm(d,paArray(iAlg));        %获取可行解结构体
+    dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
     
-%     plotSolution(daArray(iAlg),paArray(iAlg));
+%     plotSolution(dA(iAlg),pA(iAlg));
     
     % 算法判断是否相同类型托盘相邻摆放
-    flagArray(iAlg) =  isAdjacent(daArray(iAlg));
+    flagA(iAlg) =  isAdjacent(dA(iAlg));
 end
 
-%  printstruct(daArray(1,1),'sortfields',0,'PRINTCONTENTS',1)
+%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
 
 %% Simulate - CHOOSE BEST ONE
 % 555 算法首先排除bin内相同类型托盘不相邻的解
-% % daArray = daArray(1,logical(flagArray));
-% % paArray = paArray(1,logical(flagArray));
+% % dA = dA(1,logical(flagA));
+% % pA = pA(1,logical(flagA));
 
 % 从多次算法结果中选出从必定bin内相邻的最优结果
-if ~isempty(daArray)
-    [daBest,paBest] = getbestsol(daArray,paArray); 
+if ~isempty(dA)
+    [daBest,paBest] = getbestsol(dA,pA); 
 else
     error('本算例内所有解都存在托盘不相邻的情况 \n');
 end
@@ -130,18 +130,18 @@ fprintf(1,'Simulation done.\n');
     function getReturnBBA(daMax) 
         % 返回输出结果(原始顺序) 输出4个参数
         % 参数1 - 行1:Bin序号；行2：该bin内顺序
-        Res1_LUBeBinMatrix=daMax.LU.LU_Bin;
+        output_LU_Bin=daMax.LU.LU_Bin;
         
         % 参数2 - LU在Bin内的坐标
         % 增加间隙-增加CoordLUBinWithBuff变量
         daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.BUFF./2;
-        Res2_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %Res2_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+        output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
         
         % 参数3 - LU的长宽高(旋转后)
         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
         % 以下是V2      
         daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.BUFF;
-        Res3_LWH=daMax.LU.LWHOriRota;  %Res3_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
             % 以下是V1
             %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
             %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
@@ -150,14 +150,14 @@ fprintf(1,'Simulation done.\n');
         % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
         LU_Item=daMax.LU.LU_Item(1,:);
         LUID=daMax.LU.ID;
-        Res4_LUBeItemID = [LU_Item; LUID];
+        output_LU_Item_ID = [LU_Item; LUID];
         
         % Res5_BinLWH = d.Veh.LWH; %减去Buffer后实际可用的长宽高
         % 返回输出结果(安放顺序)
-        % % [~,x]=sort(Res1_LUBeBinMatrix(2,:));
-        % % Res1_LUBeBinMatrix=Res1_LUBeBinMatrix(:,x)
+        % % [~,x]=sort(output_LU_Bin(2,:));
+        % % output_LU_Bin=output_LU_Bin(:,x)
         % % LU_Item=LU_Item(1,x)
-        % % Res2_CoordLUBin=Res2_CoordLUBin(:,x)
+        % % output_CoordLUBin=output_CoordLUBin(:,x)
         % % Res3_LWHRota=Res3_LWHRota(:,x)
         % % fprintf('本算例计算全部完成 \n');
         end
@@ -302,20 +302,21 @@ d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.BUFF(:,1:size(d.Item.LWH,2))/2;
 plot2DBPP(d,par);
 end
 
-function [d] = RunAlgorithm(d,ParaArray)
+function [d] = RunAlgorithm(d,p)
         
         %% 检验Input输入数据
-        d = GcheckInput(d,ParaArray);
+        d = GcheckInput(d,p);
         %% 启发式: LU到Item的算法
           printstruct(d);
-        [d] = HLUtoItem(d,ParaArray); %Item将按ID序号排序（但下一操作将变化顺序）
+        [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
+
                   printstruct(d);
         %% 计算下届
         lb = computerLB(d);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
 %         printstruct(d);
 %         printstruct(d.Item);
-        [d] = HItemToStrip(d,ParaArray);
+        [d] = HItemToStrip(d,p);
         %% 计算strip装载率
 %         printstruct(d);
         d = computeLoadingRateStrip(d);
@@ -366,7 +367,7 @@ function [d] = RunAlgorithm(d,ParaArray)
         end
         %% 启发式：Strip到Bin的算法
 %         printstruct(d);
-        [d] = HStripToBin(d,ParaArray); %todo CHECK CHECK CHECK
+        [d] = HStripToBin(d,p); %todo CHECK CHECK CHECK
         %% Item到bin的信息获取:
 %         printstruct(d);
         [d] = HItemToBin(d);
