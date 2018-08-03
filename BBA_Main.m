@@ -307,12 +307,11 @@ function [d] = RunAlgorithm(d,p)
         %% 检验Input输入数据
         d = GcheckInput(d,p);
         %% 启发式: LU到Item的算法
-          printstruct(d);
+        printstruct(d);
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
-
-                  printstruct(d);
+        printstruct(d);
         %% 计算下届
-        lb = computerLB(d);   fprintf('LB = %d \n', lb); %以某个bin类型为准
+        lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
 %         printstruct(d);
 %         printstruct(d.Item);
@@ -367,7 +366,7 @@ function [d] = RunAlgorithm(d,p)
         end
         %% 启发式：Strip到Bin的算法
 %         printstruct(d);
-        [d] = HStripToBin(d,p); %todo CHECK CHECK CHECK
+        [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,p);
         %% Item到bin的信息获取:
 %         printstruct(d);
         [d] = HItemToBin(d);
@@ -684,10 +683,10 @@ end
         
     end
 
-    function [ lb ] = computerLB(d)
-        sum1 = sum(prod(d.Item.LWH,1));
+    function [ lb ] = computerLB(Item,Veh)
+        sum1 = sum(prod(Item.LWH,1));        
         % todo 增加判断是否所有的BinArray中所有的bin是相同的 如果是 则继续执行
-        sum2 = prod(d.Veh.LWH(:,1));
+        sum2 = prod(Veh.LWH(:,1));
         lb = ceil(sum1/sum2);
         if lb <=0, error('EEE');end
     end

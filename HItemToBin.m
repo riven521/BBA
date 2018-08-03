@@ -11,7 +11,7 @@ nLU= size(d.LU.LWH,2); %具体使用的LU的数量
 uniBinDataMatrix = unique((d.Veh.LWH(1:nDim,:))','rows')';
 %% 结构体提取
 LU_Item = d.LU.LU_Item;
-stripBeBinMatrix = d.Strip.stripBeBinMatrix;
+stripBeBinMatrix = d.Strip.Strip_Bin;
 Item_Strip = d.Item.Item_Strip;
 
 itemRotaed = d.Item.Rotaed;

@@ -58,6 +58,9 @@ V0803-3
 1 find and replace paArray -> pA  daArray -> dA flagArray -> flagA
 1 find and replace 4个output
 1 find and replace
+V0803-4
+1 HLUToItem: 更新函数输入输出,方面了解哪些参数需要被使用
+
 
 1 d初始化
 2 所有子函数不传递d,传递d.LU等具体子struc
@@ -70,6 +73,7 @@ TODO
 3：改输入参数为非nested structure,并不在内部取structure
 4：初始化每个struct结构，采用initilize方式
 5：采用ployshape函数画图，和表示strip代替系数?
+6：STRIP给高度（最大的堆垛高度3/最小4）
 
 sign
 Y = sign(x) 返回与 x 大小相同的数组 Y，其中 Y 的每个元素是：

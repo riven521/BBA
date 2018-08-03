@@ -1,4 +1,4 @@
-function [d] = HItemToStrip(d,ParaArray)
+function [d] = HItemToStrip(d,p)
 % 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  ITEM:  ID LWH Weight
 % Output --- ITEM: itemorder Item_Strip itemRotaFlag CoordItemStrip
@@ -36,10 +36,10 @@ d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.BUFF);
                                     % printstruct(d) ;printstruct(sortedItemArray)
 
     % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
-    if ParaArray.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放
+    if p.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放
         [ sortedItemArray.Rotaed] = placeItemHori(sortedItemArray.LWH,sortedItemArray.isRota,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
     end
-    if ParaArray.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
+    if p.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
         [ sortedItemArray.Rotaed] = placeItemHori(sortedItemArray.LWH,sortedItemArray.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
     end
     sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LU.BUFF); 
@@ -142,16 +142,16 @@ end
     function order = getITEMorder()        
         tmpLWHItem = d.Item.LWH(1:nDim,:);
         tmpIDItem =     d.Item.ID(1,:);
-        if ParaArray.whichSortItemOrder == 1 %Descend of 长(高)
+        if p.whichSortItemOrder == 1 %Descend of 长(高)
             tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
             [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
         end
-        if ParaArray.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
+        if p.whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
 %             tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
 %             [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
              %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
         end
-        if ParaArray.whichSortItemOrder == 3  %Descend of total area 总表面积  ->
+        if p.whichSortItemOrder == 3  %Descend of total area 总表面积  ->
             %             printstruct(d);
        end        
         if ~isrow(order), order=order'; end
@@ -163,7 +163,7 @@ end
 
     function thisLevel = getThisLevel()
         % 不同whichStripH下,获得共同的thisLevel
-        if ParaArray.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
+        if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
             % 增对Rotation增加变量
             if ItemisRotaSort(iItem) == 1 %此Item可以旋转
                                         %             if ParaArray.whichRotation == 1
@@ -187,7 +187,7 @@ end
                     thisLevel = thisLevel(1);
                 end
             end
-        elseif ParaArray.whichStripH == 2 % firstfit  % firstfit下能不能直接套用bestfit的代码?
+        elseif p.whichStripH == 2 % firstfit  % firstfit下能不能直接套用bestfit的代码?
             % 增对Rotation增加变量
             if ItemisRotaSort(iItem) == 1 %此Item可以旋转
                 % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
@@ -204,7 +204,7 @@ end
                 thisLevel = flag(1);
                 if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
             end
-        elseif ParaArray.whichStripH == 3 % nextfit 
+        elseif p.whichStripH == 3 % nextfit 
             % 增对Rotation增加变量
             if ItemisRotaSort(iItem) == 1 %此Item可以旋转 % nextfit下不能直接套用bestfit的代码
                 % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以
