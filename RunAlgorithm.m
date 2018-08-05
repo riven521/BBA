@@ -47,7 +47,7 @@ function [d] = RunAlgorithm(d,p)
             d.Strip.loadingrateLimit =  d.Strip.Itemvolume ./ d.Strip.StripvolumeLimit;
         end
         %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
-         d = modifyStripWithOneItem(d);
+%         d = modifyStripWithOneItem(d);
         function d = modifyStripWithOneItem(d)
             stripheight = d.Strip.LW(2,:);
             binwidth = d.Veh.LWH(1,1);
@@ -84,11 +84,11 @@ function [d] = RunAlgorithm(d,p)
             d.Bin.Itemloadingrate = zeros(1,nBin);
             d.Bin.ItemloadingrateLimit = zeros(1,nBin);
             % 计算每个Bin的装载率            
-            BinWidth = d.Veh.LWH(1,:);
-            BinHeight = d.Veh.LWH(2,:);
-            BinVolume = BinWidth .* BinHeight;
+            BinWidth = d.Veh.LWH(1,1);
+            BinHeight = d.Veh.LWH(2,1);
+            BinArea = BinWidth .* BinHeight;
             %每个Bin的可用体积 = 车辆高度*车辆宽度
-            d.Bin.Binvolume = repmat(BinVolume,1,nBin);            
+            d.Bin.Binvolume = repmat(BinArea,1,nBin);            
             %每个Bin 的有限可用体积 = 宽度(bin使用宽度=车辆宽度-bin剩余宽度) *高度(bin使用高度=车辆高度-bin剩余高度)
             d.Bin.BinvolumeLimit = (BinWidth - d.Bin.LW(1,:)) .* (BinHeight - d.Bin.LW(2,:));
             

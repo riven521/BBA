@@ -61,7 +61,21 @@ V0805-1
 4 555 完成DataInitiliza初始化 增加较多输入参数
 
 V0805-2
-1 更改为多车型（随机生成，车型按从大到小排序，首先安排第一种大车型）
+1 增加随机生成的车型按volume从大到小排序
+2 数据初始化即开始: [d.LU, d.Veh] = initCheck(d.LU,d.Veh); 
+3 更改HItemToStrip输入输出
+
+V0805-3
+1 增加多车型首选第一个车型（默认应该是体积最大车型）- 修改Veh.LWH相关参数
+2  
+
+TODO:
+FPRINT
+2 test main error 画图
+3 modifyStripWithOneItem(d);修改
+
+2 修改局部函数HItemToStrip
+为多车型（随机生成，车型按从大到小排序，首先安排第一种大车型）
 
 1 完成所有的局部函数
 2 

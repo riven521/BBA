@@ -40,7 +40,7 @@ iStrip=1; iBin=1;
 while 1
     if iStrip > nStrip, break; end
     
-    [thisBin] = getThisBin(iBin, iStrip, sStrip, Veh, Bin, p);    % 获取Bin号
+    [thisBin,iBin] = getThisBin(iBin, iStrip, sStrip, Veh, Bin, p);    % 获取Bin号
     
     [Bin,sStrip_Bin,Bin_Strip] = insertStripToBin(iStrip, thisBin, sStrip, Bin, sStrip_Bin, Bin_Strip)
         
@@ -53,7 +53,7 @@ end
 % 获取Strip_Bin: 每个strip在哪个bin内  以及顺序
 Strip.Strip_Bin( : , Strip.striporder) = sStrip_Bin;
 
-% 获取Bin: 去除未使用的Bin
+% 获取Bin: 去除未使用的Bin 注意Bin结构体的变化
 Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
  
    
@@ -98,13 +98,16 @@ printscript();
         nThisItem = size(d.Item.LWH,2);
         nIDType = unique(d.Item.ID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
-        tmpUniqueBin = unique(Veh.LWH(1:2,:)','rows')';
-        wBin = tmpUniqueBin(1);
-        hBin = tmpUniqueBin(2);        
+%         tmpUniqueBin = unique(Veh.LWH(1:2,:)','rows')';
+        %         wBin = tmpUniqueBin(1);
+%         hBin = tmpUniqueBin(2);     
+        wBin = Veh.LWH(1,1);
+        hBin = Veh.LWH(2,1);
+   
     
         nUsedBin = sum(sStrip_Bin(2,:)>0);
 
-        %% 画图
+%         %% 画图
         % 1 画个画布 宽度为nUsedBin+1个bin宽 长（高）度为bin高
         figure();
         DrawRectangle([wBin*(nUsedBin+1)/2 hBin/2 wBin*(nUsedBin+1) hBin 0],'--');
@@ -138,14 +141,14 @@ end
         if ~isrow(order), order=order'; end
     end
 
-        function thisBin = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)        
+        function [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)        
         if p.whichBinH == 1 % 1 bestfit
             % 条件: 寻找 bin的剩余高度 >= 本strip的高度 &且 bin的剩余重量 >= 本strip的重量 (集合中的最小值)
             flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
-                Veh.Weight - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) );
+                Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) ); %
             if isempty(flag)
                 iBin = iBin + 1; % 如果高度不满足，则bin升级
-                thisBin = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);                
+                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);                
             else
                 tepBins = Bin.LW(2,1 : iBin); %获取所有已安排或新安排的bin的剩余高度向量tepBins
                 tepMin = min(tepBins(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin（TODO 是否考虑重量？）
@@ -157,20 +160,20 @@ end
             end
         elseif p.whichBinH == 2 % 1 firstfit
             flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
-                Veh.Weight - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) );            
+                Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) );            
             if isempty(flag)
                 iBin = iBin + 1; 
-                thisBin = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
+                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
             else
                 thisBin = flag(1);
                 if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');       end
             end
         elseif p.whichBinH == 3 % 1 nextfit
             flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & ...
-                Veh.Weight - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );            
+                Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );            
             if  isempty(flaged)  %注意与之前~flag的区别
                 iBin = iBin + 1; 
-                thisBin = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
+                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
             else
                 if  isempty(flaged) ,   error(' 不可能的错误 ');      end
                 thisBin = iBin; % 当前bin一定放的下

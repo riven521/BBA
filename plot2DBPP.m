@@ -6,9 +6,9 @@ nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nThisItem = size(d.Item.LWH,2);
 nIDType = unique(d.Item.ID);
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
-tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
-widthBin = tmpUniqueBin(1);
-lengthBin = tmpUniqueBin(2);
+% tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
+widthBin = d.Veh.LWH(1,1);
+lengthBin = d.Veh.LWH(2,1);
 clear tmpUniqueBin;
 
 %% 结构体提取

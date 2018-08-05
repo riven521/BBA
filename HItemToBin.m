@@ -8,7 +8,7 @@ function [d] = HItemToBin(d)
 nDim = size(d.Item.LWH,1);  
 nItem = size(d.Item.LWH,2); %具体使用的Item的数量
 nLU= size(d.LU.LWH,2); %具体使用的LU的数量
-uniBinDataMatrix = unique((d.Veh.LWH(1:nDim,:))','rows')';
+
 %% 结构体提取
 LU_Item = d.LU.LU_Item;
 stripBeBinMatrix = d.Strip.Strip_Bin;
@@ -99,7 +99,7 @@ for iBin = 1:max(d.Item.Item_Bin(1,:))
     [~,idx] = find(d.Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
     idxSeq = d.Item.Item_Bin(2,idx); %本iBin内item放入顺序Seq
     fprintf('bin 的宽+长+高为: ' );
-    fprintf(' %d  ',uniBinDataMatrix);
+    fprintf(' %d  ',d.Veh.LWH);
     fprintf('\n');
     fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
     fprintf('( %d ) ',d.Bin.LW(:,iBin));fprintf('\n');
