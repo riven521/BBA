@@ -55,21 +55,25 @@ V0805-1
 2 所有子函数不传递d,传递d.LU等具体子struc
 3 完成除LU->ITEM STRIP->BIN
 
-1 检验输入更改
-2 Main函数 BBA_Main(LUID,LULWH,BINID,BINLWH); 前4参数必须,其它参数可有可无; 如无则自己生成随机数据; 如有则
-3 polyshape使用(画LU的图)
+1 检验输入更改 
+2 Main函数 BBA_Main(LUID,LULWH,BINID,BINLWH); 前4参数必须,其它参数可有可无; 如无则自己生成随机数据; 如有则再swith中获取
+3 polyshape使用(画LU/Item的图) 待改进
+4 555 完成DataInitiliza初始化 增加较多输入参数
+
+V0805-2
+1 更改为多车型（随机生成，车型按从大到小排序，首先安排第一种大车型）
+
+1 完成所有的局部函数
+2 
 
 
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
 2：增加matlab画图功能，可视化每一步
-3：改输入参数为非nested structure,并不在内部取structure
+3：改输入参数为非nested structure,并不在内部取structure（局部函数）
 4：初始化每个struct结构，采用initilize方式
 5：采用ployshape函数画图，和表示strip代替系数
-%         polyout = sortregions(pgon,'perimeter','descend');
-%         R = regions(polyout);   plot(R)
-%         plot(rotate(pgon,90));
-%         getAlphashape(d.LU.LWH);
+
 6：STRIP给高度（最大的堆垛高度3/最小4）
 
 sign

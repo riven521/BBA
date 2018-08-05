@@ -86,6 +86,8 @@ else
                 error('存在未知输入');
         end
     end
+    % 首先做initCheck
+    [d.LU, d.Veh] = initCheck(d.LU,d.Veh);
     
     % 补充其它数据
     n = length(d.LU.ID);
@@ -103,10 +105,13 @@ else
         
     if ~isfield(d.LU, 'Weight'),     d.LU.Weight = 10*ones(1,n);  end
     if ~isfield(d.LU, 'isH'),           d.LU.isH = zeros(1,n);         end        %1 isHeavy
+    
     if ~isfield(d.LU, 'buff'),           d.LU.buff = zeros(size(d.LU.LWH));  end%以后无用
-            
+    
+    
     % 列: 车型数量; 行: 意义不同
-    if ~isfield(d.Veh, 'Weight'),           d.Veh.Weight = 1000*ones(1,m);  end       %以后无用
+    if ~isfield(d.Veh, 'volume'),           d.Veh.volume = prod(d.Veh.LWH);  end
+    if ~isfield(d.Veh, 'Weight'),           d.Veh.Weight = 1000*ones(1,m);  end      
     if ~isfield(d.Veh, 'buff'),                d.Veh.buff = zeros(size(d.Veh.LWH));  end     %以后无用
     if ~isfield(d.Veh, 'yID')
         for i=1:m

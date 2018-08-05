@@ -7,7 +7,7 @@ function [d] = getRandDa(n,m)
     
 % Veh
     Veh.ID = randperm(m);   %Veh 类型数
-    Veh.buff = [0;0;0];
+    Veh.buff = zeros(3,m);
     maxSeg = 3;
 
     Veh.LWH = zeros(3,m);
@@ -19,7 +19,8 @@ function [d] = getRandDa(n,m)
         Veh.LWH(1,i) = randi([2200,2400]); %宽度
         Veh.LWH(2,i) = randi([5000,6000]); %宽度
         Veh.LWH(3,i) = randi([2200,2400]); %宽度
-
+        Veh.volume(i) = Veh.LWH(1,i) * Veh.LWH(2,i) * Veh.LWH(3,i); % 体积
+        
         nYID = randi([1,maxSeg]);
         nXID = 1;
         for j=1:nYID
@@ -38,9 +39,7 @@ function [d] = getRandDa(n,m)
 
     % remove extra rows
     emptyYID =  all(Veh.yID ==0,2) == true;
-    Veh.yID(emptyYID,:) = [];
-    
-    
+    Veh.yID(emptyYID,:) = [];    
     
     
 % LU   

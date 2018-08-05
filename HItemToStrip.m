@@ -1,38 +1,39 @@
-function [d] = HItemToStrip(d,p)
+% function [d] = HItemToStrip(d,p)
+function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  ITEM:  ID LWH Weight
 % Output --- ITEM: itemorder Item_Strip itemRotaFlag CoordItemStrip
 % Output --- Strip: LW Weight
-% d.Item (1 LWH (已知)
-% d.Item (2 Item_Strip  (dim1:序号item在某个strip dim2:item进入顺序(左->右) 
-% d.Item (3 CoordItemStrip Item在strip的坐标) 
-% d.Item (4 itemo rder 函数内Item排序顺序)
-% d.Strip (1 LW )
+% Item (1 LWH (已知)
+% Item (2 Item_Strip  (dim1:序号item在某个strip dim2:item进入顺序(左->右) 
+% Item (3 CoordItemStrip Item在strip的坐标) 
+% Item (4 itemo rder 函数内Item排序顺序)
+% Strip (1 LW )
 
 %% 初始化
 % nDim Item维度(2) nItem Item数量 nStrip Strip数量 
 % widthStrip Strip最大宽度
-nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
-nItem = size(d.Item.LWH,2);
+nDim = size(Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
+nItem = size(Item.LWH,2);
 nStrip = nItem;
 
-tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
+tmpUniqueBin = unique(Veh.LWH(1:nDim,:)','rows')';
 widthStrip = tmpUniqueBin(1);
 clear tmpUniqueBin;
 
 %% 先判断ITEM是以Horizontal/Vertical 方式摆放（连带是否旋转）；再判断进入算法的顺序
 % 无论是否允许旋转, 只看是否需要以Horizontal/Vertical方式摆放
 
-%  [ItemLWRota, ItemRotaed] = placeItemHori(d.Item,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+%  [ItemLWRota, ItemRotaed] = placeItemHori(Item,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
 % 获得原封不动的返回值:赋初始值
-[d.Item.Rotaed] = placeItemHori(d.Item.LWH,d.Item.isRota,2);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.buff); 
+[Item.Rotaed] = placeItemHori(Item.LWH,Item.isRota,2);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff); 
 
     %% ITEM排序 555
     % getITEMorder - 获取ItemLWRota的顺序(重点是高度递减排序) % ITEM两种排序方式 高度/最短边
-    d.Item.itemorder = getITEMorder();
+    Item.itemorder = getITEMorder();
     % getSortedITEM - 获取按order排序后的ITEM:sortedItemArray
-    sortedItemArray = getSortedITEM(d.Item.itemorder);
+    sortedItemArray = getSortedITEM(Item.itemorder);
                                     % printstruct(d) ;printstruct(sortedItemArray)
 
     % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
@@ -42,16 +43,16 @@ d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.buff);
     if p.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
         [ sortedItemArray.Rotaed] = placeItemHori(sortedItemArray.LWH,sortedItemArray.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
     end
-    sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LU.buff); 
+    sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, LU.buff); 
      
 %% 55 LU->Item->Strip转换 
 % 提取变量 此处只使用LWHRota和Rotaed; 不使用LWH
 ItemLWRotaSort = sortedItemArray.LWH(1:nDim,:); %ItemLWSortHori
-ItemRotaedSort = sortedItemArray.Rotaed; % ItemRotaSortHori % itemRotaSort = zeros(1,size(d.Item.LWH,2));
+ItemRotaedSort = sortedItemArray.Rotaed; % ItemRotaSortHori % itemRotaSort = zeros(1,size(Item.LWH,2));
 ItemisRotaSort = sortedItemArray.isRota;
 ItemWeightSort = sortedItemArray.Weight;
 
-Itemorder = d.Item.itemorder;
+Itemorder = Item.itemorder;
 
 %%
 % 获取itemBeStripMatrixSort: 每个排序后Item在哪个Strip内  以及顺序
@@ -99,28 +100,28 @@ end
 % 获取LWHRota：每个item结合Rotaed标志后获得的LWH
 
     Item_Strip(:,Itemorder) = itemBeStripMatrixSort;
-    d.Item.Item_Strip = Item_Strip;
+    Item.Item_Strip = Item_Strip;
     
     CoordItemStrip(:,Itemorder) = CoordItemStripSort;    
-    d.Item.CoordItemStrip = CoordItemStrip;
+    Item.CoordItemStrip = CoordItemStrip;
     
     % ItemArray旋转相关
     itemRotaed(:,Itemorder) = ItemRotaedSort;
-    d.Item.Rotaed = itemRotaed;
+    Item.Rotaed = itemRotaed;
     ItemLWRota(:,Itemorder) = ItemLWRotaSort;
-    d.Item.LWH = [ItemLWRota; d.Item.LWH(3,:)];  % 返回原始顺序的旋转后的ItemArray
+    Item.LWH = [ItemLWRota; Item.LWH(3,:)];  % 返回原始顺序的旋转后的ItemArray
 
     % LUArray旋转相关,及时更新    
-    nbItem=length(d.Item.Rotaed);
+    nbItem=length(Item.Rotaed);
     % 循环每个item
     for idxItem=1:nbItem
-        flagThisItem = (d.LU.LU_Item(1,:)==idxItem );
+        flagThisItem = (LU.LU_Item(1,:)==idxItem );
         % 对应位置LU.Rotaed更新
-        if d.Item.Rotaed(idxItem)
-            d.LU.Rotaed(flagThisItem) = ~d.LU.Rotaed(flagThisItem);
+        if Item.Rotaed(idxItem)
+            LU.Rotaed(flagThisItem) = ~LU.Rotaed(flagThisItem);
             % 对应位置LU.LWH更新
-            d.LU.LWH(1, flagThisItem) = d.Item.LWH(1, idxItem);
-            d.LU.LWH(2, flagThisItem) = d.Item.LWH(2, idxItem);
+            LU.LWH(1, flagThisItem) = Item.LWH(1, idxItem);
+            LU.LWH(2, flagThisItem) = Item.LWH(2, idxItem);
         end
     end
 
@@ -130,8 +131,8 @@ end
 % 获取LWStrip:  新生成的strip的长宽
 % 获取StripWeight:  新生成的strip的重量
 
-    d.Strip.LW = LWStrip(:,LWStrip(2,:)>0); % 没有顺序 + 去除未使用的Strip    
-    d.Strip.Weight = StripWeight(StripWeight(:)>0); % 没有顺序 + 去除未使用的Strip    
+    Strip.LW = LWStrip(:,LWStrip(2,:)>0); % 没有顺序 + 去除未使用的Strip    
+    Strip.Weight = StripWeight(StripWeight(:)>0); % 没有顺序 + 去除未使用的Strip    
     
     %% 测试script
     % 输出主要结果:获得每个level包含的 
@@ -140,8 +141,8 @@ end
     
     %% 嵌套函数        
     function order = getITEMorder()        
-        tmpLWHItem = d.Item.LWH(1:nDim,:);
-        tmpIDItem =     d.Item.ID(1,:);
+        tmpLWHItem = Item.LWH(1:nDim,:);
+        tmpIDItem =     Item.ID(1,:);
         if p.whichSortItemOrder == 1 %Descend of 长(高)
             tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
             [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
@@ -158,7 +159,7 @@ end
     end
 
     function item = getSortedITEM(order)
-        item = structfun(@(x) x(:,order),d.Item,'UniformOutput',false);
+        item = structfun(@(x) x(:,order),Item,'UniformOutput',false);
     end
 
     function thisLevel = getThisLevel()
@@ -294,16 +295,16 @@ end
         %  printstruct(d);
         
         % 输出主要结果:获得从1开始每个strip包含的数据
-        for iStrip = 1:max(d.Item.Item_Strip(1,:))
-            [~,idx] = find(d.Item.Item_Strip(1,:)==iStrip);
+        for iStrip = 1:max(Item.Item_Strip(1,:))
+            [~,idx] = find(Item.Item_Strip(1,:)==iStrip);
             fprintf('strip %d 的剩余宽+最大长为:  ',iStrip);
-            fprintf('( %d ) ',d.Strip.LW(:,iStrip));
+            fprintf('( %d ) ',Strip.LW(:,iStrip));
             fprintf('\n');
             fprintf('strip %d 包含 original Item 索引号(长宽)[旋转标志]{坐标}为  \n  ',iStrip);
             fprintf('%d ',idx);
-            fprintf('( %d ) ', d.Item.LWH(1:nDim,idx));fprintf('\n');
-            fprintf('[ %d ] ', d.Item.Rotaed(:,idx));fprintf('\n');  %ItemRotaedSort
-            fprintf('{ %d } ', d.Item.CoordItemStrip(:,idx));fprintf('\n');
+            fprintf('( %d ) ', Item.LWH(1:nDim,idx));fprintf('\n');
+            fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %ItemRotaedSort
+            fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
             fprintf('\n');
         end
     end

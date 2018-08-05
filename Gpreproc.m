@@ -11,39 +11,43 @@
 %    d                     (1,1)
 %
 
-function [d] = Gpreproc(d)
-    % 0 ID 转换为从1开始的类序号 方便刘工输入ID类信息
-    if isfield(d.LU, 'ID'),  d.LU.ID = idExchange(d.LU.ID); end
-    if isfield(d.LU, 'PID'),  d.LU.PID = idExchange(d.LU.PID); end
-    if isfield(d.LU, 'PID'),  d.LU.SID = idExchange(d.LU.SID); end
-    if isfield(d.LU, 'PID'),  d.LU.UID = idExchange(d.LU.UID); end
+function [LU,Veh] = Gpreproc(LU,Veh)
+    % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息
+    if isfield(LU, 'ID'),  LU.ID = idExchange(LU.ID); end
+    if isfield(LU, 'PID'),  LU.PID = idExchange(LU.PID); end
+    if isfield(LU, 'PID'),  LU.SID = idExchange(LU.SID); end
+    if isfield(LU, 'PID'),  LU.UID = idExchange(LU.UID); end
     
-    % 1 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
-% %     d.Veh.LWH = d.Veh.LWH - d.Veh.buff;
-% %     d.LU.LWH(1,:) =  d.LU.LWH(1,:) +  d.LU.buff(1,: ) + d.LU.buff(2,: );
-% %     d.LU.LWH(2,:) =  d.LU.LWH(2,:) +  d.LU.buff(3,: ) + d.LU.buff(4,: );
+    % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
+% %     Veh.LWH = Veh.LWH - Veh.buff;
+% %     LU.LWH(1,:) =  LU.LWH(1,:) +  LU.buff(1,: ) + LU.buff(2,: );
+% %     LU.LWH(2,:) =  LU.LWH(2,:) +  LU.buff(3,: ) + LU.buff(4,: );
     
     % V1 : buff: 托盘间的间隙
-%     d.LU.buff = [d.LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
-%     d.LU.buff = repmat(d.LU.buff,1,numel(d.LU.ID));
-    d.LU.LWH = d.LU.LWH + d.LU.buff;
+%     LU.buff = [LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
+%     LU.buff = repmat(LU.buff,1,numel(LU.ID));
+    LU.LWH = LU.LWH + LU.buff;
     %TODO: 此处增加间隙为权宜之际，未考虑rotation后的变化；后期考虑在算法中增加间隙
 
-    % 2 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）
+    % 3 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）
     % NOTE: 此处将获得1: Horizontal方向的LWH和是否Rotaed标记
     % NOTE : 直接替换了原始ORIGINAL 的 LWH
-    [d.LU.Rotaed]= placeItemHori(d.LU.LWH,d.LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-    d.LU.LWH = getRotaedLWH(d.LU.LWH, d.LU.Rotaed, d.LU.buff);
+    [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+    LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.buff);
         
-%     d.LUID = getLUIDArray(d.LU); %% 计算：LU类型相关数据 暂时无用
+    % 4 Veh从体积大->小   默认顺序
+    [~,order] = sortrows(Veh.volume', [1],{'descend'});    
+    Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
+    
+%     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 
      printInput();
 %% 嵌套函数:
 function printInput()
-    fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(d.Veh.LWH','rows')');
-    fprintf('本算例只有一个箱型 宽间隙=%1.0f 长间隙=%1.0f 高间隙=%1.0f \n', unique(d.Veh.buff','rows')');
-    fprintf('本算例有 %d 个物品,其宽长高分别为 \n',numel(d.LU.ID(:)));
-    fprintf('%1.1f %1.1f %1.1f \n',d.LU.LWH);
+    fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(Veh.LWH','rows')');
+    fprintf('本算例只有一个箱型 宽间隙=%1.0f 长间隙=%1.0f 高间隙=%1.0f \n', unique(Veh.buff','rows')');
+    fprintf('本算例有 %d 个物品,其宽长高分别为 \n',numel(LU.ID(:)));
+    fprintf('%1.1f %1.1f %1.1f \n',LU.LWH);
 end
 
 end
