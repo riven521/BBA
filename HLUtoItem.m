@@ -27,8 +27,8 @@ Item = structfun(@(x) x( : , Item.ID(1,:)>0 ), Item, 'UniformOutput', false);
 LU.LU_Item( : , LU.order) = LU_Item;
 
 % 额外变量 ItemID
-ItemID = getITEMIDArray(Item);
-
+% ItemID = getITEMIDArray(Item);
+ ItemID = [];
 %% 测试script TO BE FIX
 % 输出主要结果:获得每个item包含的 原始 LU序号
 printscript(LU,Item);

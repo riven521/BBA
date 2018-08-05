@@ -10,7 +10,7 @@ clc;  clear;  close all;
     
 % 企业测试版1
     LUID = [2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2] ;
-    BINLWH = [2380, 9500, 2600];  %[6; 10; 4];
+    BINLWH = [2380, 9500, 2600]';  %[6; 10; 4];
     LULWH = [1955 760 550 ;
 1220 820 1100 ;
 1955 760 550 ;
@@ -54,10 +54,11 @@ clc;  clear;  close all;
 1220 820 1100 ;
 1220 820 1100 ;
 1220 820 1100 ;
-1955 760 550 ];    
+1955 760 550 ]';    
     PARA = [ 1 0] ;    
-    LUBUFF = [100,100];
-    BINBUFF = [0,0,0];       
+    LUBUFF = [100;100];
+    BINBUFF = [0;0;0];       
+    BINID = [1];
 
 % %     LUID = [1 2 1 2];
 % %     BINLWH = [10;20;4]';
@@ -77,7 +78,7 @@ clc;  clear;  close all;
     
     %% 不同参数多次计算
                             [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
-                            BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
+                            BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
                         
 % %      n=5;d=getRandDa(n);save('rndDa.mat','d');
 % %      load('rndDa.mat')

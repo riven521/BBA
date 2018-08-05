@@ -1,16 +1,3 @@
-TODO :
-
-2 材料增加考虑（通过托盘ID号辨别 DONE）
-
-1 重量增加考虑
-5 重货判定及位置
-
-3 托盘Buffer增加考虑（长宽）- 可作为托盘间间隙的距离*2
-4 车辆buffer增加考虑（长宽高） - 可作为边支LU间隙的调节器
-
-
-%长宽高间隙
-
 V12 180710 
 1 增加间隙，输入参数5和6
 增加第五个输入 LUBUFF = [1,1]; %长宽间隙
@@ -60,19 +47,29 @@ V0803-3
 1 find and replace
 V0803-4
 1 HLUToItem: 更新函数输入输出,方面了解哪些参数需要被使用
+V0803-5
+1 HStripToBin: 更新函数输入输出,方面了解哪些参数需要被使用
 
-
+V0805-1
 1 d初始化
 2 所有子函数不传递d,传递d.LU等具体子struc
+3 完成除LU->ITEM STRIP->BIN
 
-% luarray LUArray .LUArray
-find_and_replace(dir('BBA_Main.m'), 'LUArray', 'LU');
+1 检验输入更改
+2 Main函数 BBA_Main(LUID,LULWH,BINID,BINLWH); 前4参数必须,其它参数可有可无; 如无则自己生成随机数据; 如有则
+3 polyshape使用(画LU的图)
+
+
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
 2：增加matlab画图功能，可视化每一步
 3：改输入参数为非nested structure,并不在内部取structure
 4：初始化每个struct结构，采用initilize方式
-5：采用ployshape函数画图，和表示strip代替系数?
+5：采用ployshape函数画图，和表示strip代替系数
+%         polyout = sortregions(pgon,'perimeter','descend');
+%         R = regions(polyout);   plot(R)
+%         plot(rotate(pgon,90));
+%         getAlphashape(d.LU.LWH);
 6：STRIP给高度（最大的堆垛高度3/最小4）
 
 sign

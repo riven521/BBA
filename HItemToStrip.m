@@ -26,7 +26,7 @@ clear tmpUniqueBin;
 %  [ItemLWRota, ItemRotaed] = placeItemHori(d.Item,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
 % 获得原封不动的返回值:赋初始值
 [d.Item.Rotaed] = placeItemHori(d.Item.LWH,d.Item.isRota,2);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.BUFF); 
+d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.buff); 
 
     %% ITEM排序 555
     % getITEMorder - 获取ItemLWRota的顺序(重点是高度递减排序) % ITEM两种排序方式 高度/最短边
@@ -42,7 +42,7 @@ d.Item.LWH = getRotaedLWH(d.Item.LWH, d.Item.Rotaed, d.LU.BUFF);
     if p.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
         [ sortedItemArray.Rotaed] = placeItemHori(sortedItemArray.LWH,sortedItemArray.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
     end
-    sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LU.BUFF); 
+    sortedItemArray.LWH = getRotaedLWH(sortedItemArray.LWH, sortedItemArray.Rotaed, d.LU.buff); 
      
 %% 55 LU->Item->Strip转换 
 % 提取变量 此处只使用LWHRota和Rotaed; 不使用LWH

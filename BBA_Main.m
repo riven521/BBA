@@ -1,14 +1,14 @@
 %% BBA_MAIN demo
 %% Form
 %    [output_LU_Bin,output_CoordLUBin,output_LU_LWH,Res4_DrawSeq] = ... 
-%    BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+%    BBA_Main(varargin)
 %
 %% Description
 %   BBA_Main.
 %
-%% Inputs
+%% Inputs (varargin)
 %   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
-%   LULWH                (3,n)   托盘宽长高 
+%   LULWH                (3,n)   托盘宽长高
 %   BINLWH              (3,1)   车型宽长高（目前仅考虑单车型 TODO 后期增加到多车型按顺序使用）
 %   PARANOUSE       (1,1)   标量(1*1) 允许rotation,但考虑rotation的差异
 %   LUBUFF               (2,1)   托盘间宽长的总间隙(2倍的单边宽长间隙) 可用托盘长宽高=每个托盘的实际长宽高+增加的buff
@@ -25,36 +25,23 @@
 %
 
 function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
-    BBA_Main(varargin)
-% function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
-%     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+    BBA_Main(LUID,LULWH,BINID,BINLWH,varargin) %前4个必须
+                % function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
+                %     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
 
 %% Initialize Data Structure
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all
-if nargin ~= 0
-    if nargin <= 6 
+clc
+if nargin ~= 0    
         d = DataInitialize( ...
-            'LUID', varargin{1},...
-            'LULWH',varargin{2}, ...
-            'LUBUFF',varargin{5}, ...
-            'BINLWH',varargin{3}, ...
-            'BINBUFF', varargin{6});
-        
-    else
-        d = DataInitialize( ...
-            'LUID', varargin{1},...
-            'LULWH',varargin{2}, ...
-            'LUBUFF',varargin{5}, ...
-            'LUWEIGHT', varargin{7}, ...
-            'LUISROTA', varargin{9}, ...
-            'BINLWH',varargin{3}, ...
-            'BINBUFF', varargin{6}, ...
-            'BINWEIGHT', varargin{8});
-    end
+            'LUID', LUID,...
+            'LULWH',LULWH, ...
+            'BINID',BINID,...
+            'BINLWH',BINLWH);
 else
-    d = DataInitialize(5); %0 默认值; >0 随机产生托盘n个算例
+    d = DataInitialize(30,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
 end
 
 %% Initialize Parameter
@@ -87,10 +74,9 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
     
-%     plotSolution(dA(iAlg),pA(iAlg));
-    
-    % 算法判断是否相同类型托盘相邻摆放
-    flagA(iAlg) =  isAdjacent(dA(iAlg));
+%      plotSolution(dA(iAlg),pA(iAlg));  
+
+    flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -122,9 +108,6 @@ fprintf(1,'Simulation done.\n');
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % d = rmfield(d, {'Veh', 'LU'});
 
-%END MAIN
-
-      
 %% ******* 嵌套函数  **********
 
     function getReturnBBA(daMax) 
@@ -134,13 +117,22 @@ fprintf(1,'Simulation done.\n');
         
         % 参数2 - LU在Bin内的坐标
         % 增加间隙-增加CoordLUBinWithBuff变量
-        daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.BUFF./2;
+        % V2:  LU buff margin方式
+%         daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff(1,:) + daMax.LU.buff(3,:);
+        % V1:  LU buff 间隙方式
+        daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
         output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
         
         % 参数3 - LU的长宽高(旋转后)
         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
-        % 以下是V2      
-        daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.BUFF;
+        % 以下是V3 - LU buff margin方式
+%         daMax.LU.LWHOriRota = daMax.LU.LWH;
+%         daMax.LU.LWHOriRota(1,:) = daMax.LU.LWH(1,:) - (daMax.LU.buff(1,:) +daMax.LU.buff(2,:))  ;
+%         daMax.LU.LWHOriRota(1,:) = daMax.LU.LWH(2,:) - (daMax.LU.buff(3,:) +daMax.LU.buff(4,:))  ;
+%         output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+%         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
+%         % 以下是V2      
+        daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
         output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
             % 以下是V1
             %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
@@ -162,131 +154,9 @@ fprintf(1,'Simulation done.\n');
         % % fprintf('本算例计算全部完成 \n');
         end
 
-
-end
-
-
+end %END MAIN
 
 %% ******* 局部函数 ****************
-
-%%DATAITIALIZE Initialize the DATA data structure.
-%
-%% Form
-%  d = DataInitialize( varargin )
-%
-%% Description
-% Initializes the INPUT data structure using parameter pairs.
-%
-%% Inputs
-% varargin:  ('parameter',value,...)
-% varargin:  (value) value's random LU input
-%
-%% Outputs
-%   d	(.) DATA data structure
-function d = DataInitialize( varargin )
-
-% Defaults
-d.LU.ID = [1 1 2 2];
-d.LU.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4]';
-d.Veh.LWH = [5;20;4]';
-
-%     d.LU.ID = [1 1 2 2];
-%     d.Veh.LWH = [5;20;4]';
-%      d.LU.isRota = [1 1 1 1];
-%     d.LU.LWH = [2 2 3 3; 5 5 6 6; 4 4 4 4];
-    
-% %     d.LU.ID = [5236934585 4 5236934585 5236934585];
-% %     d.LU.isRota = [1 1 1];
-% %     d.Veh.LWH = [8;10;4];  %[6; 10; 4];
-% %     d.LU.LWH = [3 2 3 3; 6 4 6 6; 2 2 1 2];
-
-d.LU.BUFF = [0,0];
-d.Veh.BUFF = [0,0,0];
-d.Veh.Weight = 1000;
-
-n = length(varargin);
-
-if n == 1 && varargin{1}~=0
-    d=getRandDa(varargin{1});
-%     save('rndDa.mat','d');
-%     load('rndDa.mat');
-end
-
-for k = 1 : 2 : length(varargin)
-    switch varargin{k}
-        case 'LUID'
-            d.LU.ID                        = varargin{k+1};
-        case 'LULWH'
-            d.LU.LWH                    = varargin{k+1};
-        case 'LUBUFF'
-            d.LU.BUFF                   = varargin{k+1};
-        case 'LUWEIGHT'
-            d.LU.Weight                = varargin{k+1};            
-        case 'LUISROTA'
-            d.LU.isRota                = varargin{k+1};            
-        case 'BINLWH'
-            d.Veh.LWH                  = varargin{k+1};
-        case 'BINBUFF'
-            d.Veh.BUFF                 = varargin{k+1};
-        case 'BINWEIGHT'
-            d.Veh.Weight              = varargin{k+1};            
-    end
-end
-
-% 如下为默认随机值
-d.LU.Weight = randi([1,10],1,numel(d.LU.ID));
-d.LU.isRota = randi([0,1],1,numel(d.LU.ID));
-
-end
-
-%%PARAMETERNITIALIZE Initialize the parameter data structure.
-%
-%% Form
-%  p = ParameterInitialize( varargin )
-%
-%% Description
-% Initializes the algorithm's parameter data structure using parameter pairs.
-%
-%% Inputs
-% varargin:  ('parameter',value,...)
-%
-% 'whichStripH'                             (1,1) 
-% 'whichBinH'                               (1,1) 
-% 'whichSortItemOrder'               (1,1)
-% 'whichRotation'                         (1,1)
-% 'whichRotationHori'                  (1,1)
-%
-%% Outputs
-%   p	(.)  Data structure
-function p = ParameterInitialize( varargin )
-
-% Defaults
-p.whichStripH = 1;
-p.whichBinH = 1;
-p.whichSortItemOrder = 1;
-p.whichRotation = 1;
-p.whichRotationHori = 1;
-
-n = length(varargin);
-
-for k = 1:2:length(varargin)
-    switch varargin{k}
-        case 'whichStripH'
-            p.whichStripH                        = varargin{k+1};
-        case 'whichBinH'
-            p.whichBinH                         = varargin{k+1};
-        case 'whichSortItemOrders'
-            p.whichSortItemOrder          = varargin{k+1};
-        case 'whichRotation'
-            p.whichRotation                 = varargin{k+1};
-        case 'whichRotationHori'
-            p.whichRotationHori         = varargin{k+1};
-    end
-end
-
-end
-
-
 function plotSolution(d,par)
 %% 画图
 %     printstruct(d);
@@ -297,112 +167,12 @@ fields = fieldnames(par);
 aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 figure('name',num2str(aField));
-d.Item.LWH = d.Item.LWH - d.LU.BUFF(:,1:size(d.Item.LWH,2));
-d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.BUFF(:,1:size(d.Item.LWH,2))/2;
+
+d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
+d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
 plot2DBPP(d,par);
 end
 
-function [d] = RunAlgorithm(d,p)
-        
-        %% 检验Input输入数据
-        d = GcheckInput(d,p);
-        %% 启发式: LU到Item的算法
-        printstruct(d);
-        [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
-        printstruct(d);
-        %% 计算下届
-        lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
-        %% 启发式：Item到Strip的算法
-%         printstruct(d);
-%         printstruct(d.Item);
-        [d] = HItemToStrip(d,p);
-        %% 计算strip装载率
-%         printstruct(d);
-        d = computeLoadingRateStrip(d);
-        function d = computeLoadingRateStrip(d)
-            % 初始化
-            nStrip = size(d.Strip.LW,2);
-            d.Strip.Stripvolume = zeros(1,nStrip);
-            d.Strip.StripvolumeLimit = zeros(1,nStrip);
-            d.Strip.Itemvolume = zeros(1,nStrip);
-            d.Strip.loadingrate = zeros(1,nStrip);
-            d.Strip.loadingrateLimit = zeros(1,nStrip);
-            
-            % 计算每个strip的装载率
-            %每个strip的可用体积 = 高度*宽度(车辆的宽度)
-            d.Strip.Stripvolume = d.Strip.LW(2,:)*d.Veh.LWH(1,1);
-            %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
-            d.Strip.StripvolumeLimit = d.Strip.LW(2,:) .* (d.Veh.LWH(1,1) - d.Strip.LW(1,:));
-            a = d.Item.LWH;
-            b = d.Item.Item_Strip;
-            for iStrip =1:nStrip
-                %每个strip的装载体积
-                d.Strip.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
-            end
-            %每个strip的装载比率
-            d.Strip.loadingrate =  d.Strip.Itemvolume ./ d.Strip.Stripvolume;
-            %每个strip的有限装载比率
-            d.Strip.loadingrateLimit =  d.Strip.Itemvolume ./ d.Strip.StripvolumeLimit;
-        end
-        %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
-         d = modifyStripWithOneItem(d);
-        function d = modifyStripWithOneItem(d)
-            stripheight = d.Strip.LW(2,:);
-            binwidth = d.Veh.LWH(1,1);
-            stripleftwidth = d.Strip.LW(1,:);
-            stripwidth = ( binwidth - stripleftwidth );
-            [tmpset] = find(stripheight > stripwidth);
-            if ~isempty(tmpset)
-                if isscalar(tmpset) %对该strip调换内部仅有1个Item方可,多个调整涉及CoordItemStrip
-                    d.Strip.LW(:,tmpset) = [binwidth-stripheight(tmpset),stripwidth(tmpset)];    %strip的长宽调整
-                    %内部Item的itemRotaFlag调整 
-                    idxItem = find(d.Item.Item_Strip(1,:)==tmpset );
-                    if isscalar(idxItem)
-                        d.Item.itemRotaFlag(idxItem) = ~d.Item.Rotaed(idxItem);
-                    end                    
-                    %内部LU的LURotaFlag 不調 還未到 %内部Item的CoordItemStrip不調                    
-                end
-            end
-        end
-        %% 启发式：Strip到Bin的算法
-%         printstruct(d);
-        [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,p);
-        %% Item到bin的信息获取:
-%         printstruct(d);
-        [d] = HItemToBin(d);
-         %% 计算bin装载率
-         % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
-         % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
-         d = computeLoadingRateBin(d);
-        function d = computeLoadingRateBin(d)
-            % 初始化
-            nBin = size(d.Bin.LW,2);
-            d.Bin.Binvolume = zeros(1,nBin);
-            d.Bin.Itemvolume = zeros(1,nBin);
-            d.Bin.Itemloadingrate = zeros(1,nBin);
-            d.Bin.ItemloadingrateLimit = zeros(1,nBin);
-            % 计算每个Bin的装载率            
-            BinWidth = d.Veh.LWH(1,:);
-            BinHeight = d.Veh.LWH(2,:);
-            BinVolume = BinWidth .* BinHeight;
-            %每个Bin的可用体积 = 车辆高度*车辆宽度
-            d.Bin.Binvolume = repmat(BinVolume,1,nBin);            
-            %每个Bin 的有限可用体积 = 宽度(bin使用宽度=车辆宽度-bin剩余宽度) *高度(bin使用高度=车辆高度-bin剩余高度)
-            d.Bin.BinvolumeLimit = (BinWidth - d.Bin.LW(1,:)) .* (BinHeight - d.Bin.LW(2,:));
-            
-            a = d.Item.LWH;
-            b = d.Item.Item_Bin;
-            for iBin =1:nBin
-                %每个Bin的装载体积
-                d.Bin.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
-            end
-            %每个bin的装载比率
-            d.Bin.loadingrate =  d.Bin.Itemvolume ./ d.Bin.Binvolume;
-            %每个bin的有限装载比率
-            d.Bin.loadingrateLimit =  d.Bin.Itemvolume ./ d.Bin.BinvolumeLimit;
-        end
-
-end
 
     %% ************ 判断是否相同类型托盘相邻摆放
     function flag = isAdjacent(d)
@@ -424,6 +194,7 @@ end
             end                    
         end
     end
+    
 % % %             % ns - 本bin内strip个数及顺序
 % % %             ns = d.Strip.stripBeBinMatrix(2,d.Strip.stripBeBinMatrix(1,:) == iBin);
 % % %             % ni - 本bin内item内LU类型及顺序
@@ -513,183 +284,177 @@ end
 
 %% ********************** 下面是ts算法的代码 暂时不用 ****************
 
-% [ub,x,b] = HnextFit(Item,Veh);
-% [ub,x,b] = HnextFit_origin(Item,Veh);
-% disp(b');
-% disp(x);
-% fprintf('UB = %d \n', ub);
-% [ub,x,b] = TSpack(d,n,w,W,lb,timeLimit, ub0,x,b,whichH);
+% % % [ub,x,b] = HnextFit(Item,Veh);
+% % % [ub,x,b] = HnextFit_origin(Item,Veh);
+% % % disp(b');
+% % % disp(x);
+% % % fprintf('UB = %d \n', ub);
+% % % [ub,x,b] = TSpack(d,n,w,W,lb,timeLimit, ub0,x,b,whichH);
+% % 
+% % function [toReturn,x,b] = TSpack(d,n,w,W,lb,timeLimit, ub0,x,b,whichH)
+% % [nb,x,b] = heur(d,n,w,W,x,b,whichH);
+% % ub0 = nb;
+% % 
+% % if nb == lb
+% %     toReturn = nb;
+% %     fprintf('best lb = %d ', nb);
+% % end
+% % 
+% % %/* initial (trivial) solution */
+% % cnb = n;
+% % cb = 1:n;
+% % cx = zeros(d,n);
+% % cw = w;
+% % 
+% % %/* external loop */
+% % D = 1; tt = 0.0;
+% % toReturn = nb;
+% % 
+% % end
+% % 
+% % function [nb,x,b] = heur(d,n,w,W,x,b,whichH)
+% % nb = -1;
+% % which = (d-2)*100 + whichH; % which 为0或100
+% % if which == 0
+% %     [nb,x,b]  = HnextFit(n,w,W,x,b,n+1); %/* first heuristic for 2d bin packing */
+% %     %          disp(x);
+% %     %          disp(b);
+% % elseif which == 100
+% %     [nb,x,b]  = HHnextFit(n,w,W,x,b); %/* first heuristic for 3d bin packing */
+% % end
+% % end
+% % 
+% %     function [ub,px,pb]  = HnextFit(Item,Veh)
+% %         % Initialize
+% %         d = size(Item.LWH,1)-1;
+% %         n = size(Item.LWH,2);
+% %         nn = n + 1;
+% %         w = Item.LWH(1:d,:);
+% %         W = Veh.LWH(1:d,:);
+% %         x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
+% %         
+% %         %/* sort the items */
+% %         % sortD = size(w,1);%获取需要排序的维度
+% %         [~,ord] = sort(w(d,:),'descend');%对w进行排序,只需要它的顺序ord;按第d行排序（高度)
+% %         pw = w(:,ord);
+% %         px = x;
+% %         pb = (b+999); % 0 + 999
+% %         pbNb = bNb;
+% %         
+% %         %/* next fit packing */
+% %         % binLeftArray(1,ub) ： wleft
+% %         % binLeftArray(2,ub) :  hleft
+% %         nBin = n;
+% %         binLeftArray = repmat(W,1,nBin);  %初始
+% %         ub = 1;
+% %         for i=1:n
+% %             %     if (binLeftArray(1,ub) == W(1)) & (binLeftArray(2,ub) == W(2)) %如果是空bin
+% %             if pbNb(ub) == 0   %如果是空bin
+% %                 if (pw(1,i) <= binLeftArray(1,ub)) && (pw(2,i) <= binLeftArray(2,ub)) %如果宽高都不超标
+% %                     px(1,i) = 0; px(2,i) = 0;
+% %                     binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
+% %                     binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
+% %                     pbNb(ub) = pbNb(ub) + 1;
+% %                 else
+% %                     error('EEE');
+% %                 end
+% %             else               %如果不是空bin
+% %                 if pw(1,i) <= binLeftArray(1,ub)  %如果i的宽满足当前bin的剩余宽度，剩余高度应该不变
+% %                     px(1,i) = W(1) - binLeftArray(1,ub);
+% %                     px(2,i) = W(2) - binLeftArray(2,ub) - pw(2,i);     %高度为????
+% %                     binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
+% %                     binLeftArray(2,ub) = binLeftArray(2,ub);
+% %                     pbNb(ub) = pbNb(ub) + 1;
+% %                 else
+% %                     if pw(2,i)  <= binLeftArray(2,ub)  %如果i的高满足当前bin的剩余高度
+% %                         px(1,i) = 0;
+% %                         px(2,i) = binLeftArray(2,ub);
+% %                         binLeftArray(1,ub) = W(1) - pw(1,i);
+% %                         binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
+% %                         pbNb(ub) = pbNb(ub) + 1;
+% %                     else  %如果i的高不能满足当前bin的剩余高度
+% %                         ub = ub + 1;
+% %                         px(1,i) = 0;   px(2,i) = 0;
+% %                         pbNb(ub) = pbNb(ub) + 1;
+% %                         binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
+% %                         binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
+% %                     end
+% %                 end
+% %             end
+% %             pb(i) = ub-1;
+% %         end
+% %         
+% %         
+% %         %原始的
+% %         x = px(:,ord);
+% %         b = pb(ord);
+% %         bNb = pbNb(ord);
+% %         ub = ub +1;
+% %     end
+% % 
+% %     function [ub,px,pb]  = HnextFit_origin(Item,Veh)
+% %         % Initialize
+% %         d = size(Item.LWH,1);
+% %         if d==3
+% %             d=d-1;
+% %         end
+% %         n = size(Item.LWH,2);
+% %         nn = n + 1;
+% %         w = Item.LWH(1:d,:);
+% %         W = Veh.LWH(1:d,:);
+% %         x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
+% %         
+% %         %/* sort the items */
+% %         sortD = size(w,1);%获取需要排序的维度
+% %         [~,ord] = sort(w(sortD,:),'descend');%对w进行排序,只需要它的顺序ord
+% %         pw = w(:,ord);
+% %         ord;
+% %         
+% %         px = zeros(size(x,1),size(x,2));
+% %         pb = 999*ones(size(b,1),size(b,2));
+% %         %/* next fit packing */
+% %         hleft = W(2) - pw(2,1);
+% %         wleft = W(1);
+% %         ub = 0; hcurr = 0;
+% %         for i=1:n  %从第一个item开始安置
+% %             if pw(1,i) <= wleft  %如果item的w 比wleft小，安置item到本bin本层：更新x1值，更新wleft；hleft不变
+% %                 px(1,i) = W(1) - wleft;
+% %                 wleft = wleft - pw(1,i);
+% %             else    %否则往上一层安排。
+% %                 if pw(2,i) <= hleft  %如果item的h 比hleft小：表明bin高度充足，安置item到上一曾：更新坐标hleft，更新hcurr，wleft？ 更新坐标x值，更新wleft
+% %                     hcurr = W(2) - hleft; %安排在同一层，所以hcurr不变，也等于pw(2,1)(但在其他bin就不对了，所以用hcurr)
+% %                     hleft = hleft - pw(2,i);
+% %                 else  %如果放不下，开新bin，更新hcurr；更新hleft；更新数量ub+1（如果达到nn值，跳出）；更新坐标x值0，更新wleft
+% %                     hcurr = 0;    %安排在新的bin，所以hcurr为0;
+% %                     hleft = W(2) - pw(2,i);
+% %                     if (ub+1 == nn)
+% %                         break;
+% %                     end
+% %                     ub = ub + 1;
+% %                 end
+% %                 % 无论放在上层或开新bin，更新x1为0；更新wleft为W(1)-此item的宽w
+% %                 px(1,i) = 0;
+% %                 wleft = W(1) - pw(1,i);
+% %             end
+% %             % 此处统一更新x1值，即高度值，为hcurr；统一更新b值=ub；
+% %             px(2,i) = hcurr;
+% %             pb(i) = ub;
+% %         end
+% %         
+% %         %原始的
+% %         x = px(:,ord);
+% %         b = pb(ord);
+% %         ub = ub +1;
+% %     end
+% % 
+% % 
+% %     function [ nb ] = HHnextFit(n,w,W,x,b)
+% %         
+% %         nb = 1;
+% %         
+% %     end
 
-function [toReturn,x,b] = TSpack(d,n,w,W,lb,timeLimit, ub0,x,b,whichH)
-[nb,x,b] = heur(d,n,w,W,x,b,whichH);
-ub0 = nb;
 
-if nb == lb
-    toReturn = nb;
-    fprintf('best lb = %d ', nb);
-end
-
-%/* initial (trivial) solution */
-cnb = n;
-cb = 1:n;
-cx = zeros(d,n);
-cw = w;
-
-%/* external loop */
-D = 1; tt = 0.0;
-toReturn = nb;
-
-end
-
-function [nb,x,b] = heur(d,n,w,W,x,b,whichH)
-nb = -1;
-which = (d-2)*100 + whichH; % which 为0或100
-if which == 0
-    [nb,x,b]  = HnextFit(n,w,W,x,b,n+1); %/* first heuristic for 2d bin packing */
-    %          disp(x);
-    %          disp(b);
-elseif which == 100
-    [nb,x,b]  = HHnextFit(n,w,W,x,b); %/* first heuristic for 3d bin packing */
-end
-end
-
-    function [ub,px,pb]  = HnextFit(Item,Veh)
-        % Initialize
-        d = size(Item.LWH,1)-1;
-        n = size(Item.LWH,2);
-        nn = n + 1;
-        w = Item.LWH(1:d,:);
-        W = Veh.LWH(1:d,:);
-        x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
-        
-        %/* sort the items */
-        % sortD = size(w,1);%获取需要排序的维度
-        [~,ord] = sort(w(d,:),'descend');%对w进行排序,只需要它的顺序ord;按第d行排序（高度)
-        pw = w(:,ord);
-        px = x;
-        pb = (b+999); % 0 + 999
-        pbNb = bNb;
-        
-        %/* next fit packing */
-        % binLeftArray(1,ub) ： wleft
-        % binLeftArray(2,ub) :  hleft
-        nBin = n;
-        binLeftArray = repmat(W,1,nBin);  %初始
-        ub = 1;
-        for i=1:n
-            %     if (binLeftArray(1,ub) == W(1)) & (binLeftArray(2,ub) == W(2)) %如果是空bin
-            if pbNb(ub) == 0   %如果是空bin
-                if (pw(1,i) <= binLeftArray(1,ub)) && (pw(2,i) <= binLeftArray(2,ub)) %如果宽高都不超标
-                    px(1,i) = 0; px(2,i) = 0;
-                    binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
-                    binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
-                    pbNb(ub) = pbNb(ub) + 1;
-                else
-                    error('EEE');
-                end
-            else               %如果不是空bin
-                if pw(1,i) <= binLeftArray(1,ub)  %如果i的宽满足当前bin的剩余宽度，剩余高度应该不变
-                    px(1,i) = W(1) - binLeftArray(1,ub);
-                    px(2,i) = W(2) - binLeftArray(2,ub) - pw(2,i);     %高度为????
-                    binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
-                    binLeftArray(2,ub) = binLeftArray(2,ub);
-                    pbNb(ub) = pbNb(ub) + 1;
-                else
-                    if pw(2,i)  <= binLeftArray(2,ub)  %如果i的高满足当前bin的剩余高度
-                        px(1,i) = 0;
-                        px(2,i) = binLeftArray(2,ub);
-                        binLeftArray(1,ub) = W(1) - pw(1,i);
-                        binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
-                        pbNb(ub) = pbNb(ub) + 1;
-                    else  %如果i的高不能满足当前bin的剩余高度
-                        ub = ub + 1;
-                        px(1,i) = 0;   px(2,i) = 0;
-                        pbNb(ub) = pbNb(ub) + 1;
-                        binLeftArray(1,ub) = binLeftArray(1,ub) - pw(1,i);
-                        binLeftArray(2,ub) = binLeftArray(2,ub) - pw(2,i);
-                    end
-                end
-            end
-            pb(i) = ub-1;
-        end
-        
-        
-        %原始的
-        x = px(:,ord);
-        b = pb(ord);
-        bNb = pbNb(ord);
-        ub = ub +1;
-    end
-
-    function [ub,px,pb]  = HnextFit_origin(Item,Veh)
-        % Initialize
-        d = size(Item.LWH,1);
-        if d==3
-            d=d-1;
-        end
-        n = size(Item.LWH,2);
-        nn = n + 1;
-        w = Item.LWH(1:d,:);
-        W = Veh.LWH(1:d,:);
-        x = zeros(d,n); b = zeros(n,1); bNb = zeros(n,1);
-        
-        %/* sort the items */
-        sortD = size(w,1);%获取需要排序的维度
-        [~,ord] = sort(w(sortD,:),'descend');%对w进行排序,只需要它的顺序ord
-        pw = w(:,ord);
-        ord;
-        
-        px = zeros(size(x,1),size(x,2));
-        pb = 999*ones(size(b,1),size(b,2));
-        %/* next fit packing */
-        hleft = W(2) - pw(2,1);
-        wleft = W(1);
-        ub = 0; hcurr = 0;
-        for i=1:n  %从第一个item开始安置
-            if pw(1,i) <= wleft  %如果item的w 比wleft小，安置item到本bin本层：更新x1值，更新wleft；hleft不变
-                px(1,i) = W(1) - wleft;
-                wleft = wleft - pw(1,i);
-            else    %否则往上一层安排。
-                if pw(2,i) <= hleft  %如果item的h 比hleft小：表明bin高度充足，安置item到上一曾：更新坐标hleft，更新hcurr，wleft？ 更新坐标x值，更新wleft
-                    hcurr = W(2) - hleft; %安排在同一层，所以hcurr不变，也等于pw(2,1)(但在其他bin就不对了，所以用hcurr)
-                    hleft = hleft - pw(2,i);
-                else  %如果放不下，开新bin，更新hcurr；更新hleft；更新数量ub+1（如果达到nn值，跳出）；更新坐标x值0，更新wleft
-                    hcurr = 0;    %安排在新的bin，所以hcurr为0;
-                    hleft = W(2) - pw(2,i);
-                    if (ub+1 == nn)
-                        break;
-                    end
-                    ub = ub + 1;
-                end
-                % 无论放在上层或开新bin，更新x1为0；更新wleft为W(1)-此item的宽w
-                px(1,i) = 0;
-                wleft = W(1) - pw(1,i);
-            end
-            % 此处统一更新x1值，即高度值，为hcurr；统一更新b值=ub；
-            px(2,i) = hcurr;
-            pb(i) = ub;
-        end
-        
-        %原始的
-        x = px(:,ord);
-        b = pb(ord);
-        ub = ub +1;
-    end
-
-
-    function [ nb ] = HHnextFit(n,w,W,x,b)
-        
-        nb = 1;
-        
-    end
-
-    function [ lb ] = computerLB(Item,Veh)
-        sum1 = sum(prod(Item.LWH,1));        
-        % todo 增加判断是否所有的BinArray中所有的bin是相同的 如果是 则继续执行
-        sum2 = prod(Veh.LWH(:,1));
-        lb = ceil(sum1/sum2);
-        if lb <=0, error('EEE');end
-    end
 
 %% ************************* 下面是注释代码  ************************
 
