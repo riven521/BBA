@@ -16,6 +16,7 @@ Item_Bin = d.Item.Item_Bin;
 CoordItemBin = d.Item.CoordItemBin;
 itemLWH = d.Item.LWH;
 itemID = d.Item.ID;
+itemSID = d.Item.SID;
 % if ParaArray.whichRotation == 1    
     ItemRotaed = d.Item.Rotaed; %增加rotation后增 itemRotaFlag
 % end
@@ -27,6 +28,7 @@ itemBeBinMatrixSort = Item_Bin(:,binorder);
 CoordItemBinSort = CoordItemBin(:,binorder);
 itemLWHSort = itemLWH(:,binorder);
 itemIDSort = itemID(:,binorder);
+itemSIDSort = itemSID(:,binorder);
 % if ParaArray.whichRotation == 1    
     ItemRotaedSort = ItemRotaed(:,binorder); %增加rotation后增
 % end
@@ -73,8 +75,12 @@ for iBin = 1:nBin
         itemID = drawItemId(iItem);
         itemColor = 0.8*nColors(nIDType==itemID, : );        
         
+%         for iSid = 1:length(unique(itemSIDSort))
+%             itemSIDSort(iSid)
         DrawRectangle([itemCenter itemWidth itemLength 0],  '-',  itemColor); 
+%         itemSIDSort
         hold on;
+%         end
     end
     % 递增本次bin的宽度
     iterWidth = iterWidth + widthBin;

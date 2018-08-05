@@ -63,15 +63,15 @@ function [d] = getRandDa(n,m)
     for i=1: length(uniID)
         % 与LUID相关
         idx = find(LU.ID(:)==uniID(i));
-        LU.LWH(1,idx) = randi([100,1000]); %宽度
-        LU.LWH(2,idx) = randi([100,1000]); %长度
+        LU.LWH(1,idx) = randi([1000,1300]); %宽度
+        LU.LWH(2,idx) = randi([700,850]); %长度
         LU.isRota(idx) = randi([0,1]);            %是否旋转
         LU.maxL(idx) = randi([1,4]);
         LU.yID(idx) = randi([0,nYID]); % TODO 后期改与车型一致
         LU.xID(idx) = randi([0,nXID]);
         LU.margin(:,idx) = randi([1,4]);
         for j=1:length(idx)
-            LU.LWH(3,idx(j)) = randi([500,1000]); %高度
+            LU.LWH(3,idx(j)) = randi([250,1150]); %高度
             LU.PID(idx(j)) = randi([100,103]);
             LU.SID(idx(j)) = randi([200, 203]);
             LU.UID(idx(j)) = randi([300,303]);

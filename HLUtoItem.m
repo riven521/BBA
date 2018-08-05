@@ -49,8 +49,8 @@ function printscript(LU,Item)
 end
 
 function order = getLUorder(LU)
-tmpLUMatrix = [LU.ID; LU.LWH];
-[~,tepLUorder] = sortrows(tmpLUMatrix',[1 4],{'ascend','descend'}); %1:ID 4:Hight
+tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
+[~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
 %         tepLUorder = 1:length(LU.ID)'; %直接赋值1:n % tepLUorder = [2 3 4 1 5]';
 if ~isrow(tepLUorder)
     order = tepLUorder';
@@ -72,6 +72,8 @@ nLUid = size(unique(sLU.ID),2);
 hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
 
 Item.ID = zeros(sz);             %Item的ID类型
+Item.SID = zeros(sz);           
+Item.UID = zeros(sz);           
 Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
 Item.Weight = zeros(sz);     %Item的重量
 Item.LWH = zeros(3,sz(2));  %Item的宽长高
@@ -99,6 +101,8 @@ for iLUid=1:nLUid
             LU_Item(2,iLU) = Item_LU(iItem);
             
             Item.ID(1,iItem) = sLU.ID(1,iLU);               %更新ID类型
+            Item.SID(1,iItem) = sLU.SID(1,iLU);               
+            Item.UID(1,iItem) = sLU.UID(1,iLU);               
             Item.isRota(1,iItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
         end
     end

@@ -67,19 +67,23 @@ V0805-2
 
 V0805-3
 1 增加多车型首选第一个车型（默认应该是体积最大车型）- 修改Veh.LWH相关参数
-2  
+2 [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p); 增加输出iLevel,否则NEXTFIT 变为 FIRSTFIT
+
+V0805-4
 
 TODO:
-FPRINT
-2 test main error 画图
-3 modifyStripWithOneItem(d);修改
+1 FPRINT
+2 test main error （modifyStripWithOneItem(d);修改）
+3 车型约束5-边界约束4-摆放相邻约束1-摆放位置约束4
 
-2 修改局部函数HItemToStrip
-为多车型（随机生成，车型按从大到小排序，首先安排第一种大车型）
-
-1 完成所有的局部函数
-2 
-
+TODO:
+1 分别每种LUID分别做Hori=1/2，而非全文统一 NEXTFIT 4 STRIPH
+2 供应商ID增加, 确保同供应商放在一起（按供应商排序，由指定顺序，从小到大排序）（LU按供应商排序，再按高度排序）
+2 供应商在bin内排序要一起，而非strip; strip先按供应商排序,后按高度排序
+3 逻辑确保多供应商时没有摆放位置要求
+4 strip在bin内局部优化，也可以bin之间调整，确保满足要求即可。
+5 供应商之间衔接时，注意可以一起堆垛并连接的strip高度变异最小，可以固定strip选LUID
+6 暂且规定不同供应商即使LUID相同，也不能堆垛；否则无法获取堆垛后ITEM的SID等。后期可局部优化。
 
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。

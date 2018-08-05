@@ -73,18 +73,22 @@ sCoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
 iLevel = 1; iItem = 1; %iStrip代表item实质
 while 1
     if iItem > nItem, break; end
-    
+    tmpLevel = iLevel;
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
     
     insertItemToStrip(thisLevel);
     
+    if iLevel > tmpLevel && p.whichStripH == 3
+%         iItem - 1;
+    end
+        
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
 
-% plot2DStrip(); %一次性画图
-
+%  plot2DStrip(); %可能有问题: 一次性画图
+ 
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem_Strip; CoordItemStrip=sCoordItemStrip;
@@ -266,11 +270,12 @@ end
 end
 
 function order = getITEMorder(Item,whichSortItemOrder)        
-        tmpLWHItem = Item.LWH(1:2,:);
+        tmpLWH = Item.LWH(1:2,:);
         tmpIDItem =     Item.ID(1,:);
+        tmpSID = Item.SID;
         if whichSortItemOrder == 1 %Descend of 长(高)
-            tmpLWH = [tmpIDItem; tmpLWHItem]; %额外增加ITEM的ID到第一行形成临时变量
-            [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序            
+            tmp = [tmpSID; tmpLWH; tmpIDItem; ]; %额外增加ITEM的ID到第一行形成临时变量
+            [~,order] = sortrows(tmp',[1 3 4 ],{'ascend','descend','descend'}); %按高度,ID(相同高度时)递减排序            
         end
         if whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
 %             tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
