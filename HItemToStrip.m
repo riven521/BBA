@@ -60,7 +60,7 @@ Strip.LW = zeros(2,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,cu
 Strip.LW(1,:) = wStrip;   %dim1-宽度剩余 
 Strip.Weight = zeros(1,nStrip); % 初始赋值
  
-Strip_Item = zeros(1,nStrip);  % 每个Strip内的Item数量 后期不用
+Strip.Strip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
 
 sItem_Strip = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
 sCoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
@@ -87,8 +87,10 @@ while 1
     iItem = iItem + 1;
 end
 
-%  plot2DStrip(); %可能有问题: 一次性画图
- 
+ plot2DStrip(); %可能有问题: 一次性画图
+%  Strip.Strip_Item
+
+
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem_Strip; CoordItemStrip=sCoordItemStrip;
@@ -133,7 +135,7 @@ end
 
     Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
-    
+    Strip.Strip_Item = Strip.Strip_Item(Strip.Strip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
@@ -173,16 +175,21 @@ end
             % 更新strip信息
             updateLWStrip();
         end
-        %  2.2 更新stripBeItemArray
-        Strip_Item(thisLevel) = Strip_Item(thisLevel) + 1; %只要该level安放一个item,数量就增加1
+        
+        %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item
+        Strip.Strip_Item(1,thisLevel) = Strip.Strip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
         
         %  2.3 更新本level对应的StripWeight: 
         Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
         
         %  1.3 更新item归属strip信息itemBeStripMatrixSort
         sItem_Strip(1,iItem) = thisLevel;    %第几个level
-        sItem_Strip(2,iItem) = Strip_Item(thisLevel); %本level下第几次安置
+        sItem_Strip(2,iItem) = Strip.Strip_Item(1,thisLevel); %本level下第几次安置
         
+        %  2.2 更新Strip.Strip_Item 行2 本strip内包含几种Item
+        itemThisLevel = sItem_Strip(1,:) == thisLevel;
+        Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.ID(1,itemThisLevel)));
+
         % 4 二级嵌套函数
         function rotateItem()
             %  不仅标记Rotaed变化 还要把物品真正的rotate(反)过去

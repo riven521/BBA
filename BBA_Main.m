@@ -76,7 +76,7 @@ for iAlg = 1:nAlg
     
 %      plotSolution(dA(iAlg),pA(iAlg));  
 
-    flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放
+%     flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
