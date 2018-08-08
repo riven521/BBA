@@ -9,7 +9,7 @@ function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % Item (3 CoordItemStrip Item在strip的坐标) 
 % Item (4 itemo rder 函数内Item排序顺序)
 % Strip (1 LW )
-
+% Strip.Strip_Item         (2,n): % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
 %% 初始化
 % nDim Item维度(2) nItem Item数量 nStrip Strip数量 
 % widthStrip Strip最大宽度
@@ -28,11 +28,15 @@ wStrip = Veh.LWH(1,1);;
 Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff); 
 
     %% ITEM排序 555
-    % getITEMorder - 获取ItemLWRota的顺序(重点是高度递减排序) % ITEM两种排序方式 高度/最短边
-    Item.itemorder = getITEMorder(Item,p.whichSortItemOrder );
-    % getSortedITEM - 获取按order排序后的ITEM:sortedItemArray
-    sItem = structfun(@(x) x(:,Item.itemorder),Item,'UniformOutput',false);
-                                    % printstruct(d) ;printstruct(sItem)
+    % 获取Item的顺序 % ITEM两种排序方式 高度/最短边
+    [Item.itemorder] = getITEMorder(Item,p.whichSortItemOrder );
+    % 获取按order排序后的ITEM: sItem
+    if isSameCol(Item)
+        sItem = structfun(@(x) x(:,Item.itemorder),Item,'UniformOutput',false);
+    else
+        error('不能使用structfun');
+    end
+                % printstruct(d) ;printstruct(sItem)
 
     % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
     if p.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放
@@ -43,6 +47,7 @@ Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff);
     end
     sItem.LWH = getRotaedLWH(sItem.LWH, sItem.Rotaed, LU.buff); 
      
+
 %% 55 LU->Item->Strip转换 
 % 提取变量 此处只使用LWHRota和Rotaed; 不使用LWH
 % ItemLWRotaSort = sItem.LWH(1:2,:); %ItemLWSortHori
@@ -53,17 +58,18 @@ Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff);
 % Itemorder = Item.itemorder;
 
 %%
-% 获取itemBeStripMatrixSort: 每个排序后Item在哪个Strip内  以及顺序
-% 获取LWStrip:  新生成的Strip的长宽
-% 获取CoordItemStripSort  Item在strip的坐标值
+% Strip初始化
+% 获取Strip.LW:  新生成的Strip的长宽等
 Strip.LW = zeros(2,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,current 高度)
 Strip.LW(1,:) = wStrip;   %dim1-宽度剩余 
 Strip.Weight = zeros(1,nStrip); % 初始赋值
- 
 Strip.Strip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
 
-sItem_Strip = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
-sCoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
+% sItem新增
+% 获取CoordItemStripSort  Item在strip的坐标值
+% 获取Item_Strip: 每个排序后Item在哪个Strip内  以及顺序
+sItem.Item_Strip = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
+sItem.CoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
 
 % 55 获取thisLevel - 当前item要放入的level序号
 % 循环往strip中安置item,即固定item,变化选择不同level(thisLevel)
@@ -73,68 +79,73 @@ sCoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
 iLevel = 1; iItem = 1; %iStrip代表item实质
 while 1
     if iItem > nItem, break; end
-    tmpLevel = iLevel;
+    %     tmpLevel = iLevel;
+    
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
     
     insertItemToStrip(thisLevel);
     
-    if iLevel > tmpLevel && p.whichStripH == 3
-%         iItem - 1;
-    end
+        %     if iLevel > tmpLevel && p.whichStripH == 3
+        %         iItem - 1;
+        %     end
         
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
-
 %  plot2DStrip(); %可能有问题: 一次性画图
-%  Strip.Strip_Item
-
 
 % 后处理 并赋值到d
 %Matalb code gerator use:
-%         Item_Strip=sItem_Strip; CoordItemStrip=sCoordItemStrip;
+%         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
 
 % Item相关：更新的按顺序返回（无更新的不需返回）
-% sItem_Strip
-% sCoordItemStrip
-% sItem.Rotaed
-% sItem.LWH(1:2,:)
-% 获取itemBeStripMatrix : 每个Item在哪个Strip内  以及顺序
-% 获取CoordItemStrip : 每个Item在Strip的坐标
+% LU内部更新,sLU依据order变化回来(主要为了sLU中新增的几个变量,要按顺序转回来)
 % 获取Rotaed : 每个item是否Rotation的标志
 % 获取LWHRota：每个item结合Rotaed标志后获得的LWH
+if isSameCol(sItem)
+    Item = reorderStruct(Item.itemorder, sItem);
+else
+    error('不能使用structfun');
+end
 
-    Item.Item_Strip(:,Item.itemorder) = sItem_Strip;
-    Item.CoordItemStrip(:,Item.itemorder) = sCoordItemStrip;    
-    
-    % ItemArray旋转相关
-    Item.Rotaed(:,Item.itemorder) = sItem.Rotaed;
-    ItemLWRota(:,Item.itemorder) = sItem.LWH(1:2,:);
-    Item.LWH = [ItemLWRota; Item.LWH(3,:)];             % 返回原始顺序的旋转后的ItemArray
+                    % 获取Item_Strip : 每个Item在哪个Strip内  以及顺序
+                    % 获取CoordItemStrip : 每个Item在Strip的坐标
+                    %     Item.Item_Strip(:,Item.itemorder) = sItem.Item_Strip;
+                    %     Item.CoordItemStrip(:,Item.itemorder) = sItem.CoordItemStrip;    
+                    % ItemArray旋转相关
+                    %         Item.Rotaed(:,Item.itemorder) = sItem.Rotaed;
+                    %     ItemLWRota(:,Item.itemorder) = sItem.LWH(1:2,:);
+                    %     Item.LWH = [ItemLWRota; Item.LWH(3,:)];             % 返回原始顺序的旋转后的ItemArray
 
-    % LUArray旋转相关,及时更新    
-    nbItem=length(Item.Rotaed);
-    % 循环每个item
-    for idxItem=1:nbItem
-        flagThisItem = (LU.LU_Item(1,:)==idxItem );
-        % 对应位置LU.Rotaed更新
-        if Item.Rotaed(idxItem)
-            LU.Rotaed(flagThisItem) = ~LU.Rotaed(flagThisItem);
-            % 对应位置LU.LWH更新
-            LU.LWH(1, flagThisItem) = Item.LWH(1, idxItem);
-            LU.LWH(2, flagThisItem) = Item.LWH(2, idxItem);
-        end
-    end
+
+                    % LUArray旋转相关,及时更新    已嵌入到rotateItem
+                %     nbItem=length(Item.Rotaed);
+                %     % 循环每个item
+                %     for idxItem=1:nbItem
+                %         tmpflagThisItem = (LU.LU_Item(1,:)==idxItem );
+                %         % 对应位置LU.Rotaed更新
+                %         if Item.Rotaed(idxItem)
+                %             LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
+                %             % 对应位置LU.LWH更新
+                %             LU.LWH(1, tmpflagThisItem) = Item.LWH(1, idxItem);
+                %             LU.LWH(2, tmpflagThisItem) = Item.LWH(2, idxItem);
+                %         end
+                %     end
     
-% Strip相关: 无顺序概念
+% Strip相关: 无顺序概念(去除初始化的多余列)
 % Strip.LW
 % 获取LWStrip:  新生成的strip的长宽
 % 获取StripWeight:  新生成的strip的重量
-
-    Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
-    Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
-    Strip.Strip_Item = Strip.Strip_Item(Strip.Strip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
+% 如果Strip的列数全部相同
+if isSameCol(Strip)
+    Strip = structfun(@(x) x( : , Strip.Weight(1,:)>0 ), Strip, 'UniformOutput', false);
+else
+    error('不能使用structfun');
+end
+         %     Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
+        %     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
+        %     Strip.Strip_Item = Strip.Strip_Item(Strip.Strip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
@@ -144,14 +155,14 @@ end
 
     function insertItemToStrip(thisLevel)
 %         %为了matlab的coder 无用
-%         sCoordItemStrip=sCoordItemStrip;Strip.LW=Strip.LW;
+%         sItem.CoordItemStrip=sItem.CoordItemStrip;Strip.LW=Strip.LW;
 %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
-%         Strip_Item=Strip_Item;sItem_Strip=sItem_Strip;
+%         Strip_Item=Strip_Item;sItem.Item_Strip=sItem.Item_Strip;
         
         % 1 更新Item相关Sort数据
         %  1.1 更新CoordItemStripSort
-        sCoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);  %更新x坐标
-        sCoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
+        sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);  %更新x坐标
+        sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
         
         % 2 更新Strip相关数据（非排序）
         %  2.1 更新LWStrip        
@@ -182,21 +193,32 @@ end
         Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
         
         %  1.3 更新item归属strip信息itemBeStripMatrixSort
-        sItem_Strip(1,iItem) = thisLevel;    %第几个level
-        sItem_Strip(2,iItem) = Strip.Strip_Item(1,thisLevel); %本level下第几次安置
+        sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level
+        sItem.Item_Strip(2,iItem) = Strip.Strip_Item(1,thisLevel); %本level下第几次安置
         
         %  2.2 更新Strip.Strip_Item 行2 本strip内包含几种Item
-        itemThisLevel = sItem_Strip(1,:) == thisLevel;
-        Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.ID(1,itemThisLevel)));
+        itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
+        Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
 
         % 4 二级嵌套函数
         function rotateItem()
-            %  不仅标记Rotaed变化 还要把物品真正的rotate(反)过去
+            %  1 不仅标记Rotaed变化 还要把ITEM真正的rotate(反)过去
             sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
             tep = sItem.LWH(1,iItem);
             sItem.LWH(1,iItem) = sItem.LWH(2,iItem);
             sItem.LWH(2,iItem) = tep;
-        end
+            sItem.LWH(3,iItem) = sItem.LWH(3,iItem);
+            
+            %  2 Item内部的Lu也要随之更新
+            tmpflagThisItem = (LU.LU_Item(1,:)==iItem);
+            % 对应位置LU.Rotaed更新
+            if Item.Rotaed(iItem)
+                LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
+                % 对应位置LU.LWH的长宽更新，高度不更新
+                LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
+                LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
+            end
+        end        
         
         function updateLWStrip()
             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
@@ -208,7 +230,7 @@ end
     function printscript()
         % 测试代码
         % % LWHStrip
-        % % sItem_Strip
+        % % sItem.Item_Strip
         % % ItemLWSort
         % % itemCoordMatrixSort
         % % Item_Strip
@@ -235,8 +257,8 @@ end
     function plot2DStrip()
         %% 初始化
         wStrip = wStrip;        
-        hStrip = sum(Strip.LW(2,sItem_Strip(2,:)>0));        
-        nstrip = sum(sItem_Strip(2,:)>0);
+        hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
+        nstrip = sum(sItem.Item_Strip(2,:)>0);
 
         nIDType = unique(sItem.ID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
@@ -248,9 +270,9 @@ end
         % 2 画图：逐个strip/item 画图
         for istrip = 1:nstrip
             % 找出当前istrip的物品索引
-            idxDrawItem = find(sItem_Strip(1,:)==istrip);
+            idxDrawItem = find(sItem.Item_Strip(1,:)==istrip);
             % 获取该索引下的变量
-            drawItemCoordMatrix = sCoordItemStrip(:,idxDrawItem);
+            drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
             drawItemLWH = sItem.LWH(:,idxDrawItem);
             drawItemId = sItem.ID(:,idxDrawItem);
 
@@ -277,7 +299,7 @@ end
 
 function order = getITEMorder(Item,whichSortItemOrder)        
         tmpLWH = Item.LWH(1:2,:);
-        tmpIDItem =     Item.ID(1,:);
+        tmpIDItem =     Item.LID(1,:);
         tmpSID = Item.SID;
         if whichSortItemOrder == 1 %Descend of 长(高)
             tmp = [tmpSID; tmpLWH; tmpIDItem; ]; %额外增加ITEM的ID到第一行形成临时变量
@@ -366,7 +388,7 @@ end
 % % %         CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
 % % %         %为了matlab的coder 无用
 % % %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
-% % %         stripBeItemArray=stripBeItemArray;sItem_Strip=sItem_Strip;
+% % %         stripBeItemArray=stripBeItemArray;sItem.Item_Strip=sItem.Item_Strip;
 % %         
 % %         % 1 更新CoordItemStripSort
 % %         CoordItemStripSort(1,iStrip) = widthStrip - LWStrip(1,thisLevel);  %更新x坐标

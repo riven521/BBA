@@ -4,7 +4,7 @@ function [] = plot2DBPP(d,ParaArray)
 % 初始化
 nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nThisItem = size(d.Item.LWH,2);
-nIDType = unique(d.Item.ID);
+nIDType = unique(d.Item.LID);
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 % tmpUniqueBin = unique(d.Veh.LWH(1:nDim,:)','rows')';
 widthBin = d.Veh.LWH(1,1);
@@ -15,7 +15,7 @@ clear tmpUniqueBin;
 Item_Bin = d.Item.Item_Bin;
 CoordItemBin = d.Item.CoordItemBin;
 itemLWH = d.Item.LWH;
-itemID = d.Item.ID;
+itemID = d.Item.LID;
 itemSID = d.Item.SID;
 % if ParaArray.whichRotation == 1    
     ItemRotaed = d.Item.Rotaed; %增加rotation后增 itemRotaFlag

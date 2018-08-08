@@ -13,10 +13,16 @@ wVeh  = Veh.LWH(1,1);
 lVeh  = Veh.LWH(2,1); 
 
 %% Strip排序 555 (如何确保相同托盘类型的相邻摆放？？？ TODO FIX ME)
-    % getStriporder - 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
-    Strip.striporder = getStriporder(Strip);  % Strip两排序方式 高度/长度递减
-    sStrip = structfun(@(x) x(:,Strip.striporder),Strip,'UniformOutput',false);
+    % 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
+    [Strip.striporder] = getStriporder(Strip);  % Strip两排序方式 高度/长度递减
+    % 获取按order排序后的Strip: sStrip    
+    if isSameCol(Strip)
+        sStrip = structfun(@(x) x(:,Strip.striporder),Strip,'UniformOutput',false);
+    else
+        error('不能使用structfun');
+    end
     
+   
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
 % 获取LWBin:  新生成的Bin的剩余长宽
@@ -25,8 +31,9 @@ Bin.LW(1,:) = wVeh;
 Bin.LW(2,:) = lVeh;
 Bin.Weight = zeros(1,nBin); % 初始赋值
 
-Bin_Strip = zeros(1,nBin);    % 每个Bin内的Strip数量 后期不用
-sStrip_Bin = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
+tmpBin_Strip = zeros(1,nBin);    % 每个Bin内的Strip数量 后期不用
+% sStrip新增
+sStrip.Strip_Bin = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
 
 % LWStripSort = sStrip.LW; %从sorted获得
 % StripWeightSort = sStrip.Weight;
@@ -42,7 +49,7 @@ while 1
     
     [thisBin,iBin] = getThisBin(iBin, iStrip, sStrip, Veh, Bin, p);    % 获取Bin号
     
-    [Bin,sStrip_Bin,Bin_Strip] = insertStripToBin(iStrip, thisBin, sStrip, Bin, sStrip_Bin, Bin_Strip)
+    [Bin,sStrip.Strip_Bin,tmpBin_Strip] = insertStripToBin(iStrip, thisBin, sStrip, Bin, sStrip.Strip_Bin, tmpBin_Strip);
         
     iStrip = iStrip + 1;
 end
@@ -51,11 +58,22 @@ end
 
 % 后处理 并赋值到da
 % 获取Strip_Bin: 每个strip在哪个bin内  以及顺序
-Strip.Strip_Bin( : , Strip.striporder) = sStrip_Bin;
+                % Strip.Strip_Bin( : , Strip.striporder) = sStrip.Strip_Bin;
+% Strip内部更新,sStrip依据order变化回来
+if isSameCol(sStrip)
+    Strip = reorderStruct(Strip.striporder, sStrip);
+else
+    error('不能使用structfun');
+end
 
 % 获取Bin: 去除未使用的Bin 注意Bin结构体的变化
-Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
- 
+if isSameCol(Bin)
+    Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
+else
+    error('不能使用structfun');
+end
+
+
    
 %% 测试script
 % 输出主要结果:获得每个item包含的 原始 LU序号
@@ -91,12 +109,12 @@ printscript();
             % 初始化
         Bin.LW
         sStrip.LW
-        Bin_Strip
-        sStrip_Bin
+        tmpBin_Strip
+        sStrip.Strip_Bin
         sStrip
             %% 初始化
         nThisItem = size(d.Item.LWH,2);
-        nIDType = unique(d.Item.ID);
+        nIDType = unique(d.Item.LID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
 %         tmpUniqueBin = unique(Veh.LWH(1:2,:)','rows')';
         %         wBin = tmpUniqueBin(1);
@@ -105,7 +123,7 @@ printscript();
         hBin = Veh.LWH(2,1);
    
     
-        nUsedBin = sum(sStrip_Bin(2,:)>0);
+        nUsedBin = sum(sStrip.Strip_Bin(2,:)>0);
 
 %         %% 画图
         % 1 画个画布 宽度为nUsedBin+1个bin宽 长（高）度为bin高
@@ -116,7 +134,7 @@ printscript();
         iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
         for iBin = 1:nUsedBin
             % 找出当前iBin的物品索引
-            idxDrawStrip = find(sStrip_Bin(1,:)==iBin);
+            idxDrawStrip = find(sStrip.Strip_Bin(1,:)==iBin);
             % 。。。 由于没有Strip在bin内的Coord，此函数暂停
         end
         % 逐个strip画图
@@ -183,11 +201,11 @@ end
         end
         end
 
+        
     
-    function [Bin,sStrip_Bin,Bin_Strip] = insertStripToBin(iStrip, thisBin,sStrip,Bin,sStrip_Bin,Bin_Strip)
+    function [Bin,Strip_Bin,Bin_Strip] = insertStripToBin(iStrip, thisBin,sStrip,Bin,Strip_Bin,Bin_Strip)
 %         binBeStripArray=binBeStripArray;stripBeBinMatrixSort=stripBeBinMatrixSort;Bin.LW=Bin.LW;
 
-   
         % 1 更新Bin相关非Sort数据        
         %  1.1 更新strip归属bin的信息 ：stripBeBinMatrixSort
         Bin_Strip(thisBin) = Bin_Strip(thisBin) + 1; %本bin下第几次安置strip
@@ -201,8 +219,8 @@ end
         
         % 2 更新Strip相关Sort数据
         %  2.1 更新stripBeBinMatrixSort
-        sStrip_Bin(1,iStrip) = thisBin;
-        sStrip_Bin(2,iStrip) = Bin_Strip(thisBin);
+        Strip_Bin(1,iStrip) = thisBin;
+        Strip_Bin(2,iStrip) = Bin_Strip(thisBin);
    
        %% 其余放到ItemToBin内计算
     end

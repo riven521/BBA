@@ -75,9 +75,17 @@ V0805-4
 V0806-1
 1 Strip.Strip_Item: 增加该变量，行1：该strip内包括Item数量；并增加行2，放入该Strip内包括Item种类
 
-V0807-1
+V0808-1
+1 更新LU的排序，tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH]; sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
+2 更新ITEM进入Strip后的排序; ITEM按高度排序
 
+V0808-2
+1 更新HLUtoItem,原先算是BUG，采用NEXT FIT方式安排LU到ITEM
 
+1 ITEM.ID -> ITEM.LID
+2 增加isSameCol函数，判断struct的矩阵内列数全部相同
+3 增加reorderStruct函数，对结构体S进行重新排序
+4 Item旋转后，LUArray也要旋转相关,及时更新  已由后续处理转为嵌入到rotateItem
 
 TODO:
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）
@@ -95,6 +103,8 @@ TODO:
 4 strip在bin内局部优化，也可以bin之间调整，确保满足要求即可。
 5 供应商之间衔接时，注意可以一起堆垛并连接的strip高度变异最小，可以固定strip选LUID
 6 暂且规定不同供应商即使LUID相同，也不能堆垛；否则无法获取堆垛后ITEM的SID等。后期可局部优化。
+
+1 对于可变高度托盘的堆垛，也需要考虑BEST FIRST NEXT
 
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。

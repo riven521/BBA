@@ -41,7 +41,7 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    d = DataInitialize(30,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    d = DataInitialize(5,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
 end
 
 %% Initialize Parameter
@@ -181,7 +181,7 @@ end
         % 每个bin中找出各类型ID所在Strip是否相邻
         nBin = size(d.Bin.LW,2);
         for iBin = 1:nBin
-            t = [d.Item.ID; d.Item.Item_Strip; d.Item.Item_Bin ];
+            t = [d.Item.LID; d.Item.Item_Strip; d.Item.Item_Bin ];
             tiBin = t( : , t(4,:) == iBin );
             nIdType = unique(tiBin(1,:)); %nIdType: 本iBin内包含的LU的ID类型
             for iId = 1:nIdType
@@ -199,8 +199,8 @@ end
 % % %             ns = d.Strip.stripBeBinMatrix(2,d.Strip.stripBeBinMatrix(1,:) == iBin);
 % % %             % ni - 本bin内item内LU类型及顺序
 % % %             d.Item.Item_Bin(1,:) == iBin
-% % %             ni = d.Item.ID(d.Item.Item_Bin(1,:) == iBin);
-% % %             [a,b] = find(d.Item.ID(d.Item.Item_Bin(1,:) == iBin));
+% % %             ni = d.Item.LID(d.Item.Item_Bin(1,:) == iBin);
+% % %             [a,b] = find(d.Item.LID(d.Item.Item_Bin(1,:) == iBin));
 % % %             ni_uni = unique(ni);
 % % %             for ini = 1:length(ni_uni)
 % % % %                 d.Item.
@@ -212,8 +212,8 @@ end
 % % %                 for jStrip = (iStrip+1):(nStrip-1)
 % % %                 [is] = find(ns==iStrip); %第3个strip放第1层
 % % %                 [js] = find(ns==jStrip); %第1个strip放第2层
-% % %                 LUIDInis = d.Item.ID(1,(d.Item.Item_Strip(1,:)==is))
-% % %                 LUIDInjs = d.Item.ID(1,(d.Item.Item_Strip(1,:)==js))
+% % %                 LUIDInis = d.Item.LID(1,(d.Item.Item_Strip(1,:)==is))
+% % %                 LUIDInjs = d.Item.LID(1,(d.Item.Item_Strip(1,:)==js))
 % % %                 
 % % %                 end
 % % %             end
