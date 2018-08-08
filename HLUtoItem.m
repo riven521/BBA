@@ -49,8 +49,11 @@ function printscript(LU,Item)
 end
 
 function order = getLUorder(LU)
-tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
-[~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
+tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH];
+[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
+
+% tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
 %         tepLUorder = 1:length(LU.ID)'; %Ö±½Ó¸³Öµ1:n % tepLUorder = [2 3 4 1 5]';
 if ~isrow(tepLUorder)
     order = tepLUorder';

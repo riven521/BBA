@@ -70,8 +70,19 @@ V0805-3
 2 [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p); 增加输出iLevel,否则NEXTFIT 变为 FIRSTFIT
 
 V0805-4
+1 小的 更改
+
+V0806-1
+1 Strip.Strip_Item: 增加该变量，行1：该strip内包括Item数量；并增加行2，放入该Strip内包括Item种类
+
+V0807-1
+
+
 
 TODO:
+1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）
+2 每次算法对strip摆放都要尝试hori和vert两种方式，分别判断不同类型LU如何摆放为好，暂不考虑部分vert，部分hori在同一level情形，（可能与其它非空strip拼载可用考虑
+
 1 FPRINT
 2 test main error （modifyStripWithOneItem(d);修改）
 3 车型约束5-边界约束4-摆放相邻约束1-摆放位置约束4

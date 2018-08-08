@@ -41,7 +41,7 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    d = DataInitialize(50,6); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    d = DataInitialize(3,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
 end
 
 %% Initialize Parameter
@@ -50,7 +50,7 @@ for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
     for j=1:1 %1-2 排序:1 高度（仅保留） 2 最短边
         for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
             for l=1:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
-                for m=1:3 %1-3 best first next均可
+                for m=1:1 %1-3 best first next均可
                 % pA nAlg 
                 pA(nAlg) = ParameterInitialize( ...
                              'whichStripH', i,...
