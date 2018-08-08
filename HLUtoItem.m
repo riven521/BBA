@@ -13,18 +13,82 @@ function [LU,Item,ItemID] = HLUtoItem(LU,Veh)
 %% LU排序
 % 获取LU的顺序(重点是高度递减排序)
 LU.order = getLUorder(LU); %获取 LU排序(先ID递增,后高度递减)
+% printstruct(LU)
 % 获取按order排序后的LU:sLU
 sLU = structfun(@(x) x(:,LU.order),LU,'UniformOutput',false);
+% printstruct(sLU)
 
 %% 55 LU->Item转换
 
 % 排序后的sLU, 经过堆垛获取垛Item,以及sLU在Item内的顺序
-[Item,LU_Item] = getItem(sLU,Veh);
+sz = size(sLU.ID);
+nLU = sz(2);
+hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
 
-Item = structfun(@(x) x( : , Item.ID(1,:)>0 ), Item, 'UniformOutput', false);
+Item.ID = zeros(sz);             %Item的ID类型
+Item.SID = zeros(sz);           
+% Item.UID = zeros(sz);           
+Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
 
-% LU在Item内的顺序
-LU.LU_Item( : , LU.order) = LU_Item;
+Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
+Item.Weight = zeros(1,nLU); %Item的重量
+Item.Item_LU = zeros(2,nLU);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
+sLU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
+
+iItem = 1; iLU = 1; %iStrip代表item实质
+while 1
+    if iLU > nLU, break; end
+    [thisItem,iItem] = getThisItem(iItem);
+    insertLUToItem(thisItem,iLU);       
+    iLU = iLU + 1;
+end
+
+% Get ITEM 务必可以放
+    function [thisItem,iItem] = getThisItem(iItem)
+        % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
+        isflagCurr =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
+        isSameID = Item.ID(iItem) == sLU.ID(iLU); %判断Item内部ID是否=当前iLU的ID
+        isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0            
+        
+        if isNewItem
+                thisItem = iItem;
+        else
+            if isflagCurr && isSameID %如果高度允许 且 ID相同
+                 thisItem = iItem;
+            else
+                iItem = iItem + 1;
+                [thisItem,iItem] = getThisItem(iItem);
+            end
+        end
+    end
+
+% Put LU into thisItem
+    function insertLUToItem(thisItem,iLU)
+        %更新Height
+        Item.LWH(3,iItem) = Item.LWH(3,iItem)  + sLU.LWH(3,iLU);
+        Item.LWH(1:2,iItem) = sLU.LWH(1:2,iLU);  %更新item长宽
+        Item.Weight(1,iItem) = Item.Weight(1,iItem) + sLU.Weight(1,iLU); %更新item重量
+        
+        Item.Item_LU(1,iItem) = Item.Item_LU(1,iItem) + 1;
+        
+        sLU_Item(1,iLU) = iItem;
+        sLU_Item(2,iLU) = Item.Item_LU(1,iItem);
+        
+        tmpLUThisItem = sLU_Item(1,:) == thisItem;
+        Item.Item_LU(2,iItem) = numel(unique(sLU.PID(1,tmpLUThisItem)));
+        
+        Item.ID(1,iItem) = sLU.ID(1,iLU);               %更新ID类型
+        Item.SID(1,iItem) = sLU.SID(1,iLU);
+        Item.UID(1,iItem) = sLU.UID(1,iLU);
+        Item.isRota(1,iItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
+        Item.Rotaed(1,iItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
+    end
+
+% LU内部更新
+    LU.LU_Item(:,LU.order) = sLU_Item;
+    
+% Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
+    Item = structfun(@(x) x( : , Item.ID(1,:)>0 ), Item, 'UniformOutput', false);
 
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);
@@ -50,7 +114,8 @@ end
 
 function order = getLUorder(LU)
 tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH];
-[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
+[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6],{'ascend','descend','ascend','ascend','descend'}); 
 
 % tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight
@@ -89,7 +154,7 @@ for iLUid=1:nLUid
     hLeft = hVeh;
     for iLU=1:nLU
         if sLU.ID(iLU) == iLUid %仅对当前LU对应Luid在该iLUid内的进行操作
-            if hLeft < sLU.LWH(3,iLU) %如当前LU高度满足(高度在第nDim行)
+            if hLeft < sLU.LWH(3,iLU) %如当前LU高度不满足(高度在第nDim行)
                 iItem =  iItem + 1;
                 hLeft = hVeh; 
             end

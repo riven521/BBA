@@ -8,9 +8,11 @@ function [d] = RunAlgorithm(d,p)
         % 数据预处理
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh);
         %% 启发式: LU到Item的算法    
-        printstruct(d);
+        
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
-        printstruct(d);          pgon = getPolyshape(d.Item.LWH);   %  figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
+        printstruct(d);
+        pgon = getPolyshape(d.Item.LWH);   
+%         figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法

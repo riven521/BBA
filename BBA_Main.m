@@ -41,7 +41,7 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    d = DataInitialize(3,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    d = DataInitialize(30,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
 end
 
 %% Initialize Parameter

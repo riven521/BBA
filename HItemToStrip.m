@@ -87,7 +87,7 @@ while 1
     iItem = iItem + 1;
 end
 
- plot2DStrip(); %可能有问题: 一次性画图
+%  plot2DStrip(); %可能有问题: 一次性画图
 %  Strip.Strip_Item
 
 
@@ -105,7 +105,7 @@ end
 % 获取Rotaed : 每个item是否Rotation的标志
 % 获取LWHRota：每个item结合Rotaed标志后获得的LWH
 
-    Item.Item_Strip(:,Item.itemorder) = sItem_Strip;  
+    Item.Item_Strip(:,Item.itemorder) = sItem_Strip;
     Item.CoordItemStrip(:,Item.itemorder) = sCoordItemStrip;    
     
     % ItemArray旋转相关
@@ -126,7 +126,6 @@ end
             LU.LWH(2, flagThisItem) = Item.LWH(2, idxItem);
         end
     end
-
     
 % Strip相关: 无顺序概念
 % Strip.LW
