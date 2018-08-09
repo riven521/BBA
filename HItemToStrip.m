@@ -9,14 +9,13 @@ function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % Item (3 CoordItemStrip Item在strip的坐标) 
 % Item (4 itemo rder 函数内Item排序顺序)
 % Strip (1 LW )
-% Strip.Strip_Item         (2,n): % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
+% tmpStrip_Item         (2,n): % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
 %% 初始化
 % nDim Item维度(2) nItem Item数量 nStrip Strip数量 
 % widthStrip Strip最大宽度
 nDim = size(Item.LWH,1); if nDim ==3, nDim = nDim-1;end
 sz = size(Item.LWH);
 nItem = sz(2);
-nStrip = nItem;
 wStrip = Veh.LWH(1,1);;
 
 %% 先判断ITEM是以Horizontal/Vertical 方式摆放（连带是否旋转）；再判断进入算法的顺序
@@ -58,14 +57,21 @@ Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff);
 % Itemorder = Item.itemorder;
 
 %%
-% Strip初始化
+% 1 Strip初始化
 % 获取Strip.LW:  新生成的Strip的长宽等
 Strip.LW = zeros(2,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,current 高度)
 Strip.LW(1,:) = wStrip;   %dim1-宽度剩余 
-Strip.Weight = zeros(1,nStrip); % 初始赋值
-Strip.Strip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
+Strip.Weight = zeros(1,nItem); % 初始赋值
 
-% sItem新增
+    % 初始化多行nItem列
+    Strip.LID = zeros(numel(unique(LU.ID)),nItem);
+    Strip.PID = zeros(numel(unique(LU.PID)),nItem);
+    Strip.SID = zeros(numel(unique(LU.SID)),nItem);
+    Strip.UID = zeros(numel(unique(LU.UID)),nItem);
+    
+% 2  临时
+tmpStrip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
+% 3 sItem新增
 % 获取CoordItemStripSort  Item在strip的坐标值
 % 获取Item_Strip: 每个排序后Item在哪个Strip内  以及顺序
 sItem.Item_Strip = zeros(2,nItem); %dim1:属于第几个level dim2:属于该level第几个排放 555
@@ -84,7 +90,7 @@ while 1
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
     
-    insertItemToStrip(thisLevel);
+    insertItemToStrip(thisLevel,iItem);
     
         %     if iLevel > tmpLevel && p.whichStripH == 3
         %         iItem - 1;
@@ -93,8 +99,8 @@ while 1
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
-%  plot2DStrip(); %可能有问题: 一次性画图
-
+%  plot2DStrip();  hold off;%可能有问题: 一次性画图
+ 
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
@@ -145,15 +151,14 @@ else
 end
          %     Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
         %     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
-        %     Strip.Strip_Item = Strip.Strip_Item(Strip.Strip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
+                        %     tmpStrip_Item = tmpStrip_Item(tmpStrip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
     %% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
 %     printstruct(d);
     
     %% 嵌套函数        
-
-    function insertItemToStrip(thisLevel)
+    function insertItemToStrip(thisLevel,iItem)
 %         %为了matlab的coder 无用
 %         sItem.CoordItemStrip=sItem.CoordItemStrip;Strip.LW=Strip.LW;
 %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
@@ -187,18 +192,18 @@ end
         end
         
         %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item
-        Strip.Strip_Item(1,thisLevel) = Strip.Strip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
+        tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
         
         %  2.3 更新本level对应的StripWeight: 
         Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
         
         %  1.3 更新item归属strip信息itemBeStripMatrixSort
         sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level
-        sItem.Item_Strip(2,iItem) = Strip.Strip_Item(1,thisLevel); %本level下第几次安置
+        sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %本level下第几次安置
         
-        %  2.2 更新Strip.Strip_Item 行2 本strip内包含几种Item
-        itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
-        Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
+                        %  2.2 更新Strip.Strip_Item 行2 本strip内包含几种Item
+                %         itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
+                %         Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
 
         % 4 二级嵌套函数
         function rotateItem()
@@ -223,6 +228,20 @@ end
         function updateLWStrip()
             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %更新strip高度lleft(取最大值)
+            
+            % 更新Strip中包含ID类与否
+            Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
+            Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
+            Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 数值为出现与否
+            
+            Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % 数值为出现次数
+            Strip.PID(Strip.PID>0) = 1; % 数值改为出现与否
+            
+%             Strip.SID(sItem.SID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
+%             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
+
+%             Item.PID(sLU.PID(1,iLU),thisItem) = 1;         % 555 更新多行PID
+            
         end
         
     end
@@ -260,7 +279,7 @@ end
         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
         nstrip = sum(sItem.Item_Strip(2,:)>0);
 
-        nIDType = unique(sItem.ID);
+        nIDType = unique(sItem.LID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
         
         %% 画图
@@ -274,7 +293,7 @@ end
             % 获取该索引下的变量
             drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
             drawItemLWH = sItem.LWH(:,idxDrawItem);
-            drawItemId = sItem.ID(:,idxDrawItem);
+            drawItemId = sItem.LID(:,idxDrawItem);
 
             % 画图：逐个item
             nThisItem = size(drawItemLWH,2);

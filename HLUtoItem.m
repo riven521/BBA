@@ -32,11 +32,13 @@ nLU = sz(2);
 hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
 
 % 仅需初始化需要自增的fields
-    Item.LID = zeros(sz);             %Item的ID类型
-    Item.SID = zeros(sz);           
-    Item.UID = zeros(sz);           
-    Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
-    Item.Rotaed = ones(sz)*2;
+    Item.LID = zeros(sz);            %Item的ID类型
+    Item.SID = zeros(sz);
+    Item.UID = zeros(sz);
+    Item.PID = zeros(numel(unique(LU.PID)),sz(2));
+    
+    Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为2)
+    Item.Rotaed = ones(sz)*-1;
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
 % 临时使用
@@ -90,7 +92,12 @@ end
         Item.SID(1,thisItem) = sLU.SID(1,iLU);
         Item.UID(1,thisItem) = sLU.UID(1,iLU);
         Item.isRota(1,thisItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
-        Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
+        Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记        
+        
+
+                        %         Item.PID(sLU.PID(1,iLU),thisItem) = Item.PID(sLU.PID(1,iLU),thisItem) + 1;         % 555 更新多行PID - 数值为出现次数
+         Item.PID(sLU.PID(1,iLU),thisItem) =     1;                             % 555 更新多行PID - 数值为出现与否
+        
     end
 
 % LU内部更新,sLU依据order变化回来
@@ -100,7 +107,6 @@ else
     error('不能使用structfun');
 end
 
-
 % Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
 % 如果ITEM的列数全部相同
 if isSameCol(Item)
@@ -108,7 +114,6 @@ if isSameCol(Item)
 else
     error('不能使用structfun');
 end
-    
 
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);

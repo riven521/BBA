@@ -82,10 +82,35 @@ V0808-1
 V0808-2
 1 更新HLUtoItem,原先算是BUG，采用NEXT FIT方式安排LU到ITEM
 
+V0808-3
 1 ITEM.ID -> ITEM.LID
 2 增加isSameCol函数，判断struct的矩阵内列数全部相同
 3 增加reorderStruct函数，对结构体S进行重新排序
 4 Item旋转后，LUArray也要旋转相关,及时更新  已由后续处理转为嵌入到rotateItem
+5 所有用到structfun地方全部做了struct的判断，并增加reorderStruct的顺序处理
+
+V0809-1
+1 ITEM 新增PID （多行n列） 0为未出现，其它为出现次数
+2 STRIP 新增LID/PID/SID/UID等 （多行n列）
+3 BIN 新增LID/PID/SID/UID等 （多行n列） - 但不好计算。
+
+V0809-2
+1 Gpreproc增加pwhichSortItemOrder 判断初始物品如何摆放，全部横放或全部竖放
+2 修改striporder：优先SID，其次？ 增加fff函数
+
+
+ans =
+
+     1     1     1     0     0
+     0     0     1     1     1
+     如何排序？
+
+给定供应商顺序2 1 
+希望顺序是4 5 3 1 2
+
+
+
+
 
 TODO:
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）

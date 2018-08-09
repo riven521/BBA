@@ -43,7 +43,7 @@ function [d] = getRandDa(n,m)
     
     
 % LU   
-    LU.ID = randi([11,14],1,n); %ID 类型数
+    LU.ID = randi([11,12],1,n); %ID 类型数
     LU.buff = zeros(3,n); %以后无用    
 
     LU.LWH = zeros(3,n);
@@ -72,8 +72,8 @@ function [d] = getRandDa(n,m)
         LU.margin(:,idx) = randi([1,4]);
         for j=1:length(idx)
             LU.LWH(3,idx(j)) = randi([1,3]); %高度250,1150
-            LU.PID(idx(j)) = randi([100,100]); %100,103
-            LU.SID(idx(j)) = randi([200, 200]); %200, 203
+            LU.PID(idx(j)) = randi([100,101]); %100,103
+            LU.SID(idx(j)) = randi([200, 201]); %200, 203
             LU.UID(idx(j)) = randi([300,303]);
             LU.Weight(idx(j)) = randi([10,20]);
             if LU.Weight(idx(j)) >= Par.maxHeavey
