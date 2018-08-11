@@ -19,13 +19,15 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
 %     if isfield(LU, 'PID'),  LU.UID = idExchange(LU.UID); end
     
     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
-% %     Veh.LWH = Veh.LWH - Veh.buff;
-% %     LU.LWH(1,:) =  LU.LWH(1,:) +  LU.buff(1,: ) + LU.buff(2,: );
-% %     LU.LWH(2,:) =  LU.LWH(2,:) +  LU.buff(3,: ) + LU.buff(4,: );
+    %     Veh.LWH = Veh.LWH - Veh.buff;  %Veh的buff无用，输入直接给可用内径长宽高
+                %         LU.margin([2],:) = 2 %测试增加不同margin的效果
+                %         LU.margin([3],:) = 3
+    LU.LWH(1,:) =  LU.LWH(1,:) +  LU.margin(1,: ) + LU.margin(2,: ); %宽度（左右）
+    LU.LWH(2,:) =  LU.LWH(2,:) +  LU.margin(3,: ) + LU.margin(4,: ); %长度（上下）
     
     % V1 : buff: 托盘间的间隙
-%     LU.buff = [LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
-%     LU.buff = repmat(LU.buff,1,numel(LU.ID));
+    %     LU.buff = [LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
+    %     LU.buff = repmat(LU.buff,1,numel(LU.ID));
     LU.LWH = LU.LWH + LU.buff;
     %TODO: 此处增加间隙为权宜之际，未考虑rotation后的变化；后期考虑在算法中增加间隙
 
@@ -41,8 +43,7 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     elseif pwhichSortItemOrder ==3
         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(3,1)); %第二个参数：1: Hori; 0: Vert；其它: 原封不动  3按缝隙最小排序      
     end
-     LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.buff);
-%         LU.LWH
+    LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
         
     % 4 Veh从体积大->小   默认顺序
     [~,order] = sortrows(Veh.volume', [1],{'descend'});    

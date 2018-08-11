@@ -109,13 +109,29 @@ V0811-1
 2 在Gpreproc增加pwhichSortItemOrder=3->placeItemHori=3 判断初始物品如何摆放，全部横放或全部竖放(1/2),按横竖摆放右侧剩余间隙大小决定横竖放（3）
 3 修改HItemToStrip对ITEM的排序，SID 第一，其次ITEM的长度和宽度，再其次LUID，确保相同ID摆放一起（STRIP2BIN确保类别越单纯的越在前端）
 
+V0811-2
+1 大幅度修改主函数输出（参数1：Coord 参数2：LWH 参数3：LU显示顺序，方便合并输出）
+2 大幅度修改HItemToBin(LU,Item,Strip)；
+3 确保零部件相邻：在LU2ITEM排序保障
+
+V0811-3 ：实现margin约束
+1 保障LU BUFF 为0
+2 增加LU margin 4个值全为2
+3 增加LU margin -> LU.LWH
+4 旋转 getRotaedLWH -> 参数3由buff变为margin 确保旋转时margin随之变化
+5 作图(包括main输出)时更新LU ITEM的Coord; LU ITEM的LW;
+6 [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
+7 return回bb的主程序李增加 updateItemMargin
 
 TODO:
+0 plot strip时更新LW和Coord，确保含margin的显示正确
 1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。
 2 增加同BIN/STRIP包含多个指标SID/PID等如何计算的问题？
 3 isAdjacent为基础增加更多解的check判断函数
 4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面
 
+1：研发投入，如名门项目落地，从项目分成中抵扣；（5/5）10w起；
+0：0研发投入，如名门项目落地，在既定项目分成比例提高20%；（7/3）；
 
 
 

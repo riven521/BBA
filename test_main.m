@@ -77,7 +77,7 @@ clc;  clear;  close all;
     % 0 1 2
     
     %% 不同参数多次计算
-                            [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+                            [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
                             BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
                         
 % %      n=5;d=getRandDa(n);save('rndDa.mat','d');

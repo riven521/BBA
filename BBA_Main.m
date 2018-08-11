@@ -42,10 +42,11 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    n=10; m=1;
+    n=18; m=7;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
 %     save( strcat( '.\new\', filename), 'd');
+%     load .\new\GoodIns200.mat;
 end
 
 %% Initialize Parameter
@@ -78,9 +79,9 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
     
-%      plotSolution(dA(iAlg),pA(iAlg));  
+     plotSolution(dA(iAlg),pA(iAlg));  
 
-    flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放 +
+    flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -116,35 +117,34 @@ fprintf(1,'Simulation done.\n');
 % 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
 % 参数4和参数1功能类似, 可以合并
     function getReturnBBA(daMax) 
-        % 返回输出结果(原始顺序) 输出4个参数
-        % 参数1 - 行1:Bin序号；行2：该bin内顺序
-%         output_LU_Bin=daMax.LU.LU_Bin;
+        % 返回输出结果(原始顺序) 输出3个参数       
         
-        % 参数2 - LU在Bin内的坐标
+        % 返回之前计算不含margin的LU和Item的LWH+Coord.
+        [daMax.LU,daMax.Item] = updateItemMargin(daMax.LU,daMax.Item);
+        
+        % 参数1 - LU在Bin内的坐标
         % 增加间隙-增加CoordLUBinWithBuff变量
-        % V2:  LU buff margin方式
-%         daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff(1,:) + daMax.LU.buff(3,:);
+        % V2:  LU margin方式
+        output_CoordLUBin = daMax.LU.CoordLUBin;
         % V1:  LU buff 间隙方式
-        daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
-        output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+                % daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
+                % output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
         
-        % 参数3 - LU的长宽高(旋转后)
-        % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
-        % 以下是V3 - LU buff margin方式
-%         daMax.LU.LWHOriRota = daMax.LU.LWH;
-%         daMax.LU.LWHOriRota(1,:) = daMax.LU.LWH(1,:) - (daMax.LU.buff(1,:) +daMax.LU.buff(2,:))  ;
-%         daMax.LU.LWHOriRota(1,:) = daMax.LU.LWH(2,:) - (daMax.LU.buff(3,:) +daMax.LU.buff(4,:))  ;
-%         output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
-%         % 增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
-%         % 以下是V2      
-        daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
-        output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        % 参数2 - LU的长宽高(旋转后)
+        % LWH已经为减小长宽对应margin后的实际数据变量
+        % 以下是V3 - LU margin方式
+        output_LU_LWH = daMax.LU.LWH; %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        
+         % 以下是V2
+         %  增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
+         %  daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
+         %  output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
             % 以下是V1
             %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
             %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
 
        
-        % 参数4 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
+        % 参数3 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
         LU_Item=daMax.LU.LU_Item;        
         LID=daMax.LU.ID;
         PID=daMax.LU.PID;        
@@ -169,6 +169,7 @@ fprintf(1,'Simulation done.\n');
         % 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D 
          tmpShow =[7,8,5,3,1,2,4,6];         
         
+         % FINAL return's results;
         output_CoordLUBin =output_CoordLUBin(:,order);
         output_LU_LWH =output_LU_LWH(:,order);
         output_LU_Seq =output_LU_Seq(tmpShow,order);
@@ -197,9 +198,18 @@ aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 figure('name',num2str(aField));
 
-d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
-d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
+% V1 buff version
+% d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
+% d.Item.LWH(1,:) = d.Item.LWH(1,:) - ( d.LU.margin(1, 1:size(d.Item.LWH,2) ) + d.LU.margin(2,: )); 
+% d.Item.LWH(2,:) = d.Item.LWH(2,:) - (d.LU.margin(3,: ) + d.LU.margin(4,: )); 
+% d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
+
+% V2 margin version
+% 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
+ [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
+
 plot2DBPP(d,par);
+
 end
 
 

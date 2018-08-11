@@ -43,15 +43,15 @@ function [d] = getRandDa(n,m)
     
     
 % LU   
-    LU.ID = randi([11,11],1,n); %ID 类型数
-    LU.buff = zeros(3,n); %以后无用    
+    LU.ID = randi([11,12],1,n); %ID 类型数
+    LU.buff = zeros(3,n); %以后无用
 
     LU.LWH = zeros(3,n);
     LU.isRota = zeros(1,n);
 %     LU.maxL = zeros(1,n);
 %     LU.yID = zeros(1,n);
 %     LU.xID = zeros(1,n);
-    LU.margin = zeros(4,n);
+    LU.margin = zeros(4,n); 
 
     LU.PID = zeros(1,n);
 %     LU.UID = zeros(1,n);
@@ -65,11 +65,11 @@ function [d] = getRandDa(n,m)
         idx = find(LU.ID(:)==uniID(i));
         LU.LWH(1,idx) = randi([4,5]); %宽度 randi([1000,1300]);
         LU.LWH(2,idx) = randi([2,6]); %长度 randi([700,850]); 
-        LU.isRota(idx) = randi([0,1]);            %是否旋转
+        LU.isRota(idx) = randi([1,1]);            %是否旋转
 %         LU.maxL(idx) = randi([1,4]);
 %         LU.yID(idx) = randi([0,nYID]); % TODO 后期改与车型一致
 %         LU.xID(idx) = randi([0,nXID]);
-        LU.margin(:,idx) = randi([1,4]);
+        LU.margin(:,idx) = randi([0,0]);  %左上右下
         for j=1:length(idx)
             LU.LWH(3,idx(j)) = randi([1,3]); %高度250,1150
             LU.PID(idx(j)) = randi([100,101]); %100,103
