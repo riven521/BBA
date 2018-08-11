@@ -1,48 +1,54 @@
 %% BBA_MAIN demo
 %% Form
-%    [output_CoordLUBin,output_LU_LWH,Res4_DrawSeq] = ... 
-%    BBA_Main(varargin)
-%
+%    [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ... 
+%    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin)
+%        
 %% Description
 %   BBA_Main.
 %
 %% Inputs (varargin)
 %   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
 %   LULWH                (3,n)   托盘宽长高
-%   BINLWH              (3,1)   车型宽长高（目前仅考虑单车型 TODO 后期增加到多车型按顺序使用）
-%   PARANOUSE       (1,1)   标量(1*1) 允许rotation,但考虑rotation的差异
-%   LUBUFF               (2,1)   托盘间宽长的总间隙(2倍的单边宽长间隙) 可用托盘长宽高=每个托盘的实际长宽高+增加的buff
-%   LUWEIGHT           (1,n)  托盘重量
-%   BINWEIGHT         (1,1)  车型最大承载重量
+%   VEHID                 (1,m)  车型编号
+%   VEHLWH              (3,m)   车型宽长高（考虑多车型）
+%   ------------------------------------------------------
+%   LUSID                  (1,n)   托盘供应商编号
+%   LUPID                  (1,n)   托盘零部件编号
 %   LUISROTA            (1,n)  托盘是否允许旋转
-%   LUZWID               (1,n)  托盘是否属于重物
+%   LUMARGIN         (1,n)   托盘间margin(1-4左右上下)  可用托盘长宽高=每个托盘的实际长宽高+增加的margin
+%   LUWEIGHT           (1,n)  托盘重量
+%   BINWEIGHT         (1,m)  车型最大承载重量
 %
 %% Outputs
-%   	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
-%   output_LU_LWH          (3,n)    每个LU的宽长高（旋转后的：实际值）
-%   output_LU_Item_ID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
+%   output_LU_LWH            (3,n)    每个LU的宽长高（旋转后的：实际值）
+%   output_LU_Seq             (6,n)    行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序 。。。
 %
 
 %%
 function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
-    BBA_Main(LUID,LULWH,BINID,BINLWH,varargin) %前4个必须
-                % function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
-                %     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
+    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin) %前4个必须
 
 %% Initialize Data Structure
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all
 clc
+
 if nargin ~= 0    
-        d = DataInitialize( ...
+    d = DataInitialize( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
-            'BINID',BINID,...
-            'BINLWH',BINLWH);
+            'VEHID',VEHID,...
+            'VEHLWH',VEHLWH,...
+            'LUSID',varargin{1},...
+            'LUPID',varargin{2},...
+            'LUISROTA',varargin{3},...
+            'LUMARGIN',varargin{4},...
+            'LUWEIGHT',varargin{5},...
+            'VEHWEIGHT',varargin{6} );
 else
-    n=18; m=7;
+    n=4; m=7;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
 %     save( strcat( '.\new\', filename), 'd');
@@ -53,7 +59,7 @@ end
 nAlg = 1;
 for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
     for j=1:3 %1-2 排序:1 高度（仅保留） 2 最短边 %暂且改为物品初始摆放位置 Gpreproc 此处替代HItemToStrip函数中的物品摆放
-        for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
+        for k=2:2 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
             for l=1:1 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
                 for m=1:1 %1-3 best first next均可
                 % pA nAlg 
@@ -78,10 +84,8 @@ fprintf(1,'\nRunning the simulation...\n');
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
     dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
-    
-     plotSolution(dA(iAlg),pA(iAlg));  
-
-    flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
+                if nargin == 0,    plotSolution(dA(iAlg),pA(iAlg));    end
+%                 flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -103,7 +107,9 @@ end
 if ~isempty(daBest)
     bestOne = 1;
     getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
-    plotSolution(daBest(bestOne),paBest(bestOne)); % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));    
+    
+                if nargin == 0,   plotSolution(daBest(bestOne),paBest(bestOne));    end
+                % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));        
 else
     error('本算例内未找出最优解返回BBA \n');
 end
@@ -167,21 +173,15 @@ fprintf(1,'Simulation done.\n');
         
         % 结果展示顺序 tmpShow: 
         % 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D 
-         tmpShow =[7,8,5,3,1,2,4,6];         
+%          tmpShow =[7,8,5,3,1,2,4,6];         
+         tmpShow =[7,8,5,3,1,4];     
         
          % FINAL return's results;
         output_CoordLUBin =output_CoordLUBin(:,order);
         output_LU_LWH =output_LU_LWH(:,order);
         output_LU_Seq =output_LU_Seq(tmpShow,order);
 
-                            % Res5_BinLWH = d.Veh.LWH; %减去Buffer后实际可用的长宽高
-                            % 返回输出结果(安放顺序)
-                            % % [~,x]=sort(output_LU_Bin(2,:));
-                            % % output_LU_Bin=output_LU_Bin(:,x)
-                            % % LU_Item=LU_Item(1,x)
-                            % % output_CoordLUBin=output_CoordLUBin(:,x)
-                            % % Res3_LWHRota=Res3_LWHRota(:,x)
-                            % % fprintf('本算例计算全部完成 \n');
+
         end
 
 end %END MAIN
@@ -198,11 +198,11 @@ aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 figure('name',num2str(aField));
 
-% V1 buff version
-% d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
-% d.Item.LWH(1,:) = d.Item.LWH(1,:) - ( d.LU.margin(1, 1:size(d.Item.LWH,2) ) + d.LU.margin(2,: )); 
-% d.Item.LWH(2,:) = d.Item.LWH(2,:) - (d.LU.margin(3,: ) + d.LU.margin(4,: )); 
-% d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
+        % V1 buff version
+        % d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
+        % d.Item.LWH(1,:) = d.Item.LWH(1,:) - ( d.LU.margin(1, 1:size(d.Item.LWH,2) ) + d.LU.margin(2,: )); 
+        % d.Item.LWH(2,:) = d.Item.LWH(2,:) - (d.LU.margin(3,: ) + d.LU.margin(4,: )); 
+        % d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
 
 % V2 margin version
 % 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
@@ -289,7 +289,7 @@ idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
 idx =idxBin;
 if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
 idx0 =intersect(idx,idxStripLimit);
-if ~isempty(idx0),  
+if ~isempty(idx0), 
     idx = idx0; 
 else
     warning('idx0 is empty');
@@ -303,7 +303,7 @@ else
 end
 idx2 = intersect(idx,idxStrip);
 if ~isempty(idx2),  
-    idx = idx2; 
+%     idx = idx2; 
 else
     warning('idx2 is empty');
 end
@@ -316,7 +316,9 @@ if ~isempty(idx)
     end
 end
 
-end
+end % END OF ALL
+
+
 
 
 

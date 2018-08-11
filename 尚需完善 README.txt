@@ -122,6 +122,15 @@ V0811-3 ：实现margin约束
 5 作图(包括main输出)时更新LU ITEM的Coord; LU ITEM的LW;
 6 [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
 7 return回bb的主程序李增加 updateItemMargin
+8 555 重大bug修订：unique问题, updateItemMargin.m
+
+V0811-4: 返回刘强的版本
+1 修改输入输出
+2 修改plot画图
+3 修改best旋转标准
+
+V0811-1 ：实现指定位置摆放
+V0811-4: 修订Vehicle问题
 
 TODO:
 0 plot strip时更新LW和Coord，确保含margin的显示正确

@@ -320,7 +320,14 @@ clc;  clear;  close all;
 
     %% 企业测试版2 
     LUID = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2, 3, 3, 3, 2, 3, 3, 3, 2, 3, 2, 3, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 3, 3] ;
+        LUSID = ones(size(LUID));
+        LUPID = ones(size(LUID));
+        LUISROTA = ones(size(LUID));
+        LUWEIGHT = ones(size(LUID));
+        LUMARGIN = zeros(4,size(LUID,2));
+        VEHWEIGHT = [1000];
     BINLWH = [2400   12750   2400]';  %[6; 10; 4];
+    
     LULWH = [
       1140	760	990	;
 1140	760	990	;
@@ -624,9 +631,9 @@ clc;  clear;  close all;
 1220	820	1100	;
 1955	760	550	;
 1955	760	550	 ];    
-    PARA = [ 0 0] ;    
-    LUBUFF = [0,0];
-    BINBUFF = [0,0,0];       
+%     PARA = [ 0 0] ;    
+%     LUBUFF = [0,0];
+%     BINBUFF = [0,0,0];       
     BINID = [1];
 %%
 % %     LUID = [1 2 1 2];
@@ -648,9 +655,12 @@ clc;  clear;  close all;
     %% 不同参数多次计算
 %                             [Res1_LUBeBinMatrix,Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
 %                             BBA_Main(LUID,LULWH,BINLWH,PARA,LUBUFF,BINBUFF);
+%                             [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+%                             BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
                             [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
-                            BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
-              
+                            BBA_Main(LUID,LULWH,BINID,BINLWH,...
+                            LUSID, LUPID, LUISROTA, LUMARGIN, LUWEIGHT, VEHWEIGHT  );
+
                         
 % %      n=5;d=getRandDa(n);save('rndDa.mat','d');
 % %      load('rndDa.mat')

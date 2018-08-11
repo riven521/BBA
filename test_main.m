@@ -10,6 +10,12 @@ clc;  clear;  close all;
     
 % 企业测试版1
     LUID = [2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2] ;
+            LUSID = ones(size(LUID));
+        LUPID = ones(size(LUID));
+        LUISROTA = ones(size(LUID));
+        LUWEIGHT = ones(size(LUID));
+        LUMARGIN = zeros(4,size(LUID,2));
+         VEHWEIGHT = [1000];
     BINLWH = [2380, 9500, 2600];  %[6; 10; 4];
     LULWH = [1955 760 550 ;
 1220 820 1100 ;
@@ -55,11 +61,11 @@ clc;  clear;  close all;
 1220 820 1100 ;
 1220 820 1100 ;
 1955 760 550 ]';    
-    PARA = [ 1 0] ;    
-    LUBUFF = [100;100];
-    BINBUFF = [0;0;0];       
-    BINID = [1];
 
+%     PARA = [ 1 0] ;    
+%     LUBUFF = [100;100];
+%     BINBUFF = [0;0;0];       
+    BINID = [1];
 % %     LUID = [1 2 1 2];
 % %     BINLWH = [10;20;4]';
 % %     LULWH = [2 5 4;  7 5 4; 2 5 2; 7 5 4];
@@ -77,9 +83,11 @@ clc;  clear;  close all;
     % 0 1 2
     
     %% 不同参数多次计算
-                            [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
-                            BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
-                        
+%                             [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+%                             BBA_Main(LUID,LULWH,BINID,BINLWH,BINBUFF);
+                                                    [Res2_CoordLUBin,Res3_LWHRota,Res4_DrawSeq] = ...
+                            BBA_Main(LUID,LULWH,BINID,BINLWH,...
+                            LUSID, LUPID, LUISROTA, LUMARGIN, LUWEIGHT, VEHWEIGHT  );
 % %      n=5;d=getRandDa(n);save('rndDa.mat','d');
 % %      load('rndDa.mat')
 % %          LUID =d.LUArray.ID ; 

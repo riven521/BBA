@@ -68,20 +68,24 @@ else
                 d.LU.ID                        = varargin{k+1};
             case 'LULWH'
                 d.LU.LWH                    = varargin{k+1};
-            case 'LUBUFF'
-                d.LU.buff                   = varargin{k+1};
+            case 'LUMARGIN'
+                d.LU.margin                 = varargin{k+1};
             case 'LUWEIGHT'
                 d.LU.Weight                = varargin{k+1};
             case 'LUISROTA'
                 d.LU.isRota                = varargin{k+1};
-            case 'BINID'
+            case 'LUSID'
+                d.LU.SID                     = varargin{k+1};
+            case 'LUPID'
+                d.LU.PID                     = varargin{k+1};                
+            case 'VEHID'
                 d.Veh.ID                    = varargin{k+1};                
-            case 'BINLWH'
+            case 'VEHLWH'
                 d.Veh.LWH                  = varargin{k+1};
-            case 'BINBUFF'
-                d.Veh.buff                 = varargin{k+1};
-            case 'BINWEIGHT'
+            case 'VEHWEIGHT'
                 d.Veh.Weight              = varargin{k+1};
+                        %             case 'VEHBUFF'
+                        %                 d.Veh.buff                 = varargin{k+1};
             otherwise
                 error('¥Ê‘⁄Œ¥÷™ ‰»Î');
         end
