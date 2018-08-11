@@ -20,9 +20,6 @@ function [d] = GcheckInput(d)
     deepCheck(d.LU,d.Veh);
 end
 
-
-
-
 function deepCheck(LU,Veh)
     % 高度约束 罕见
     if min(Veh.LWH(3, :)) < max(LU.LWH(3, : )),     error('错误: 存在托盘高度 大于 本车型可用高度数据 \n');     end
@@ -48,9 +45,9 @@ function deepCheck(LU,Veh)
         if numel(unique(tmp,'rows')) > 2,  error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    end
         tmp = LU.isRota(:,LU.ID==iLU);
         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其允许旋转类型不同数据 \n');    end
-        tmp = LU.maxL(:,LU.ID==iLU);
-        if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其最大层数maxL类型不同数据 \n');    end
-        tmp = LU.yID(:,LU.ID==iLU);
+%         tmp = LU.maxL(:,LU.ID==iLU);
+%         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其最大层数maxL类型不同数据 \n');    end
+%         tmp = LU.yID(:,LU.ID==iLU);
         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其yID类型不同数据 \n');    end
     end
     

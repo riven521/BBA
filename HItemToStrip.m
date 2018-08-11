@@ -76,7 +76,7 @@ Strip.Weight = zeros(1,nItem); % 初始赋值
     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
     Strip.SID = zeros(numel(unique(LU.SID)),nItem);
-    Strip.UID = zeros(numel(unique(LU.UID)),nItem);
+%     Strip.UID = zeros(numel(unique(LU.UID)),nItem);
     
 % 2  临时
 tmpStrip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
@@ -254,7 +254,7 @@ end
             % 更新Strip中包含ID类与否
             Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
             Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
-            Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 数值为出现与否
+%             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 数值为出现与否
             
             Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % 数值为出现次数
             Strip.PID(Strip.PID>0) = 1; % 数值改为出现与否

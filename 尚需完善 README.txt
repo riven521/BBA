@@ -109,12 +109,18 @@ V0811-1
 2 在Gpreproc增加pwhichSortItemOrder=3->placeItemHori=3 判断初始物品如何摆放，全部横放或全部竖放(1/2),按横竖摆放右侧剩余间隙大小决定横竖放（3）
 3 修改HItemToStrip对ITEM的排序，SID 第一，其次ITEM的长度和宽度，再其次LUID，确保相同ID摆放一起（STRIP2BIN确保类别越单纯的越在前端）
 
+
 TODO:
 1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。
-2 isAdjacent为基础增加更多解的check判断函数
+2 增加同BIN/STRIP包含多个指标SID/PID等如何计算的问题？
+3 isAdjacent为基础增加更多解的check判断函数
+4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面
+
+
+
 
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）
-2 每次算法对strip摆放都要尝试hori和vert两种方式，分别判断不同类型LU如何摆放为好，暂不考虑部分vert，部分hori在同一level情形，（可能与其它非空strip拼载可用考虑
+2 每次算法对strip摆放都要尝试hori和vert两种方式，分别判断不同类型LU如何摆放为好，暂不考虑部分vert，部分hori在同一level情形，（可能与其它非空strip拼载可用考虑） -> 改为先确固定hori和vert摆放，后期不调整的方式（依赖顺序）
 
 1 FPRINT
 2 test main error （modifyStripWithOneItem(d);修改）
@@ -134,7 +140,7 @@ TODO:
 TODO
 1：用户输入和对应算法参数，以及运算结果，返回BBA结果全部保存到MAT文件，方便后期核验和重复算法。
 2：增加matlab画图功能，可视化每一步
-3：改输入参数为非nested structure,并不在内部取structure（局部函数）
+3：改输入参数为非nested structure,并不在内部取structure（局部函数） DONE
 4：初始化每个struct结构，采用initilize方式
 5：采用ployshape函数画图，和表示strip代替系数
 

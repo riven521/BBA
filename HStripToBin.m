@@ -34,7 +34,7 @@ Bin.Weight = zeros(1,nStrip); % 初始赋值
     Bin.LID = zeros(numel(unique(LU.ID)),nStrip);
     Bin.PID = zeros(numel(unique(LU.PID)),nStrip);
     Bin.SID = zeros(numel(unique(LU.SID)),nStrip);
-    Bin.UID = zeros(numel(unique(LU.UID)),nStrip);
+%     Bin.UID = zeros(numel(unique(LU.UID)),nStrip);
     
 tmpBin_Strip = zeros(1,nStrip);    % 每个Bin内的Strip数量 后期不用
 % sStrip新增
@@ -153,66 +153,19 @@ end
 %         tmpLWStrip = Strip.LW(1:2,:);
 %         [~,order] = sort(tmpLWStrip(2,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
 
-Strip.SID
-zs = getOrderofID(Strip.SID)
-Strip.LID
-zl = getOrderofID(Strip.LID)
-%  t = Strip.SID;
-%  ss = sum(t);  %每个STRIP内包含的SID个数
-%  
-%   for i=1:size(t,1)
-%      if sum(ss( find(t(i,:))  ) > 1) > 1
-%          error('有同一个SID被2个及以上STRIP包括');
-%      end
-%  end
-% if  any(sum(t)>2)
-%     error('有同一个strip包括3个及以上各SID');
-% end
-% 
-%  z = zeros(1,size(t,2)); 
-%  k=1;
-%  for i=1:numel(ss)
-%     if ss(i) ==1
-%         if i>1 && ss(i-1) ==1 && find(t(:, i)==1) ~= find(t(:, i-1)==1) %判断当前与前一个strip是否属于同样SID
-%             k=k+1;
-%         end
-%         z(i) = k;
-%     elseif ss(i) >1 %只要遇到STRIP包含2个及以上的STRIP时，更新顺序        
-%         k=k+1;
-%         z(i)=k;
-%         k=k+1;
-%     end
-%  end
+Strip.SID;
+zs = getOrderofID(Strip.SID);
+Strip.LID;
+zl = getOrderofID(Strip.LID);
 
-                     %  ss = sum(tSID);
-                    %  torder = zeros(1,length(sorder));
-                    %  k=1;
-                    %  for i=1:length(sorder)
-                    %      tt = tSID(sorder(i),:)
-                    %      to
-                    % %      tSID(sorder(i)) = [];
-                    %      other = sorder;
-                    %      other(sorder(i)) = [];
-                    %      tti = tSID(sorder(other),:);
-                    %      torder(tt==1) = k;
-                    %      k = k+1;
-                    %      f = tti==1 & tt==1 %本次SID有，但其它里面也有,排序为k+1
-                    %      if any(f)
-                    %          torder(f) = k; 
-                    %          k = k+1;
-                    %      end
-                    %      1
-                    %  end
-                    % 
-                    % Strip.SID
-                    % [a,b,~]=find(Strip.SID==1)
-                    % [a,b,~]=find(Strip.SID(:,:)==1)
-                    % Strip.LID
-
+        % 按供应商SID/LID排序
+%         zs
+%         zl
         tmpSort = [zs; zl; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
+        [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+%         [~,order] = sortrows(tmpSort',[1],{'descend'});
+
 %         [~,order] = sortrows(tmpSort',[1],{'ascend'}); %对strip进行排序;按第nDim=2行排序（长/高度)，再看strip内部loadingrateLimit
-        [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %对strip进行排序;按第nDim=2行排序（长/高度)，再看strip内部loadingrateLimit
-% descend ascend
 %         tmpSort = [zorder; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
 %         [~,order] = sortrows(tmpSort',[1 3 4 5 ],{'ascend','descend','descend','descend'}); %对strip进行排序;按第nDim=2行排序（长/高度)，再看strip内部loadingrateLimit
        
@@ -222,6 +175,58 @@ zl = getOrderofID(Strip.LID)
 %         [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
       
         if ~isrow(order), order=order'; end
+        
+                    %  t = Strip.SID;
+                    %  ss = sum(t);  %每个STRIP内包含的SID个数
+                    %  
+                    %   for i=1:size(t,1)
+                    %      if sum(ss( find(t(i,:))  ) > 1) > 1
+                    %          error('有同一个SID被2个及以上STRIP包括');
+                    %      end
+                    %  end
+                    % if  any(sum(t)>2)
+                    %     error('有同一个strip包括3个及以上各SID');
+                    % end
+                    % 
+                    %  z = zeros(1,size(t,2)); 
+                    %  k=1;
+                    %  for i=1:numel(ss)
+                    %     if ss(i) ==1
+                    %         if i>1 && ss(i-1) ==1 && find(t(:, i)==1) ~= find(t(:, i-1)==1) %判断当前与前一个strip是否属于同样SID
+                    %             k=k+1;
+                    %         end
+                    %         z(i) = k;
+                    %     elseif ss(i) >1 %只要遇到STRIP包含2个及以上的STRIP时，更新顺序        
+                    %         k=k+1;
+                    %         z(i)=k;
+                    %         k=k+1;
+                    %     end
+                    %  end
+
+                                         %  ss = sum(tSID);
+                                        %  torder = zeros(1,length(sorder));
+                                        %  k=1;
+                                        %  for i=1:length(sorder)
+                                        %      tt = tSID(sorder(i),:)
+                                        %      to
+                                        % %      tSID(sorder(i)) = [];
+                                        %      other = sorder;
+                                        %      other(sorder(i)) = [];
+                                        %      tti = tSID(sorder(other),:);
+                                        %      torder(tt==1) = k;
+                                        %      k = k+1;
+                                        %      f = tti==1 & tt==1 %本次SID有，但其它里面也有,排序为k+1
+                                        %      if any(f)
+                                        %          torder(f) = k; 
+                                        %          k = k+1;
+                                        %      end
+                                        %      1
+                                        %  end
+                                        % 
+                                        % Strip.SID
+                                        % [a,b,~]=find(Strip.SID==1)
+                                        % [a,b,~]=find(Strip.SID(:,:)==1)
+                                        % Strip.LID
     end
 
         function [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)        
@@ -294,8 +299,8 @@ zl = getOrderofID(Strip.LID)
             Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
             Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
             Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
-            Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
-            Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
+%             Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
+%             Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
             
             
        %% 其余放到ItemToBin内计算

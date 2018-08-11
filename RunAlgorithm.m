@@ -3,16 +3,17 @@ function [d] = RunAlgorithm(d,p)
         % 检验Input输入数据
 %         d.LU.isRota = [1 0 0]
         printstruct(d.LU);
-        d = GcheckInput(d);
+        d = GcheckInput(d); %可以不做 
         pgon = getPolyshape(d.LU.LWH);    maxX = sum(d.LU.LWH(1,:))+10;    maxY = max(max(d.LU.LWH'))+10;  maxV = max(maxX,maxY);
 %                   plot(pgon);        axis equal;   axis ([0 maxX 0 maxY]);   
 %                   plot3Dshape(d.LU.LWH);
         % 数据预处理
-        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder);
+        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %不可以不做 
         %% 启发式: LU到Item的算法    
           printstruct(d.LU);
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
         printstruct(d.LU);
+        printstruct(d.Item);
         pgon = getPolyshape(d.Item.LWH);
 %          figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
@@ -75,7 +76,9 @@ function [d] = RunAlgorithm(d,p)
         [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,d.LU,p);
         %% Item到bin的信息获取:
 %         printstruct(d);
-        [d] = HItemToBin(d);
+%         [d] = HItemToBin(d);
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+        printstruct(d.Item);
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
          % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积

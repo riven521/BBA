@@ -66,7 +66,7 @@ end
         if isNewItem
                 thisItem = iItem;
         else
-            if isflagCurr && isSameID %如果高度允许 且 ID相同
+            if isflagCurr && isSameID %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
                  thisItem = iItem;
             else
                 iItem = iItem + 1;
@@ -92,7 +92,7 @@ end
         
         Item.LID(1,thisItem) = sLU.ID(1,iLU);               %更新ID类型
         Item.SID(1,thisItem) = sLU.SID(1,iLU);
-        Item.UID(1,thisItem) = sLU.UID(1,iLU);
+%         Item.UID(1,thisItem) = sLU.UID(1,iLU);
         Item.isRota(1,thisItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
         Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记        
         
@@ -141,9 +141,9 @@ end
 
 
 function [tepLUorder] = getLUorder(LU)
-tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH];
+tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH; LU.Weight];
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
-[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6],{'ascend','descend','ascend','ascend','descend'}); 
+[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6, 7],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight

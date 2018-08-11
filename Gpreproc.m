@@ -16,7 +16,7 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     if isfield(LU, 'ID'),  LU.ID = idExchange(LU.ID); end
     if isfield(LU, 'PID'),  LU.PID = idExchange(LU.PID); end
     if isfield(LU, 'PID'),  LU.SID = idExchange(LU.SID); end
-    if isfield(LU, 'PID'),  LU.UID = idExchange(LU.UID); end
+%     if isfield(LU, 'PID'),  LU.UID = idExchange(LU.UID); end
     
     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
 % %     Veh.LWH = Veh.LWH - Veh.buff;
@@ -50,7 +50,7 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 
-     printInput();
+%      printInput();
 %% 嵌套函数:
 function printInput()
     fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(Veh.LWH','rows')');

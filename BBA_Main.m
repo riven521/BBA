@@ -1,6 +1,6 @@
 %% BBA_MAIN demo
 %% Form
-%    [output_LU_Bin,output_CoordLUBin,output_LU_LWH,Res4_DrawSeq] = ... 
+%    [output_CoordLUBin,output_LU_LWH,Res4_DrawSeq] = ... 
 %    BBA_Main(varargin)
 %
 %% Description
@@ -18,14 +18,14 @@
 %   LUZWID               (1,n)  托盘是否属于重物
 %
 %% Outputs
-%   output_LU_Bin	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
+%   	(2,n)	 行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
 %   output_LU_LWH          (3,n)    每个LU的宽长高（旋转后的：实际值）
 %   output_LU_Item_ID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
 %
 
 %%
-function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
+function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
     BBA_Main(LUID,LULWH,BINID,BINLWH,varargin) %前4个必须
                 % function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
                 %     BBA_Main(LUID,LULWH,BINLWH,PARANOUSE,LUBUFF,BINBUFF,LUWEIGHT,BINWEIGHT,LUISROTA)
@@ -42,7 +42,10 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    d = DataInitialize(200,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    n=10; m=1;
+    d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    filename = strcat('GoodIns',num2str(n));
+%     save( strcat( '.\new\', filename), 'd');
 end
 
 %% Initialize Parameter
@@ -110,11 +113,12 @@ fprintf(1,'Simulation done.\n');
 % d = rmfield(d, {'Veh', 'LU'});
 
 %% ******* 嵌套函数  **********
-
+% 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
+% 参数4和参数1功能类似, 可以合并
     function getReturnBBA(daMax) 
         % 返回输出结果(原始顺序) 输出4个参数
         % 参数1 - 行1:Bin序号；行2：该bin内顺序
-        output_LU_Bin=daMax.LU.LU_Bin;
+%         output_LU_Bin=daMax.LU.LU_Bin;
         
         % 参数2 - LU在Bin内的坐标
         % 增加间隙-增加CoordLUBinWithBuff变量
@@ -140,19 +144,43 @@ fprintf(1,'Simulation done.\n');
             %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
 
        
-        % 参数4 - 行1：LU在Item的位置；行2：LU的ID类型
-        LU_Item=daMax.LU.LU_Item(1,:);
-        LUID=daMax.LU.ID;
-        output_LU_Item_ID = [LU_Item; LUID];
+        % 参数4 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
+        LU_Item=daMax.LU.LU_Item;        
+        LID=daMax.LU.ID;
+        PID=daMax.LU.PID;        
+        SID=daMax.LU.SID;
+        hLU=daMax.LU.LWH(3,:);
+        LU_Bin = daMax.LU.LU_Bin;
         
-        % Res5_BinLWH = d.Veh.LWH; %减去Buffer后实际可用的长宽高
-        % 返回输出结果(安放顺序)
-        % % [~,x]=sort(output_LU_Bin(2,:));
-        % % output_LU_Bin=output_LU_Bin(:,x)
-        % % LU_Item=LU_Item(1,x)
-        % % output_CoordLUBin=output_CoordLUBin(:,x)
-        % % Res3_LWHRota=Res3_LWHRota(:,x)
-        % % fprintf('本算例计算全部完成 \n');
+        output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin];
+
+        % 三个参数的排序后展示及顺序
+        % 排序优先顺序 tmpSeq:
+        % 如果需要按LUID先堆垛展示,后零部件展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 LU_ITEM，同一PID
+        % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8        
+            %         tmpSeq =[7,8,5,3,1,2,4,6];
+        % 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
+        % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8
+        tmpSeq =[7,8,5,3,4,1,2,6]; 
+        
+        [~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend'});
+        
+        % 结果展示顺序 tmpShow: 
+        % 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D 
+         tmpShow =[7,8,5,3,1,2,4,6];         
+        
+        output_CoordLUBin =output_CoordLUBin(:,order);
+        output_LU_LWH =output_LU_LWH(:,order);
+        output_LU_Seq =output_LU_Seq(tmpShow,order);
+
+                            % Res5_BinLWH = d.Veh.LWH; %减去Buffer后实际可用的长宽高
+                            % 返回输出结果(安放顺序)
+                            % % [~,x]=sort(output_LU_Bin(2,:));
+                            % % output_LU_Bin=output_LU_Bin(:,x)
+                            % % LU_Item=LU_Item(1,x)
+                            % % output_CoordLUBin=output_CoordLUBin(:,x)
+                            % % Res3_LWHRota=Res3_LWHRota(:,x)
+                            % % fprintf('本算例计算全部完成 \n');
         end
 
 end %END MAIN
