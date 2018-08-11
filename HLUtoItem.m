@@ -13,6 +13,7 @@ function [LU,Item,ItemID] = HLUtoItem(LU,Veh)
 
 %% LU排序
 % 获取LU的顺序(重点是高度递减排序)
+
 [LU.order]  = getLUorder(LU); %获取 LU排序(先ID递增,后高度递减)
 % printstruct(LU)
 % 获取按order排序后的LU:sLU
@@ -21,7 +22,8 @@ if isSameCol(LU)
 else
     error('不能使用structfun');
 end
-
+% LU.order(:,LU.order)
+% os = sLU.order
 % printstruct(sLU)
 
 %% 55 LU->Item转换
@@ -136,6 +138,7 @@ function printscript(LU,Item)
         fprintf('\n');
     end
 end
+
 
 function [tepLUorder] = getLUorder(LU)
 tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH];

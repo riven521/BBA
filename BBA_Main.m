@@ -24,6 +24,7 @@
 %   output_LU_Item_ID         (2,n)   行1: LU在某个ITEM内；行2: LU的托盘ID类型
 %
 
+%%
 function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
     BBA_Main(LUID,LULWH,BINID,BINLWH,varargin) %前4个必须
                 % function [output_LU_Bin,output_CoordLUBin,output_LU_LWH,output_LU_Item_ID] = ...
@@ -41,21 +42,21 @@ if nargin ~= 0
             'BINID',BINID,...
             'BINLWH',BINLWH);
 else
-    d = DataInitialize(10,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    d = DataInitialize(200,1); %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
 end
 
 %% Initialize Parameter
 nAlg = 1;
 for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
-    for j=1:2 %1-2 排序:1 高度（仅保留） 2 最短边 %暂且改为物品初始摆放位置 Gpreproc
+    for j=1:3 %1-2 排序:1 高度（仅保留） 2 最短边 %暂且改为物品初始摆放位置 Gpreproc 此处替代HItemToStrip函数中的物品摆放
         for k=1:1 %0-2 默认0 不可旋转 1可旋转 2: 按人为设置是否允许Rotation 
-            for l=1:2 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
+            for l=1:1 %0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
                 for m=1:1 %1-3 best first next均可
                 % pA nAlg 
                 pA(nAlg) = ParameterInitialize( ...
                              'whichStripH', i,...
                              'whichBinH',m, ...
-                             'whichSortItemOrder',j, ...
+                             'whichSortItemOrder',j, ... 
                              'whichRotation',k, ...
                              'whichRotationHori', l);
                  nAlg=nAlg+1;
@@ -76,7 +77,7 @@ for iAlg = 1:nAlg
     
 %      plotSolution(dA(iAlg),pA(iAlg));  
 
-%     flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放
+    flagA(iAlg) =  isAdjacent(dA(iAlg));     % 算法判断是否相同类型托盘相邻摆放 +
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -225,10 +226,10 @@ function [daMax,parMax] = getbestsol(DaS,Par)
 
 %获取评价指标和对应参数
 for r=1:length(DaS)
-    resLoadingRateStrip(r) = mean(DaS(r).Strip.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的装载率均值最大 Itemloadingrate ItemloadingrateLimit
     resLoadingRateStripLimit(r) = mean(DaS(r).Strip.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
     resLoadingRateBinLimit(r) = mean(DaS(r).Bin.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+    resLoadingRateStrip(r) = mean(DaS(r).Strip.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit    
 %     Par(r);
 end
 
@@ -241,11 +242,10 @@ end
 %% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
 %% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
 %% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
-idxBin=find(resLoadingRateBin==max(resLoadingRateBin));
-idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
+idxBin=find(resLoadingRateBin==max(resLoadingRateBin)); %取
 idxStripLimit=find(resLoadingRateStripLimit==max(resLoadingRateStripLimit));
 idxBinLimit=find(resLoadingRateBinLimit==max(resLoadingRateBinLimit));
-
+idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
 %% 5 找出idxStrip和idxBin两者的交集
 % % if isempty(intersect(idxBin,idxStrip))
 idx =idxBin;
@@ -259,13 +259,13 @@ end
 % if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
 idx1 = intersect(idx,idxBinLimit);
 if ~isempty(idx1),  
-%     idx = idx1; 
+%      idx = idx1; 
 else
     warning('idx1 is empty');
 end
 idx2 = intersect(idx,idxStrip);
 if ~isempty(idx2),  
-%     idx = idx2; 
+    idx = idx2; 
 else
     warning('idx2 is empty');
 end

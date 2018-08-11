@@ -1,16 +1,24 @@
 % 将Item进行水平或竖直放置: LU或Item均可以使用
 function [flag]  =placeItemHori(LWH,isRota,HoriOrVert)
-        % 增加判断是否事ITEM的变化, 如果是, 要增加对LU变化的影响
-        
+
         % 获取是否旋转的标记flag
         flag1 = LWH(1,:) < LWH(2,:);  %宽<高/长, 1：非Horizontal 0：是Horizontal
         flag2 = isRota == 1;                       % 1: 允许旋转 0 不允许
+        
         if HoriOrVert == 1 %按Horizontal 摆放
             flag = flag1 & flag2;  %允许旋转且目前非Horizontal方式摆放
         elseif HoriOrVert == 0 %按Vertical 摆放
             flag = ~flag1 & flag2;  %允许旋转且目前是Horizontal方式摆放
-        else
+        elseif HoriOrVert ==2
+            error('111111111111');
             flag = false(size(flag1)); %其它参数原封不动
+        else
+            wVeh = HoriOrVert;
+            x=mod(wVeh,LWH(1,:)); %按车辆宽度对Hori排放取余数
+            y=mod(wVeh,LWH(2,:)); %按车辆宽度对Vert排放取余数
+            flag3 = x <= y; %是否Hori排放比Vert排放余数更小 1 希望Hori摆放 0 否则
+            fxor = ~xor(flag1,flag3); %XOR 异或对比           
+            flag =  fxor & flag2;
         end
 end
     

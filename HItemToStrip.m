@@ -16,37 +16,46 @@ function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 nDim = size(Item.LWH,1); if nDim ==3, nDim = nDim-1;end
 sz = size(Item.LWH);
 nItem = sz(2);
-wStrip = Veh.LWH(1,1);;
+wStrip = Veh.LWH(1,1);
 
 %% 先判断ITEM是以Horizontal/Vertical 方式摆放（连带是否旋转）；再判断进入算法的顺序
 % 无论是否允许旋转, 只看是否需要以Horizontal/Vertical方式摆放
 
 %  [ItemLWRota, ItemRotaed] = placeItemHori(Item,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
 % 获得原封不动的返回值:赋初始值
-[Item.Rotaed] = placeItemHori(Item.LWH,Item.isRota,2);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff); 
+% x = Item.Rotaed
+% [Item.Rotaed] = placeItemHori(Item.LWH,Item.isRota,2);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+%         if any(x~=Item.Rotaed),             error('111111111111');         end
+% Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff); 
 
     %% ITEM排序 555
     % 获取Item的顺序 % ITEM两种排序方式 高度/最短边
+%     printstruct(Item)    
     [Item.itemorder] = getITEMorder(Item,p.whichSortItemOrder );
+    
     % 获取按order排序后的ITEM: sItem
     if isSameCol(Item)
         sItem = structfun(@(x) x(:,Item.itemorder),Item,'UniformOutput',false);
     else
         error('不能使用structfun');
     end
-                % printstruct(d) ;printstruct(sItem)
+%     printstruct(sItem)
 
-    % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
-    if p.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放
-        [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-    end
-    if p.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
-        [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-    end
-    sItem.LWH = getRotaedLWH(sItem.LWH, sItem.Rotaed, LU.buff); 
-     
-
+    % 下面用途不大，主要原因在于在Gpreproc中以及做了H/V放置处理了
+% %     % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
+% %     if p.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放
+% %          x = sItem.Rotaed;
+% %          sItem.LWH
+% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,1);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动       
+% % %          if any(x~=sItem.Rotaed),                 error('111111111111');         end    
+% %     end
+% %     if p.whichRotationHori == 2 % 无论哪个level,都按照vertical方式摆放
+% %                     x = sItem.Rotaed
+% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,0);  %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+% % %                     if any(x~=sItem.Rotaed),                                  error('111111111111');         end
+% %     end
+% %     sItem.LWH = getRotaedLWH(sItem.LWH, sItem.Rotaed, LU.buff); 
+% %     sItem.LWH
 %% 55 LU->Item->Strip转换 
 % 提取变量 此处只使用LWHRota和Rotaed; 不使用LWH
 % ItemLWRotaSort = sItem.LWH(1:2,:); %ItemLWSortHori
@@ -83,18 +92,29 @@ sItem.CoordItemStrip = zeros(2,nItem); %Item在strip的坐标值
 % 注释：获取 thisLevel   从FLAG中找到按规则的那个thisLevel, 并执行 insert函数
 
 iLevel = 1; iItem = 1; %iStrip代表item实质
+
 while 1
     if iItem > nItem, break; end
-    %     tmpLevel = iLevel;
-    
+                        %     tmpLevel = iLevel;
+                    %     nLID = numel(unique(sItem.LID))
+                    %     for i=1:nLID
+                    %         sItem.LID
+                    %         c = sItem.LID(i);
+
+                            % sItem如允许旋转，找出摆放最佳H/V，并对改item针对性旋转，修改LWH和Rotaed
+                    %         if sItem.isRota(iItem) == 1
+                    %             z = fff(sItem.LWH(:,iItem), wStrip );
+                    %             [sItem.Rotaed]  =placeItemHori( sItem.LWH(:,iItem),sItem.isRota(iItem) ,z);
+                    %             zzz = zeros(size(sItem.isRota));
+                    %             zzz(iItem) = sItem.Rotaed;
+                    %             sItem.LWH = getRotaedLWH(sItem.LWH, logical(zzz));
+                    %         end
+
+                    %     end
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
-    
+                
     insertItemToStrip(thisLevel,iItem);
-    
-        %     if iLevel > tmpLevel && p.whichStripH == 3
-        %         iItem - 1;
-        %     end
         
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
@@ -166,30 +186,32 @@ end
         
         % 1 更新Item相关Sort数据
         %  1.1 更新CoordItemStripSort
-        sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);  %更新x坐标
+        sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %更新x坐标
         sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
         
         % 2 更新Strip相关数据（非排序）
         %  2.1 更新LWStrip        
-        if sItem.isRota(iItem) == 1 %此Item可以旋转
-            % 判断语句: 2个
-            isflagCurr = Strip.LW(1,thisLevel) >=  sItem.LWH(1,iItem); %判断是否current's strip剩余宽度 >= 当前高度（非旋转）
-            isNewLevel = Strip.LW(1,thisLevel) == wStrip; % 判断是否 new Level            
-            % 更新strip信息
-            if isNewLevel %无论如何,均可以放入,无论何种摆放,因此:直接更新（Item已按Hori/Vert摆放过）
-                    updateLWStrip();
-            else % 如果非新level 如可以摆放,放入; 否则,调换长宽（旋转）后放入
-                    if isflagCurr
-                        updateLWStrip();
-                    else
-                        rotateItem();
-                        updateLWStrip();
-                    end
-             end            
-        elseif sItem.isRota(iItem) == 0 %此Item不可以旋转
-            % 更新strip信息
-            updateLWStrip();
-        end
+        updateLWStrip(); %不在判断是否允许旋转；不再判断是否属于新Level；不再判断是否当前可放入
+                % % %         if sItem.isRota(iItem) == 1 %此Item可以旋转
+                % % %             % 判断语句: 2个
+                % % %             isflagCurr = Strip.LW(1,thisLevel) >=  sItem.LWH(1,iItem); %判断是否current's strip剩余宽度 >= 当前高度（非旋转）
+                % % %             isNewLevel = Strip.LW(1,thisLevel) == wStrip; % 判断是否 new Level            
+                % % %             % 更新strip信息
+                % % %             if isNewLevel %无论如何,均可以放入,无论何种摆放,因此:直接更新（Item已按Hori/Vert摆放过）
+                % % %                     updateLWStrip();
+                % % %             else % 如果非新level 如可以摆放,放入; 否则,调换长宽（旋转）后放入
+                % % %                     if isflagCurr
+                % % %                         updateLWStrip();
+                % % %                     else
+                % % %                         error('11111111');
+                % % % %                         rotateItem(); %不能直接注释
+                % % % %                         updateLWStrip();
+                % % %                     end
+                % % %              end            
+                % % %         elseif sItem.isRota(iItem) == 0 %此Item不可以旋转
+                % % %             % 更新strip信息
+                % % %             updateLWStrip();
+                % % %         end
         
         %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item
         tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
@@ -205,7 +227,7 @@ end
                 %         itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
                 %         Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
 
-        % 4 二级嵌套函数
+        % 4 二级嵌套函数- 基本不再需要
         function rotateItem()
             %  1 不仅标记Rotaed变化 还要把ITEM真正的rotate(反)过去
             sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
@@ -223,7 +245,7 @@ end
                 LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
                 LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
             end
-        end        
+        end
         
         function updateLWStrip()
             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
@@ -239,7 +261,6 @@ end
             
 %             Strip.SID(sItem.SID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
 %             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
-
 %             Item.PID(sLU.PID(1,iLU),thisItem) = 1;         % 555 更新多行PID
             
         end
@@ -316,23 +337,31 @@ end
     end
 end
 
-function order = getITEMorder(Item,whichSortItemOrder)        
-        tmpLWH = Item.LWH(1:2,:);
-        tmpIDItem =     Item.LID(1,:);
-        tmpSID = Item.SID;
-        if whichSortItemOrder == 1 %Descend of 长(高)
-            tmp = [tmpSID; tmpLWH; tmpIDItem; ]; %额外增加ITEM的ID到第一行形成临时变量
-            [~,order] = sortrows(tmp',[1 3 4 ],{'ascend','descend','descend'}); %按高度,ID(相同高度时)递减排序            
-        end
-        if whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
+function order = getITEMorder(Item,whichSortItemOrder)
+
+tmpItem = [Item.SID; Item.LID; Item.LWH];
+% [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
+[~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
+%按ITEM长度/随后宽度/随后高度 排序有问题 可能相同IDLU被分开
+% 增加LUID 2: 确保即使长宽完全相同 但LUID相同的 也必须放一起
+if ~isrow(order), order=order'; end
+
+%         tmpLWH = Item.LWH(1:2,:);
+%         tmpIDItem = Item.LID(1,:);
+%         tmpSID = Item.SID;
+%         if whichSortItemOrder == 1 %Descend of 长(高)
+%             tmp = [tmpSID; tmpLWH; tmpIDItem; ]; %额外增加ITEM的ID到第一行形成临时变量
+%             [~,order] = sortrows(tmp',[1 3 4 ],{'ascend','descend','ascend'}); %按高度,ID(相同高度时)递减排序            
+%         end
+%         if whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
 %             tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
 %             [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
              %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
-        end
-        if whichSortItemOrder == 3  %Descend of total area 总表面积  ->
+%         end
+%         if whichSortItemOrder == 3  %Descend of total area 总表面积  ->
             %             printstruct(d);
-       end        
-        if ~isrow(order), order=order'; end
+%        end        
+
 end
 
     function [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p)  
@@ -382,8 +411,9 @@ end
             % 增对Rotation增加变量
             if sItem.isRota(iItem) == 1 %此Item可以旋转 % nextfit下不能直接套用bestfit的代码
                 % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以
-                flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
-                                      Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
+                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+%                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
+%                                       Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
             else
                 % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽
                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );

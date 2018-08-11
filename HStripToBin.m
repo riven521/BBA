@@ -289,13 +289,13 @@ zl = getOrderofID(Strip.LID)
    
             % 更新bIN中包含ID类与否
             Bin.LID(:,thisBin) = Bin.LID(:,thisBin) + sStrip.LID(:,iStrip); % 数值为出现次数
-            Bin.LID(Bin.PID>0) = 1; % 数值改为出现与否
+            Bin.LID(Bin.LID>0) = 1; % 数值改为出现与否
             Bin.PID(:,thisBin) = Bin.PID(:,thisBin) + sStrip.PID(:,iStrip); % 数值为出现次数
             Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
             Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
-            Bin.SID(Bin.PID>0) = 1; % 数值改为出现与否
+            Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
             Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
-            Bin.UID(Bin.PID>0) = 1; % 数值改为出现与否
+            Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
             
             
        %% 其余放到ItemToBin内计算

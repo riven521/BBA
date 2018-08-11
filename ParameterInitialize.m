@@ -34,7 +34,7 @@ for k = 1:2:length(varargin)
             p.whichStripH                        = varargin{k+1};
         case 'whichBinH'
             p.whichBinH                         = varargin{k+1};
-        case 'whichSortItemOrders'
+        case 'whichSortItemOrder'
             p.whichSortItemOrder          = varargin{k+1};
         case 'whichRotation'
             p.whichRotation                 = varargin{k+1};

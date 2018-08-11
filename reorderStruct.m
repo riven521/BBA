@@ -1,19 +1,11 @@
- % 判断结构体s是否全部相同列的矩阵构成
 function oS = reorderStruct(o,S)
-os = struct;
+oS = struct;
 if isstruct(S) && isrow(o)
+    % 动态数组并排序
     fields = fieldnames(S);
-for idx = 1:length(fields)
-%    aField = S.(fields{idx});
-   oS.(fields{idx})(:,o) = S.(fields{idx});
-end
-
-%     sCol = struct2cell( structfun(@(x) size(x,2), s, 'UniformOutput', false));
-%     nCol = numel(unique(cell2mat( sCol )));
-%     if nCol == 1
-%         flag = true;
-%     else
-%         flag = false; end
+    for idx = 1:length(fields) 
+        oS.(fields{idx})(:,o) = S.(fields{idx});   %    aField = S.(fields{idx});
+    end
 else
     error('输入不是结构体');
 end

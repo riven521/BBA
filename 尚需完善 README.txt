@@ -98,21 +98,21 @@ V0809-2
 1 Gpreproc增加pwhichSortItemOrder 判断初始物品如何摆放，全部横放或全部竖放
 2 修改striporder：优先SID，其次？ 增加fff函数
 
+V0809-3
+1 放弃HItemToStrip中对ITEM的顺序
+2 
 
-ans =
-
-     1     1     1     0     0
-     0     0     1     1     1
-     如何排序？
-
-给定供应商顺序2 1 
-希望顺序是4 5 3 1 2
-
-
-
-
+V0811-1
+1 放弃HItemToStrip的rotateItem及对应update：右侧剩余间隙很小，但Hori改Rota可以放也不采用，因为会增加strip高度
+同时，必须修改getThisLevel中的可旋转的flag，取消旋转条件允许的旋转。
+即：在同一strip内，严禁任何ITEM再进行旋转；所有旋转在数据初始化完成，并给予ITEM排序给方案，中间不允许再旋转。1旋转就会增加STRIP高度。
+2 在Gpreproc增加pwhichSortItemOrder=3->placeItemHori=3 判断初始物品如何摆放，全部横放或全部竖放(1/2),按横竖摆放右侧剩余间隙大小决定横竖放（3）
+3 修改HItemToStrip对ITEM的排序，SID 第一，其次ITEM的长度和宽度，再其次LUID，确保相同ID摆放一起（STRIP2BIN确保类别越单纯的越在前端）
 
 TODO:
+1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。
+2 isAdjacent为基础增加更多解的check判断函数
+
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）
 2 每次算法对strip摆放都要尝试hori和vert两种方式，分别判断不同类型LU如何摆放为好，暂不考虑部分vert，部分hori在同一level情形，（可能与其它非空strip拼载可用考虑
 
