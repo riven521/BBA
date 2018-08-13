@@ -154,9 +154,9 @@ end
 %         [~,order] = sort(tmpLWStrip(2,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
 
 Strip.SID;
-zs = getOrderofID(Strip.SID);
+zs = getOrderofID(Strip.SID); %对SID的排序: 只有一种的SID优先级高, 其次是与其它SID混合的2种STRIP；SID一定是从1-n的过程
 Strip.LID;
-zl = getOrderofID(Strip.LID);
+zl = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它LID混合的2种STRIP；
 
         % 按供应商SID/LID排序
 %         zs

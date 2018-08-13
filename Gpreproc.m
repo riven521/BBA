@@ -28,7 +28,7 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     % V1 : buff: 托盘间的间隙
     %     LU.buff = [LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
     %     LU.buff = repmat(LU.buff,1,numel(LU.ID));
-    LU.LWH = LU.LWH + LU.buff;
+%     LU.LWH = LU.LWH + LU.buff;
     %TODO: 此处增加间隙为权宜之际，未考虑rotation后的变化；后期考虑在算法中增加间隙
 
     % 3 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）

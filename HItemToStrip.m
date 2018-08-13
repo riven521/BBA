@@ -228,24 +228,24 @@ end
                 %         Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
 
         % 4 二级嵌套函数- 基本不再需要
-        function rotateItem()
-            %  1 不仅标记Rotaed变化 还要把ITEM真正的rotate(反)过去
-            sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
-            tep = sItem.LWH(1,iItem);
-            sItem.LWH(1,iItem) = sItem.LWH(2,iItem);
-            sItem.LWH(2,iItem) = tep;
-            sItem.LWH(3,iItem) = sItem.LWH(3,iItem);
-            
-            %  2 Item内部的Lu也要随之更新
-            tmpflagThisItem = (LU.LU_Item(1,:)==iItem);
-            % 对应位置LU.Rotaed更新
-            if Item.Rotaed(iItem)
-                LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
-                % 对应位置LU.LWH的长宽更新，高度不更新
-                LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
-                LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
-            end
-        end
+% %         function rotateItem()
+% %             %  1 不仅标记Rotaed变化 还要把ITEM真正的rotate(反)过去
+% %             sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
+% %             tep = sItem.LWH(1,iItem);
+% %             sItem.LWH(1,iItem) = sItem.LWH(2,iItem);
+% %             sItem.LWH(2,iItem) = tep;
+% %             sItem.LWH(3,iItem) = sItem.LWH(3,iItem);
+% %             
+% %             %  2 Item内部的Lu也要随之更新
+% %             tmpflagThisItem = (LU.LU_Item(1,:)==iItem);
+% %             % 对应位置LU.Rotaed更新
+% %             if Item.Rotaed(iItem)
+% %                 LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
+% %                 % 对应位置LU.LWH的长宽更新，高度不更新
+% %                 LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
+% %                 LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
+% %             end
+% %         end
         
         function updateLWStrip()
             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)

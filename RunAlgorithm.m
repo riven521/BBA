@@ -7,8 +7,10 @@ function [d] = RunAlgorithm(d,p)
         pgon = getPolyshape(d.LU.LWH);    maxX = sum(d.LU.LWH(1,:))+10;    maxY = max(max(d.LU.LWH'))+10;  maxV = max(maxX,maxY);
 %                   plot(pgon);        axis equal;   axis ([0 maxX 0 maxY]);   
 %                   plot3Dshape(d.LU.LWH);
+
         % 数据预处理
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %不可以不做 
+        
         %% 启发式: LU到Item的算法    
           printstruct(d.LU);
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）

@@ -56,7 +56,7 @@ while 1
     iLU = iLU + 1;
 end
 
-% Get ITEM 务必可以放
+% Get ITEM 务必可以放 NEXT FIT 
     function [thisItem,iItem] = getThisItem(iItem)
         % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
         isflagCurr =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
@@ -155,72 +155,72 @@ end
 
 
 % 将LU转换为Item的重要函数
-function [Item,LU_Item] = getItem(sLU,Veh)
-%% 初始化
-% nDim LU维度 nLU LU数量 nItem Item数量 nLUid LU种类
-% heightBin Bin最大高度
-
-sz = size(sLU.ID);
-
-nLU = sz(2);
-nLUid = size(unique(sLU.ID),2);
-
-hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
-
-% 仅需初始化需要自增的fields
-    % Item.LID = zeros(sz);             %Item的ID类型
-    % Item.SID = zeros(sz);           
-    % Item.UID = zeros(sz);           
-    % Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
-Item.Weight = zeros(sz);     %Item的重量
-Item.LWH = zeros(3,sz(2));  %Item的宽长高
-
-LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
-
-iItem = 1;
-Item_LU = zeros(sz);  % 每个Item内堆垛的LU数量 后期不用
-for iLUid=1:nLUid
-    hLeft = hVeh;
-    for iLU=1:nLU
-        if sLU.ID(iLU) == iLUid %仅对当前LU对应Luid在该iLUid内的进行操作
-            if hLeft < sLU.LWH(3,iLU) %如当前LU高度不满足(高度在第nDim行)
-                iItem =  iItem + 1;
-                hLeft = hVeh; 
-            end
-            
-            hLeft = hLeft - sLU.LWH(3,iLU);                 %更新剩余高度
-            Item.LWH(1:2,iItem) = sLU.LWH(1:2,iLU);  %更新item长宽
-            Item.LWH(3,iItem) = Item.LWH(3,iItem) + sLU.LWH(3,iLU); %更新item高度
-            Item.Weight(1,iItem) = Item.Weight(1,iItem) + sLU.Weight(1,iLU); %更新item重量
-            
-            Item_LU(iItem) = Item_LU(iItem) + 1;
-            LU_Item(1,iLU) = iItem;
-            LU_Item(2,iLU) = Item_LU(iItem);
-            
-            Item.LID(1,iItem) = sLU.ID(1,iLU);               %更新ID类型
-            Item.SID(1,iItem) = sLU.SID(1,iLU);               
-            Item.UID(1,iItem) = sLU.UID(1,iLU);               
-            Item.isRota(1,iItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
-            Item.Roated(1,iItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
-        end
-    end
-    iItem =  iItem + 1;
-end
-
-end
+% % function [Item,LU_Item] = getItem(sLU,Veh)
+% % %% 初始化
+% % % nDim LU维度 nLU LU数量 nItem Item数量 nLUid LU种类
+% % % heightBin Bin最大高度
+% % 
+% % sz = size(sLU.ID);
+% % 
+% % nLU = sz(2);
+% % nLUid = size(unique(sLU.ID),2);
+% % 
+% % hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
+% % 
+% % % 仅需初始化需要自增的fields
+% %     % Item.LID = zeros(sz);             %Item的ID类型
+% %     % Item.SID = zeros(sz);           
+% %     % Item.UID = zeros(sz);           
+% %     % Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
+% % Item.Weight = zeros(sz);     %Item的重量
+% % Item.LWH = zeros(3,sz(2));  %Item的宽长高
+% % 
+% % LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
+% % 
+% % iItem = 1;
+% % Item_LU = zeros(sz);  % 每个Item内堆垛的LU数量 后期不用
+% % for iLUid=1:nLUid
+% %     hLeft = hVeh;
+% %     for iLU=1:nLU
+% %         if sLU.ID(iLU) == iLUid %仅对当前LU对应Luid在该iLUid内的进行操作
+% %             if hLeft < sLU.LWH(3,iLU) %如当前LU高度不满足(高度在第nDim行)
+% %                 iItem =  iItem + 1;
+% %                 hLeft = hVeh; 
+% %             end
+% %             
+% %             hLeft = hLeft - sLU.LWH(3,iLU);                 %更新剩余高度
+% %             Item.LWH(1:2,iItem) = sLU.LWH(1:2,iLU);  %更新item长宽
+% %             Item.LWH(3,iItem) = Item.LWH(3,iItem) + sLU.LWH(3,iLU); %更新item高度
+% %             Item.Weight(1,iItem) = Item.Weight(1,iItem) + sLU.Weight(1,iLU); %更新item重量
+% %             
+% %             Item_LU(iItem) = Item_LU(iItem) + 1;
+% %             LU_Item(1,iLU) = iItem;
+% %             LU_Item(2,iLU) = Item_LU(iItem);
+% %             
+% %             Item.LID(1,iItem) = sLU.ID(1,iLU);               %更新ID类型
+% %             Item.SID(1,iItem) = sLU.SID(1,iLU);               
+% %             Item.UID(1,iItem) = sLU.UID(1,iLU);               
+% %             Item.isRota(1,iItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
+% %             Item.Roated(1,iItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
+% %         end
+% %     end
+% %     iItem =  iItem + 1;
+% % end
+% % 
+% % end
 
 %%  获取ITEMID类型相关数据(同类型ID的体积，面积，重量，item是否可旋转)
-function ItemID = getITEMIDArray(Item)
-
-ItemID.ID = unique(Item.LID);
-nItemID = numel(ItemID.ID);
-
-for iID = 1:nItemID
-    ItemID.Weight(iID) = sum(Item.Weight .* (Item.LID == ItemID.ID(iID)) );
-    ItemID.Volume(iID) = sum(prod(Item.LWH) .* (Item.LID == ItemID.ID(iID)) );
-    ItemID.Area(iID) = sum(prod(Item.LWH(1:2,:)) .* (Item.LID == ItemID.ID(iID)) );
-    ItemID.isRota(iID) =  unique(Item.isRota(Item.LID == ItemID.ID(iID))); if ~isscalar(ItemID.isRota(iID)), error('致命错误'); end
-end
-
-end
+% % function ItemID = getITEMIDArray(Item)
+% % 
+% % ItemID.ID = unique(Item.LID);
+% % nItemID = numel(ItemID.ID);
+% % 
+% % for iID = 1:nItemID
+% %     ItemID.Weight(iID) = sum(Item.Weight .* (Item.LID == ItemID.ID(iID)) );
+% %     ItemID.Volume(iID) = sum(prod(Item.LWH) .* (Item.LID == ItemID.ID(iID)) );
+% %     ItemID.Area(iID) = sum(prod(Item.LWH(1:2,:)) .* (Item.LID == ItemID.ID(iID)) );
+% %     ItemID.isRota(iID) =  unique(Item.isRota(Item.LID == ItemID.ID(iID))); if ~isscalar(ItemID.isRota(iID)), error('致命错误'); end
+% % end
+% % 
+% % end
 

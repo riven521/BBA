@@ -37,11 +37,22 @@ itemSIDSort = itemSID(:,binorder);
 nBin = max(Item_Bin(1,:));
 DrawRectangle([widthBin*(nBin+1)/2 lengthBin/2 widthBin*(nBin+1) lengthBin 0],'--');
 hold on;
+
 % 2 逐个bin 画图
+tmp=0; %方便Item在每个Bin内按顺序作图
 iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
 for iBin = 1:nBin
     % 找出当前iBin的物品索引
     idxDrawItem = find(itemBeBinMatrixSort(1,:)==iBin);
+    
+    
+    %方便Item在每个Bin内按顺序作图 (去除如下语句则随机混乱作图)
+    idxDrawItem = tmp+itemBeBinMatrixSort(2, idxDrawItem);
+     [~,idxDrawItem] = sort(idxDrawItem,'ascend');
+     idxDrawItem = tmp+idxDrawItem;
+    tmp=tmp+numel(idxDrawItem);
+
+
                %     drawBinMatrix = ppbelongItemBinMatrix(:,idxDrawItem);
     % 获取该索引下的变量
     drawItemCoordMatrix = CoordItemBinSort(:,idxDrawItem);
@@ -78,6 +89,7 @@ for iBin = 1:nBin
 %         for iSid = 1:length(unique(itemSIDSort))
 %             itemSIDSort(iSid)
         DrawRectangle([itemCenter itemWidth itemLength 0],  '-',  itemColor); 
+        pause(0.2);
 %         itemSIDSort
         hold on;
 %         end
