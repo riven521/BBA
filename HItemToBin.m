@@ -13,17 +13,22 @@ nLU= size(LU.LWH,2); %具体使用的LU的数量
 Item.Item_Bin=zeros(2,nItem);
 Item.CoordItemBin=zeros(2,nItem);
 LU.LU_Bin=zeros(2,nLU);
+LU.LU_Strip=zeros(2,nLU);
 LU.CoordLUBin=zeros(2,nLU);
             % LURotaed=zeros(1,nLU);
     
+iiStrip = 0;            
 % 循环每个bin
 for iBin=1:max(Strip.Strip_Bin(1,:))
     tmpItemSeq=1;  %每个bin内顺序从1开始
     tmpLUSeq=1;
+
     tmpStrip = []; %计算CoordItemBin长(高)度使用 %       tmpLWStrip = Strip.LW(:,Strip.Strip_Bin(1,:)==iBin); %此bin内剩余宽度和长(高)度
     nbStrip=numel(find(Strip.Strip_Bin(1,:)==iBin));    %nbStrip：该iBin内strip数量    
     % 循环bin内每个strip
     for iStrip=1:nbStrip %从安放的第一个Strip开始逐步放置
+         iiStrip = iiStrip+1;
+        tmpLUSeqinStrip=1;
         [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip      
         if ~isscalar(thisStrip), error('意外错误');  end
         nbItem=numel(find(Item.Item_Strip(1,:)==thisStrip));
@@ -50,9 +55,14 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
                 [~,thisLU] = find(LU.LU_Item(1,:)==thisItem & LU.LU_Item(2,:)==iLU);
                 if ~isscalar(thisLU), error('意外错误');  end
                 
+                % 更新LU_Strip
+                LU.LU_Strip(1,thisLU)=iiStrip;
+               
+                LU.LU_Strip(2,thisLU)=tmpLUSeqinStrip;
+                tmpLUSeqinStrip=tmpLUSeqinStrip+1;
                 % 更新LURotaed 555
 %                 LURotaed(1,thisLU)=Item.Rotaed(1,thisItem);
-                % 更新LUBeBinMatrix 555
+                % 更新LU_Bin 555
                 LU.LU_Bin(1,thisLU)=iBin;
                 LU.LU_Bin(2,thisLU)=tmpLUSeq;
                 tmpLUSeq=tmpLUSeq+1;               
@@ -73,19 +83,20 @@ end
 
 
 % printstruct(d);
-    % printscript();
+%     printscript();
     
 % 输出主要结果:获得从1开始每个bin包含的item数据
 % CoordItemBin Item_Bin
     function printscript()
-        for iBin = 1:max(Item.Item_Bin(1,:))
+        nBin = max(Item.Item_Bin(1,:));
+        for iBin = 1: nBin
             [~,idx] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
             idxSeq = Item.Item_Bin(2,idx); %本iBin内item放入顺序Seq
             fprintf('bin 的宽+长+高为: ' );
-            fprintf(' %d  ',d.Veh.LWH);
+            fprintf(' %d  ',Veh.LWH);
             fprintf('\n');
             fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
-            fprintf('( %d ) ',d.Bin.LW(:,iBin));fprintf('\n');
+            fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
             fprintf('\n');
             
             fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);

@@ -12,18 +12,17 @@ function [d] = RunAlgorithm(d,p)
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %不可以不做 
         
         %% 启发式: LU到Item的算法    
-          printstruct(d.LU);
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
         printstruct(d.LU);
         printstruct(d.Item);
         pgon = getPolyshape(d.Item.LWH);
 %          figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
-        lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
+%         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式：Item到Strip的算法
 %         printstruct(d);
 %         printstruct(d.Item);
-        [d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);
+        [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);
         
         %% 计算strip装载率
 %         printstruct(d);
@@ -84,12 +83,12 @@ function [d] = RunAlgorithm(d,p)
          %% 计算bin装载率
          % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
          % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
-         d = computeLoadingRateBin(d);
-        function d = computeLoadingRateBin(d)
+         d = computeLoadingRate2DBin(d);
+        function d = computeLoadingRate2DBin(d)
             % 初始化
             nBin = size(d.Bin.LW,2);
-            d.Bin.Binvolume = zeros(1,nBin);
-            d.Bin.Itemvolume = zeros(1,nBin);
+            d.Bin.Binarea = zeros(1,nBin);
+            d.Bin.Itemarea = zeros(1,nBin);
             d.Bin.Itemloadingrate = zeros(1,nBin);
             d.Bin.ItemloadingrateLimit = zeros(1,nBin);
             % 计算每个Bin的装载率            
@@ -97,21 +96,154 @@ function [d] = RunAlgorithm(d,p)
             BinHeight = d.Veh.LWH(2,1);
             BinArea = BinWidth .* BinHeight;
             %每个Bin的可用体积 = 车辆高度*车辆宽度
-            d.Bin.Binvolume = repmat(BinArea,1,nBin);            
+            d.Bin.Binarea = repmat(BinArea,1,nBin);            
             %每个Bin 的有限可用体积 = 宽度(bin使用宽度=车辆宽度-bin剩余宽度) *高度(bin使用高度=车辆高度-bin剩余高度)
-            d.Bin.BinvolumeLimit = (BinWidth - d.Bin.LW(1,:)) .* (BinHeight - d.Bin.LW(2,:));
+            d.Bin.BinareaLimit = (BinWidth - d.Bin.LW(1,:)) .* (BinHeight - d.Bin.LW(2,:));
             
             a = d.Item.LWH;
             b = d.Item.Item_Bin;
             for iBin =1:nBin
                 %每个Bin的装载体积
-                d.Bin.Itemvolume(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
+                d.Bin.Itemarea(iBin)= sum(a(1, (b(1,:)==iBin)) .* a(2, (b(1,:)==iBin)));
             end
             %每个bin的装载比率
-            d.Bin.loadingrate =  d.Bin.Itemvolume ./ d.Bin.Binvolume;
+            d.Bin.loadingrate =  d.Bin.Itemarea ./ d.Bin.Binarea;
             %每个bin的有限装载比率
-            d.Bin.loadingrateLimit =  d.Bin.Itemvolume ./ d.Bin.BinvolumeLimit;
+            d.Bin.loadingrateLimit =  d.Bin.Itemarea ./ d.Bin.BinareaLimit;
         end
+        printstruct(d);
+
+        
+% % %     d.LU = doc(d.LU,d.Item,d.Strip,d.Bin);
+    function LU = doc(LU,Item,Strip,Bin)
+        
+        LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
+            LU.LU_Item;LU.LU_Strip;LU.LU_Bin];
+        
+        nItem = size(Item.LWH,2);
+        for iItem=1:nItem
+            tmp = LU.DOC([1,2,3], LU.DOC(6,:) == iItem);
+            Item.PID1(:,iItem) = num2cell(unique(tmp(1,:))',1); %unique(tmp(1,:))';
+            Item.LID1(:,iItem) = num2cell(unique(tmp(2,:))',1);
+            Item.SID1(:,iItem) =num2cell(unique(tmp(3,:))',1);
+        end
+        
+        nStrip = size(Strip.LW,2);
+        for iStrip=1:nStrip
+            tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
+            Strip.PID1(:,iStrip) = num2cell(unique(tmp(1,:))',1);
+            Strip.LID1(:,iStrip) = num2cell(unique(tmp(2,:))',1);
+            Strip.SID1(:,iStrip) = num2cell(unique(tmp(3,:))',1);
+        end
+        
+        nBin = size(Bin.LW,2);
+        for iBin=1:nBin
+            tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
+            Bin.PID1(:,iBin) = num2cell(unique(tmp(1,:))',1);
+            Bin.LID1(:,iBin) = num2cell(unique(tmp(2,:))',1);
+            Bin.SID1(:,iBin) = num2cell(unique(tmp(3,:))',1);
+        end
+        
+        LU.DOC
+        LU.DOC([1,2,3,8],:)
+    end
+
+%         isV(d.Bin,d.Strip,d.Item,d.LU,d.Veh);
+        function isV(Bin,Strip,Item,LU,Veh) %最后一个Bin内的Item是否可以被最小的Bin放下
+            nBin = size(Bin.LW,2);
+            maxH = max(Item.LWH(3,Item.Item_Bin(1,:)==nBin)); %Item的位于最后一个Bin的物品高度的最大值
+            flag1 = Veh.LWH(3,:) >= maxH
+            Veh.area = Veh.volume./Veh.LWH(3,:);
+            flag2 =Veh.area >= Bin.Itemarea(1,nBin)
+            flag = flag1 & flag2;
+            thisVeh = max(find(flag==1))
+            
+            %找出nBin对应的LU序号
+            tLU = find(LU.LU_Bin(1,:) == nBin);
+            
+            if isSameCol(LU)
+                tLU = structfun(@(x) x( : , LU.LU_Bin(1,:) == nBin ), LU, 'UniformOutput', false);
+                printstruct(tLU);
+            end
+            if isSameCol(Veh)
+                tVeh = structfun(@(x) x( : , thisVeh ), Veh, 'UniformOutput', false);
+                printstruct(tVeh);
+            end
+            
+            [tLU,tItem,~] = HLUtoItem(tLU,tVeh); 
+            [tItem,tStrip] = HItemToStrip(tLU,tItem,tVeh,p);
+            printstruct(tLU);
+            printstruct(tItem);
+            
+%             d.LU,d.Item,d.ItemID] = HLUtoItem(tLU,d.Veh); 
+%             tItem = find(Item.Item_Bin(1,:) == nBin);
+            1
+            %找出nBin对应的Item序号
+            
+            %找出nBin对应的Strip序号
+            1
+        end
+    
+%         isR(d.Bin,d.Strip,d.Item,d.LU,d.Veh);
+        function isR(Bin,Strip,Item,LU,Veh)
+            
+        end
+        
+        printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh);
+        %% 将最后一个车替换为更小的车（从小到大替换）
+        function printOut(Bin,Strip,Item,LU,Veh)
+            nBin = size(Bin.LW,2);
+            for iBin = 1: nBin
+                [~,idx] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
+                idxSeq = Item.Item_Bin(2,idx); %本iBin内item放入顺序Seq
+                fprintf('bin 的宽+长+高为: ' );
+                fprintf(' %d  ',Veh.LWH);
+                fprintf('\n');
+                fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
+                fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
+                fprintf('\n');
+
+                fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);
+                fprintf('%d ',idx);fprintf('\n');
+                fprintf('{%d} ',idxSeq);fprintf('\n');
+                fprintf(' (%d %d %d) ', Item.LWH(1:3,idx));fprintf('\n');
+                fprintf(' [%d]     ', Item.Rotaed(:,idx));fprintf('\n');
+                fprintf(' {%d %d %d} ', Item.CoordItemBin(:,idx));fprintf('\n');
+                fprintf('\n');
+
+                [~,idxLU] = find(LU.LU_Bin(1,:)==iBin); %本iBin下的item索引号
+                fprintf('bin %d 包含 original LU 索引号{顺序}[item序号](长宽)[旋转标志]{坐标}为  \n  ',iBin);
+                idxLUSeq = LU.LU_Bin(2,idxLU); %本iBin内item放入顺序Seq
+                idxLUItem = LU.LU_Item(1,idxLU);
+                fprintf('%d ',idxLU);fprintf('\n');
+                fprintf('{%d} ',idxLUSeq);fprintf('\n');
+                fprintf('[%d] ',idxLUItem);fprintf('\n');
+                fprintf(' (%d %d %d) ', LU.LWH(1:3,idxLU));fprintf('\n');
+                fprintf(' [%d]     ', LU.Rotaed(:,idxLU));fprintf('\n');
+                fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU));fprintf('\n');
+                fprintf('\n');
+
+                % 按安放顺序展示
+                % %     [~,x]=sort(LU.LU_Bin(2,idxLU));
+                % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
+                % %     idxLUItem = idxLUItem(x);
+                % %     fprintf('%d ',idxLU);fprintf('\n');
+                % %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
+                % %     fprintf('[%d] ',idxLUItem);fprintf('\n');
+                % %     fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU(x)));fprintf('\n');
+                % %     fprintf(' [%d]     ', LU.LURotaFlag(:,idxLU(x)));fprintf('\n');
+                % %     fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU(x)));fprintf('\n');
+                % %     fprintf('\n');
+            end
+        end
+
+        
+        
+%         printstruct(d.Veh);
+%         isReAssignVeh(d.Veh,d.Bin)
+%         isRegetItem()
+%         printstruct(d.Bin);
+
 
 end
 

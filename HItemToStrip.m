@@ -1,5 +1,5 @@
 % function [d] = HItemToStrip(d,p)
-function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
+function [LU,Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  ITEM:  ID LWH Weight
 % Output --- ITEM: itemorder Item_Strip itemRotaFlag CoordItemStrip
@@ -73,9 +73,9 @@ Strip.LW(1,:) = wStrip;   %dim1-宽度剩余
 Strip.Weight = zeros(1,nItem); % 初始赋值
 
     % 初始化多行nItem列
-    Strip.LID = zeros(numel(unique(LU.ID)),nItem);
-    Strip.PID = zeros(numel(unique(LU.PID)),nItem);
-    Strip.SID = zeros(numel(unique(LU.SID)),nItem);
+%     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
+%     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
+%     Strip.SID = zeros(numel(unique(LU.SID)),nItem);
 %     Strip.UID = zeros(numel(unique(LU.UID)),nItem);
     
 % 2  临时
@@ -120,7 +120,7 @@ while 1
     iItem = iItem + 1;
 end
 %  plot2DStrip();  hold off;%可能有问题: 一次性画图
- 
+
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
@@ -135,6 +135,23 @@ else
     error('不能使用structfun');
 end
 
+%%%%%%%%%%%% 
+    nbLU = size(LU.LWH,2);
+    LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
+    for iLU=1:nbLU
+         theItem = LU.LU_Item(1,iLU); %iLU属于第几个Item
+         LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
+    end
+
+    LU.DOC=[LU.DOC; LU.LU_Strip];
+    nStrip = size(Strip.LW,2);
+    for iStrip=1:nStrip
+        tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
+        Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
+        Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
+        Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
+    end
+    
                     % 获取Item_Strip : 每个Item在哪个Strip内  以及顺序
                     % 获取CoordItemStrip : 每个Item在Strip的坐标
                     %     Item.Item_Strip(:,Item.itemorder) = sItem.Item_Strip;
@@ -190,7 +207,7 @@ end
         sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
         
         % 2 更新Strip相关数据（非排序）
-        %  2.1 更新LWStrip        
+        %  2.1 更新LWStrip
         updateLWStrip(); %不在判断是否允许旋转；不再判断是否属于新Level；不再判断是否当前可放入
                 % % %         if sItem.isRota(iItem) == 1 %此Item可以旋转
                 % % %             % 判断语句: 2个
@@ -252,12 +269,12 @@ end
             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %更新strip高度lleft(取最大值)
             
             % 更新Strip中包含ID类与否
-            Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
-            Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
+%             Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
+%             Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
 %             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 数值为出现与否
-            
-            Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % 数值为出现次数
-            Strip.PID(Strip.PID>0) = 1; % 数值改为出现与否
+
+%              Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % 数值为出现次数
+%              Strip.PID(Strip.PID>0) = 1; % 数值改为出现与否
             
 %             Strip.SID(sItem.SID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
 %             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 555 更新多行PID
@@ -339,7 +356,10 @@ end
 
 function order = getITEMorder(Item,whichSortItemOrder)
 
-tmpItem = [Item.SID; Item.LID; Item.LWH];
+SIDorder = getOrderofSID(Item.SID,'ITEM'); %对SID的排序: SID按顺序给定,序号小的在前面,同一Item应该只有一个SID
+LIDorder = getOrderofLID(Item.LID,'ITEM'); %对LID的排序: 应该不用考虑LID, 除非长宽全部一致,再看LID,最后看高度
+        % LIDorder = ones(1,length(SIDorder)); %对LID的排序: 应该不用考虑LID, 除非长宽全部一致,再看LID,最后看高度
+tmpItem = [SIDorder; LIDorder; Item.LWH]; % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
 % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
 [~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
 %按ITEM长度/随后宽度/随后高度 排序有问题 可能相同IDLU被分开

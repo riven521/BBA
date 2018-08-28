@@ -129,8 +129,43 @@ V0811-4: 返回刘强的版本
 2 修改plot画图
 3 修改best旋转标准
 
+-------------------------------------------------------------
+V0820-1: 
+1 在HItemToBin中 增加LU.LU_Strip
+2 LU2Item 获取Item.PID2等
+3 Item2Strip 获取Strip.PID2等 获取LU.LU_Strip第一行
+
+V0822-1:
+1 除LU的ID外，其它ID修改全部为V2版基于cell的SID/PID; 
+
+V0822-2:
+2 修改bug-确保strip内相连的LU,必须后面是单纯的LU
+同一SID下区分LID单纯，单纯后的必须相连，且混合LID可能非连续！！！！！！！！！！！！！！！
+
+TOBE
+获取第二行
+获取PID/SID如何起作用？
+strip2bin的order如何修改？
+
+
+SAME ID ITEM相关
+
+
+修订Vehicle问题（最后一个不满Vehicle改用小）
+
+
+
+[d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); 
+[d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);
+ d = computeLoadingRateStrip(d);
+ [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,d.LU,p);
+  [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+  d = computeLoadingRate2DBin(d);
+
+
+
 V0811-1 ：实现指定位置摆放
-V0811-4: 修订Vehicle问题
+
 
 TODO:
 0 plot strip时更新LW和Coord，确保含margin的显示正确
@@ -139,8 +174,6 @@ TODO:
 3 isAdjacent为基础增加更多解的check判断函数
 4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面
 
-1：研发投入，如名门项目落地，从项目分成中抵扣；（5/5）10w起；
-0：0研发投入，如名门项目落地，在既定项目分成比例提高20%；（7/3）；
 
 
 
@@ -170,6 +203,10 @@ TODO
 5：采用ployshape函数画图，和表示strip代替系数
 
 6：STRIP给高度（最大的堆垛高度3/最小4）
+
+
+1：研发投入，如名门项目落地，从项目分成中抵扣；（5/5）10w起；
+0：0研发投入，如名门项目落地，在既定项目分成比例提高20%；（7/3）；
 
 sign
 Y = sign(x) 返回与 x 大小相同的数组 Y，其中 Y 的每个元素是：

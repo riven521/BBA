@@ -31,9 +31,9 @@ Bin.LW(2,:) = lVeh;
 Bin.Weight = zeros(1,nStrip); % 初始赋值
 
     % 初始化多行nItem列
-    Bin.LID = zeros(numel(unique(LU.ID)),nStrip);
-    Bin.PID = zeros(numel(unique(LU.PID)),nStrip);
-    Bin.SID = zeros(numel(unique(LU.SID)),nStrip);
+%     Bin.LID = zeros(numel(unique(LU.ID)),nStrip);
+%     Bin.PID = zeros(numel(unique(LU.PID)),nStrip);
+%     Bin.SID = zeros(numel(unique(LU.SID)),nStrip);
 %     Bin.UID = zeros(numel(unique(LU.UID)),nStrip);
     
 tmpBin_Strip = zeros(1,nStrip);    % 每个Bin内的Strip数量 后期不用
@@ -61,6 +61,8 @@ end
 
 % plot2DBin();
 
+
+    
 % 后处理 并赋值到da
 % 获取Strip_Bin: 每个strip在哪个bin内  以及顺序
                 % Strip.Strip_Bin( : , Strip.striporder) = sStrip.Strip_Bin;
@@ -71,6 +73,26 @@ else
     error('不能使用structfun');
 end
 
+
+
+%%%%%%%%%%%% 
+    nbLU = size(LU.LWH,2);
+    LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
+    for iLU=1:nbLU
+         theStrip = LU.LU_Strip(1,iLU); %iLU属于第几个Item
+         LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
+    end
+
+    LU.DOC=[LU.DOC; LU.LU_Bin];
+    nBin = size(Bin.LW,2);
+    for iBin=1:nBin
+        tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
+        Bin.PID2(:,iBin) = num2cell(unique(tmp(1,:))',1);
+        Bin.LID2(:,iBin) = num2cell(unique(tmp(2,:))',1);
+        Bin.SID2(:,iBin) = num2cell(unique(tmp(3,:))',1);
+    end
+    
+    
 % 获取Bin: 去除未使用的Bin 注意Bin结构体的变化
 if isSameCol(Bin)
     Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
@@ -152,17 +174,21 @@ end
     function order = getStriporder(Strip)
 %         tmpLWStrip = Strip.LW(1:2,:);
 %         [~,order] = sort(tmpLWStrip(2,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
-
-Strip.SID;
-zs = getOrderofID(Strip.SID); %对SID的排序: 只有一种的SID优先级高, 其次是与其它SID混合的2种STRIP；SID一定是从1-n的过程
-Strip.LID;
-zl = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它LID混合的2种STRIP；
+       
+% Strip.SID;
+SIDorder = getOrderofSID(Strip.SID,'STRIP'); %对SID的排序: 只有一种的SID优先级高, 其次是与其它SID混合的2种STRIP；SID一定是从1-n的过程
+LIDorder = getOrderofLID(Strip.LID,'STRIP'); 
+% Strip.LID;
+% LIDorder = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它LID混合的2种STRIP；
+% LIDorder = ones(1,length(SIDorder)); 
 
         % 按供应商SID/LID排序
 %         zs
 %         zl
-        tmpSort = [zs; zl; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-        [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+Strip.LID
+        tmpSort = [SIDorder; LIDorder; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
+        [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); 
+%         order = LIDorder'
 %         [~,order] = sortrows(tmpSort',[1],{'descend'});
 
 %         [~,order] = sortrows(tmpSort',[1],{'ascend'}); %对strip进行排序;按第nDim=2行排序（长/高度)，再看strip内部loadingrateLimit
@@ -293,12 +319,12 @@ zl = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它L
         Strip_Bin(2,iStrip) = Bin_Strip(thisBin);
    
             % 更新bIN中包含ID类与否
-            Bin.LID(:,thisBin) = Bin.LID(:,thisBin) + sStrip.LID(:,iStrip); % 数值为出现次数
-            Bin.LID(Bin.LID>0) = 1; % 数值改为出现与否
-            Bin.PID(:,thisBin) = Bin.PID(:,thisBin) + sStrip.PID(:,iStrip); % 数值为出现次数
-            Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
-            Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
-            Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
+%             Bin.LID(:,thisBin) = Bin.LID(:,thisBin) + sStrip.LID(:,iStrip); % 数值为出现次数
+%             Bin.LID(Bin.LID>0) = 1; % 数值改为出现与否
+%             Bin.PID(:,thisBin) = Bin.PID(:,thisBin) + sStrip.PID(:,iStrip); % 数值为出现次数
+%             Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
+%             Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
+%             Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
 %             Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
 %             Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
             

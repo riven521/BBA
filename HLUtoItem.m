@@ -34,10 +34,10 @@ nLU = sz(2);
 hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
 
 % 仅需初始化需要自增的fields
-    Item.LID = zeros(sz);            %Item的ID类型
-    Item.SID = zeros(sz);
-    Item.UID = zeros(sz);
-    Item.PID = zeros(numel(unique(LU.PID)),sz(2));
+%     Item.LID = zeros(sz);             %Item的ID类型
+%     Item.SID = zeros(sz);
+%     Item.UID = zeros(sz);
+%     Item.PID = zeros(numel(unique(LU.PID)),sz(2));
     
     Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为2)
     Item.Rotaed = ones(sz)*-1;
@@ -52,21 +52,36 @@ iItem = 1; iLU = 1; %iStrip代表item实质
 while 1
     if iLU > nLU, break; end
     [thisItem,iItem] = getThisItem(iItem);
-    insertLUToItem(thisItem,iLU);       
+    insertLUToItem(thisItem,iLU);     
     iLU = iLU + 1;
 end
+
+
+
+
 
 % Get ITEM 务必可以放 NEXT FIT 
     function [thisItem,iItem] = getThisItem(iItem)
         % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
         isflagCurr =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
-        isSameID = Item.LID(iItem) == sLU.ID(iLU); %判断Item内部ID是否=当前iLU的ID
-        isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0            
         
-        if isNewItem
+        flagLUinItem = sLU.LU_Item(1,:) == iItem;
+        if ~any(flagLUinItem) %如果本iItem内不存在任意LU,即空Item
+            isNewItem2 = 1;
+        else
+            isNewItem2 = 0;
+            if ~isscalar(unique(sLU.ID(flagLUinItem))),    error('超预期错误');     end            
+            isSameID2 = unique(sLU.ID(flagLUinItem)) ==  sLU.ID(iLU);  %改用V2版本:判断iLU与Item内LU是否属于同一个ID
+        end
+        
+            % 老版本V1
+                %         isSameID = Item.LID(iItem) == sLU.ID(iLU); %判断Item内部ID是否=当前iLU的ID
+                %         isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0            
+        
+        if isNewItem2
                 thisItem = iItem;
         else
-            if isflagCurr && isSameID %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
+            if isflagCurr && isSameID2 %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
                  thisItem = iItem;
             else
                 iItem = iItem + 1;
@@ -89,16 +104,15 @@ end
         
                     %         tmpLUThisItem = sLU.LU_Item(1,:) == thisItem;
                     %         tmpItem_LU(2,iItem) = numel(unique(sLU.PID(1,tmpLUThisItem)));
-        
-        Item.LID(1,thisItem) = sLU.ID(1,iLU);               %更新ID类型
-        Item.SID(1,thisItem) = sLU.SID(1,iLU);
-%         Item.UID(1,thisItem) = sLU.UID(1,iLU);
-        Item.isRota(1,thisItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
-        Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记        
-        
 
-                        %         Item.PID(sLU.PID(1,iLU),thisItem) = Item.PID(sLU.PID(1,iLU),thisItem) + 1;         % 555 更新多行PID - 数值为出现次数
-         Item.PID(sLU.PID(1,iLU),thisItem) =     1;                             % 555 更新多行PID - 数值为出现与否
+        Item.isRota(1,thisItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
+        Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
+        
+%         Item.LID(1,thisItem) = sLU.ID(1,iLU); %更新ID类型        
+%         Item.SID(1,thisItem) = sLU.SID(1,iLU);   % Item.UID(1,thisItem) = sLU.UID(1,iLU);
+        
+%         Item.PID(sLU.PID(1,iLU),thisItem) = Item.PID(sLU.PID(1,iLU),thisItem) + 1;    % 555 更新多行PID - 数值为出现次数
+%         Item.PID(sLU.PID(1,iLU),thisItem) = 1;      % 555 更新多行PID - 数值为出现与否     
         
     end
 
@@ -109,17 +123,34 @@ else
     error('不能使用structfun');
 end
 
+
+
+%%%%%%%%%%%% 
+
+LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
+    LU.LU_Item;];
+nItem = size(Item.LWH,2);
+for iItem=1:nItem
+    tmp = LU.DOC([1,2,3], LU.DOC(6,:) == iItem);
+    Item.PID(:,iItem) = num2cell(unique(tmp(1,:))',1); %unique(tmp(1,:))';
+    Item.LID(:,iItem) = num2cell(unique(tmp(2,:))',1);
+    Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
+end
+
+
+
 % Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
 % 如果ITEM的列数全部相同
 if isSameCol(Item)
-    Item = structfun(@(x) x( : , Item.LID(1,:)>0 ), Item, 'UniformOutput', false);
+    Item = structfun(@(x) x( : , Item.LWH(1,:)>0 ), Item, 'UniformOutput', false);
 else
     error('不能使用structfun');
 end
 
+
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);
- ItemID = [];
+ItemID = [];
 %% 测试script TO BE FIX
 % 输出主要结果:获得每个item包含的 原始 LU序号
 printscript(LU,Item);
