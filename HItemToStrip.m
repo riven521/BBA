@@ -135,7 +135,9 @@ else
     error('不能使用structfun');
 end
 
-%%%%%%%%%%%% 
+
+
+% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
     nbLU = size(LU.LWH,2);
     LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
     for iLU=1:nbLU

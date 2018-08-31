@@ -148,12 +148,15 @@ V0831-1:
 3 HItemToStrip的order简单获取； HStripToBin的order复杂获取：
     3.1 getOrderofSID获取strip对应的sid的order为第一优先；
     3.2 getOrderofLID获取strip再sid内的order（改为priority）
+    3.3 依据strip高度和loadingrate先排序，后按strip相邻约束排序
+4 新增3个m文件
 
-
+V0831-2:
+1 修订getOrderofSID: 做了比较大的简化调整，参考getOrderofLID函数, 测试了几次没有问题。但不保险
 
 
 修订Vehicle问题（最后一个不满Vehicle改用小）
-
+实现指定位置摆放
 
 
 [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); 
@@ -165,19 +168,16 @@ V0831-1:
 
 
 
-V0811-1 ：实现指定位置摆放
+TODO:
+0 plot strip时更新LW和Coord，确保含margin的显示正确
+1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。 DONE
+2 增加同BIN/STRIP包含多个指标SID/PID等如何计算的问题？ DONE cell patcat
+3 isAdjacent为基础增加更多解的check判断函数 
+4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面 DONE 
+
 
 
 TODO:
-0 plot strip时更新LW和Coord，确保含margin的显示正确
-1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。
-2 增加同BIN/STRIP包含多个指标SID/PID等如何计算的问题？
-3 isAdjacent为基础增加更多解的check判断函数
-4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面
-
-
-
-
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）
 2 每次算法对strip摆放都要尝试hori和vert两种方式，分别判断不同类型LU如何摆放为好，暂不考虑部分vert，部分hori在同一level情形，（可能与其它非空strip拼载可用考虑） -> 改为先确固定hori和vert摆放，后期不调整的方式（依赖顺序）
 
@@ -205,7 +205,7 @@ TODO
 
 6：STRIP给高度（最大的堆垛高度3/最小4）
 
-
+-----------------------------------------------------------------------
 1：研发投入，如名门项目落地，从项目分成中抵扣；（5/5）10w起；
 0：0研发投入，如名门项目落地，在既定项目分成比例提高20%；（7/3）；
 
@@ -234,8 +234,6 @@ idx/true
 5 重物的定义
 
 5 增加数据核对函数（重要部分）
-
-
 
 
 1 whichRotation == 1 等 whichRotationHori = 0 等调整 DONE

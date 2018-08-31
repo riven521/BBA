@@ -48,7 +48,7 @@ if nargin ~= 0
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6} );
 else
-    n=88; m=3;
+    n=28; m=3;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);

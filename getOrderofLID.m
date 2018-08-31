@@ -45,6 +45,10 @@ for i=1:length(uniOrd)
     end
     allPriority(idxSID) = SIDorder;
 end
+
+% 防错语句：
+if any(allPriority==0), error('allPriority 存在未赋值列'); end
+
 end
 
 % 寻找tLID对应的相邻STRIP,按照一定逻辑

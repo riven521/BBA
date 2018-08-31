@@ -112,7 +112,7 @@ function [d] = RunAlgorithm(d,p)
             d.Bin.loadingrateLimit =  d.Bin.Itemarea ./ d.Bin.BinareaLimit;
         end
         printstruct(d);
-
+        1
         
 % % %     d.LU = doc(d.LU,d.Item,d.Strip,d.Bin);
     function LU = doc(LU,Item,Strip,Bin)

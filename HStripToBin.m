@@ -75,7 +75,7 @@ end
 
 
 
-%%%%%%%%%%%% 
+% 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
     nbLU = size(LU.LWH,2);
     LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
     for iLU=1:nbLU
@@ -180,6 +180,7 @@ end
 % 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
 SIDorder = getOrderofSID(Strip.SID); %SID一定是从1-n的过程
 if ~issorted(SIDorder), error('SID未按由小到大排序，请检查'); end
+if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
 
 %对LID排序: 相邻摆放的重要原则 5555 
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度

@@ -1,6 +1,6 @@
 %% V3 : 采用cell方式 且分开ITEM和STRIP两类 重点排除order被重复赋值的情况
 % SID: 按照SID由小到大的顺序排列
-function order = getOrderofSID(ID)
+function allPriority = getOrderofSID(ID)
 % ID is cell type % ID = [2 3 NaN; 2 1 3; 1 3 NaN; 2 1 NaN]';
 
 if ~iscell(ID),error('输入非cell');end
@@ -8,7 +8,7 @@ szRow = cellfun(@(x)size(x,1), ID);
 
     if (max(szRow)==min(szRow) && ~isscalar(szRow)) %所有STRIP均为单一型
         mID = cell2mat(ID);
-        order = mID;
+        allPriority = mID;
         return;
     else %有STRIP为混合型-但不存在三个以上的混合
         if max(szRow)>=3
@@ -17,59 +17,45 @@ szRow = cellfun(@(x)size(x,1), ID);
         warning('同一STRIP混合型存在两个SID');
         
         [mID, ~] = padcat(ID{:}); % 否则调用padcat:将cell内的矩阵转换为相等行数
-        order = zeros(1,size(mID,2));
-        priority=1;
         
-        SID = 1;  %其实SID,从1开始
-        
+        allPriority = zeros(1,size(mID,2));
+        priority=1;        
+        SID = 1;  %其实SID,从1开始        
         while 1
-            if all(order)
-                 mID
-                 order
+            if all(allPriority)
+                 %mID
+                 %allPriority
                 break;
             end %如果order全部大于0,表示已经全部排序
             
             % idx1(单strip为单一型)可能有多个 idx2(单strip为混合型) 只能有一个
-            [~,nbcol1] = find(mID(:,:)==SID & sum(~isnan( mID(:,:) ),1) ==1); %找出mID中包含SID的列,且该列仅有1个
-            [~,nbcol2] = find( mID(:,:)==SID & sum(~isnan( mID(:,:) ),1) ~=1); %找出mID中包含SID的列,且该列不只1个
+            [~,nbcol1] = find(mID(:,:)==SID & sum(~isnan( mID(:,:) ),1) ==1 & allPriority==0 ); %找出mID中包含SID的列,且该列仅有1个
+            [~,nbcol2] = find( mID(:,:)==SID & sum(~isnan( mID(:,:) ),1) ~=1 & allPriority==0); %找出mID中包含SID的列,且该列不只1个
             
             % 单一型strip的idx1非空 且 其order未全部被安排
-            if ~isempty(nbcol1) &&  any(order(nbcol1)==0)
-                if any(order(nbcol1)~=0)
-                    error('单strip的order存在重复赋值可能！');
-                end
-                order(nbcol1) = priority;
-                priority=priority+1;
-                
+            if ~isempty(nbcol1)
+                allPriority(nbcol1) = priority;
+                priority=priority+1;                
                 % 更新下一个SID: 非混合型按递增排序 
                 nextSID = SID + 1; %逐个SID判断,SID中间不能非连续
             end
             
             % 混合型strip的idx2非空 且 其order未全部被安排
-            if ~isempty(nbcol2) &&  any(order(nbcol2)==0)
+            if ~isempty(nbcol2)
                 if any(diff(mID(:,nbcol2))~=1)  %如果存在混合型SID，且混合的非连续值, 只能是错误
                     error('混合型strip的存在混合非连续值！');
-                end
-                
-                
-                %将已赋值的order排除在外,即order以首次为准, 不可重复安排
-                if any(order(nbcol2)~=0)
-                    flagRemove=any(order(nbcol2)~=0);
-                    nbcol2(flagRemove)=[];
-                end
-                
-                
+                end                               
                 if numel(nbcol2)>1
                     error('混合型strip且未赋值的存在多个！');
                 end
-                order(nbcol2) = priority;
+                allPriority(nbcol2) = priority;
                 priority=priority+1;
-                
+            
                 % 更新下一个SID: 找出idx2中排除本SID后的另一个SID 不能为多个
-                a = mID(:, nbcol2);
-                a(a(:)==SID)=[];
-                if ~isscalar(a),   error('同一STRIP混合型存在三个及以上SID！');    end
-                nextSID = a;
+                hyLID = mID(:, nbcol2);
+                hyLID(hyLID(:)==SID)=[];
+                if ~isscalar(hyLID),   error('同一STRIP混合型存在三个及以上SID！');    end
+                nextSID = hyLID;
             end
             
             % 防错措施 - 不应该有
@@ -77,7 +63,7 @@ szRow = cellfun(@(x)size(x,1), ID);
                 error('不存在包含该SID的strip！');
             end
             
-            SID = nextSID;            
+            SID = nextSID;     
             
         end
     end

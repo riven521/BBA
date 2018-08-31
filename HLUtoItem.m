@@ -57,9 +57,6 @@ while 1
 end
 
 
-
-
-
 % Get ITEM 务必可以放 NEXT FIT 
     function [thisItem,iItem] = getThisItem(iItem)
         % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
@@ -125,8 +122,7 @@ end
 
 
 
-%%%%%%%%%%%% 
-
+% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增
 LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
     LU.LU_Item;];
 nItem = size(Item.LWH,2);
