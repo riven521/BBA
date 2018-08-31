@@ -175,9 +175,31 @@ end
 %         tmpLWStrip = Strip.LW(1:2,:);
 %         [~,order] = sort(tmpLWStrip(2,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
        
-% Strip.SID;
-SIDorder = getOrderofSID(Strip.SID,'STRIP'); %对SID的排序: 只有一种的SID优先级高, 其次是与其它SID混合的2种STRIP；SID一定是从1-n的过程
-LIDorder = getOrderofLID(Strip.LID,'STRIP'); 
+%对SID排序: SID按给定顺序排序,序号小的在前面; 
+% 重点在于同一STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而单纯型非混合的；
+% 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
+SIDorder = getOrderofSID(Strip.SID); %SID一定是从1-n的过程
+if ~issorted(SIDorder), error('SID未按由小到大排序，请检查'); end
+
+%对LID排序: 相邻摆放的重要原则 5555 
+% LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
+% S = [Strip.SID; Strip.LID; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
+IDorder = getOrderofLID(SIDorder, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
+
+% 555查错语句：同一SID下,不允许有重复的LID
+s=[SIDorder;IDorder];
+for i=min(SIDorder):max(SIDorder)
+    si = s(2,s(1,:)==i);
+    if numel(unique(si)) ~= numel(si)
+        error('eeeee');
+    end
+end
+
+tmpSort = [SIDorder; IDorder; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
+[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+
+        
+% LIDorder = getOrderofLID([Strip.SID;Strip.LID]); 
 % Strip.LID;
 % LIDorder = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它LID混合的2种STRIP；
 % LIDorder = ones(1,length(SIDorder)); 
@@ -185,9 +207,8 @@ LIDorder = getOrderofLID(Strip.LID,'STRIP');
         % 按供应商SID/LID排序
 %         zs
 %         zl
-Strip.LID
-        tmpSort = [SIDorder; LIDorder; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-        [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); 
+%         tmpSort = [SIDorder; LIDorder; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
+%         [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); 
 %         order = LIDorder'
 %         [~,order] = sortrows(tmpSort',[1],{'descend'});
 

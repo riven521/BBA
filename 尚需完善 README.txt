@@ -130,25 +130,26 @@ V0811-4: 返回刘强的版本
 3 修改best旋转标准
 
 -------------------------------------------------------------
-V0820-1: 
+存在BUG的版本：
+V0820-1:
 1 在HItemToBin中 增加LU.LU_Strip
 2 LU2Item 获取Item.PID2等
 3 Item2Strip 获取Strip.PID2等 获取LU.LU_Strip第一行
-
 V0822-1:
-1 除LU的ID外，其它ID修改全部为V2版基于cell的SID/PID; 
-
-V0822-2:
-2 修改bug-确保strip内相连的LU,必须后面是单纯的LU
+1 除LU的ID外，其它ID修改全部为V2版基于cell的SID/PID;
+V0829-1:
+2 待修改bug-确保strip内相连的LU,必须后面是单纯的LU
 同一SID下区分LID单纯，单纯后的必须相连，且混合LID可能非连续！！！！！！！！！！！！！！！
+-------------------------------------------------------------
+bug修订的版本：
+V0831-1:
+1 修改bug-确保strip的排序, 总体按strip高度和loadingrate排序,内部按strip相邻约束排序
+2 除Lu外，其它的PID/SID/LID全部采用cell方式,注意和patcat函数结合使用
+3 HItemToStrip的order简单获取； HStripToBin的order复杂获取：
+    3.1 getOrderofSID获取strip对应的sid的order为第一优先；
+    3.2 getOrderofLID获取strip再sid内的order（改为priority）
 
-TOBE
-获取第二行
-获取PID/SID如何起作用？
-strip2bin的order如何修改？
 
-
-SAME ID ITEM相关
 
 
 修订Vehicle问题（最后一个不满Vehicle改用小）

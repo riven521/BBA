@@ -1,6 +1,10 @@
 function [d] = getRandDa(n,m)
-%     rng(1);
-    rng('default');
+%     rng(10000);
+%     rng('default');
+    s = rng
+    save('srng','s');
+%     load('srng');
+%     rng(s)
     
     Par.maxHeavey = 18;
 %     Par.LUbuff = [0;0]; %以后无用
@@ -17,7 +21,7 @@ function [d] = getRandDa(n,m)
     for i=1: m
         Veh.Weight(i) = randi([1000,1500]);    %重量 randi([1000,1500]);
         Veh.LWH(1,i) = randi([10,12]); %宽度 randi([2200,2400]);
-        Veh.LWH(2,i) = randi([100,100]); %长/Height度  randi([5000,6000]);
+        Veh.LWH(2,i) = randi([20,20]); %长/Height度  randi([5000,6000]);
         Veh.LWH(3,i) = randi([10,10]); %高度  randi([2200,2400]); 
         Veh.volume(i) = Veh.LWH(1,i) * Veh.LWH(2,i) * Veh.LWH(3,i); % 体积
         
@@ -43,7 +47,7 @@ function [d] = getRandDa(n,m)
     
     
 % LU   
-    LU.ID = randi([11,13],1,n); %ID 类型数
+    LU.ID = randi([11,15],1,n); %ID 类型数
     LU.buff = zeros(3,n); %以后无用
 
     LU.LWH = zeros(3,n);
@@ -71,9 +75,9 @@ function [d] = getRandDa(n,m)
 %         LU.xID(idx) = randi([0,nXID]);
         LU.margin(:,idx) = randi([0,0]);  %左上右下
         for j=1:length(idx)
-            LU.LWH(3,idx(j)) = randi([3,7]); %高度250,1150
-            LU.PID(idx(j)) = randi([100,101]); %100,103
-            LU.SID(idx(j)) = randi([200, 203]); %200, 203
+            LU.LWH(3,idx(j)) = randi([6,10]); %高度250,1150
+            LU.PID(idx(j)) = randi([100,100]); %100,103
+            LU.SID(idx(j)) = randi([200, 200]); %200, 203
 %             LU.UID(idx(j)) = randi([300,300]);
             LU.Weight(idx(j)) = randi([10,20]);
             if LU.Weight(idx(j)) >= Par.maxHeavey

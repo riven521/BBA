@@ -92,7 +92,7 @@ for iBin = 1:nBin
 %         for iSid = 1:length(unique(itemSIDSort))
 %             itemSIDSort(iSid)
         DrawRectangle([itemCenter itemWidth itemLength 0],  '-',  itemColor); 
-        pause(0.2);
+%         pause(0.2);
 %         itemSIDSort
         hold on;
 %         end

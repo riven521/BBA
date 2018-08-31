@@ -354,17 +354,27 @@ end
     end
 end
 
+% 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
 
-SIDorder = getOrderofSID(Item.SID,'ITEM'); %对SID的排序: SID按顺序给定,序号小的在前面,同一Item应该只有一个SID
-LIDorder = getOrderofLID(Item.LID,'ITEM'); %对LID的排序: 应该不用考虑LID, 除非长宽全部一致,再看LID,最后看高度
-        % LIDorder = ones(1,length(SIDorder)); %对LID的排序: 应该不用考虑LID, 除非长宽全部一致,再看LID,最后看高度
-tmpItem = [SIDorder; LIDorder; Item.LWH]; % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
+%对SID排序: SID按给定顺序排序,序号小的在前面
+szRow = cellfun(@(x)size(x,1), Item.SID);
+if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID
+SIDorder = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+
+%对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
+szRow = cellfun(@(x)size(x,1), Item.LID);
+if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个LID
+LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+
+    % LIDorder = ones(1,length(SIDorder));
+tmpItem = [SIDorder; LIDorder; Item.LWH];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
 % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
 [~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
 %按ITEM长度/随后宽度/随后高度 排序有问题 可能相同IDLU被分开
 % 增加LUID 2: 确保即使长宽完全相同 但LUID相同的 也必须放一起
 if ~isrow(order), order=order'; end
+
 
 %         tmpLWH = Item.LWH(1:2,:);
 %         tmpIDItem = Item.LID(1,:);
