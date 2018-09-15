@@ -86,7 +86,6 @@ fprintf(1,'\nRunning the simulation...\n');
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
     dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
-    
 %                if nargin == 0,    plotSolution(dA(iAlg),pA(iAlg));    end
 %                 flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 end
