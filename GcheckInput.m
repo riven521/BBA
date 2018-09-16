@@ -41,18 +41,23 @@ function deepCheck(LU,Veh)
     uniID = unique(LU.ID);
     % 托盘ID - 对应长宽/isRota/yID/maxL  常见555
     for iLU = 1:length(uniID)
-        tmp = LU.LWH(1:2,LU.ID==iLU)';   %获取宽和长,不要高
-        if numel(unique(tmp,'rows')) > 2,  error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    end
-        tmp = LU.isRota(:,LU.ID==iLU);
+        tmp = LU.LWH(1:2,LU.ID==uniID(iLU))';   %获取宽和长,不要高 
+        if isempty(tmp),      error('不应该出现的错误');       end
+        if numel(unique(tmp,'rows')) > 2,  error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    end        
+        tmp = LU.isRota(:,LU.ID==uniID(iLU));
+        if isempty(tmp),      error('不应该出现的错误');       end
         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其允许旋转类型不同数据 \n');    end
-%         tmp = LU.maxL(:,LU.ID==iLU);
+%         tmp = LU.maxL(:,LU.ID==uniID(iLU));
+%         if isempty(tmp),      error('不应该出现的错误');       end
 %         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其最大层数maxL类型不同数据 \n');    end
-%         tmp = LU.yID(:,LU.ID==iLU);
-        if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其yID类型不同数据 \n');    end
+%         tmp = LU.yID(:,LU.ID==uniID(iLU));
+%         if isempty(tmp),      error('不应该出现的错误');       end
+%         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其yID类型不同数据 \n');    end
     end
     
 end
-    
+%                         tmpVeh =tmpM(1:2,LU.ID==uniID(iLU))';    %获取宽和长,不要高
+
     
 %%
                                     %         fLU = structfun(@isrow, rmfield(d.LU,'LWH'), 'UniformOutput', false);

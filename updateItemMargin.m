@@ -18,12 +18,13 @@ tmpLULWH = [LU.LWH(1:2, flagLU ); LU.LU_Item(1, flagLU ); LU.ID(1,flagLU)];
 [tmpU] = sortrows(tmpU', [3], {'ascend'})'; % 获取Item从1逐渐递增的顺序值
 
 if sum(flagItem)~= size(tmpU,2)
-    sum(flagItem)
-    size(tmpU,2)
-    1
+    error('不应该出现的错误');
+%     sum(flagItem)
+%     size(tmpU,2)
+%     tmpU(1:2, :);  Item.LWH(1:2, flagItem);
+%     printstruct(LU);
+%     printstruct(Item);
 end
-tmpU(1:2, :)
-Item.LWH(1:2, flagItem)
 Item.LWH(1:2, flagItem) = tmpU(1:2, :); %flagItem = 9(Item数量=1); tmpU = 10 
 
 % 3 Update LU's Coord in Current Bin

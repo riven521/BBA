@@ -1,10 +1,8 @@
 function [d] = getRandDa(n,m)
 %     rng(10000);
 %     rng('default');
-    s = rng
-    save('srng','s');
-%     load('srng');
-%     rng(s)
+    s = rng;     save('srng','s');
+%     load('srng');    rng(s);
     
     Par.maxHeavey = 18;
 %     Par.LUbuff = [0;0]; %以后无用
@@ -21,7 +19,7 @@ function [d] = getRandDa(n,m)
     for i=1: m
         Veh.Weight(i) = randi([1000,1500]);    %重量 randi([1000,1500]);
         Veh.LWH(1,i) = randi([10,12]); %宽度 randi([2200,2400]);
-        Veh.LWH(2,i) = randi([20,20]); %长/Height度  randi([5000,6000]);
+        Veh.LWH(2,i) = randi([15,30]); %长/Height度  randi([5000,6000]);
         Veh.LWH(3,i) = randi([10,10]); %高度  randi([2200,2400]); 
         Veh.volume(i) = Veh.LWH(1,i) * Veh.LWH(2,i) * Veh.LWH(3,i); % 体积
         
@@ -47,7 +45,7 @@ function [d] = getRandDa(n,m)
     
     
 % LU   
-    LU.ID = randi([11,15],1,n); %ID 类型数
+    LU.ID = randi([11,13],1,n); %ID 类型数
     LU.buff = zeros(3,n); %以后无用
 
     LU.LWH = zeros(3,n);
@@ -67,7 +65,7 @@ function [d] = getRandDa(n,m)
     for i=1: length(uniID)
         % 与LUID相关
         idx = find(LU.ID(:)==uniID(i));
-        LU.LWH(1,idx) = randi([4,5]); %宽度 randi([1000,1300]);
+        LU.LWH(1,idx) = randi([8,9]); %宽度 randi([1000,1300]);
         LU.LWH(2,idx) = randi([2,6]); %长度 randi([700,850]); 
         LU.isRota(idx) = randi([1,1]);            %是否旋转
 %         LU.maxL(idx) = randi([1,4]);

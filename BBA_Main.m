@@ -48,10 +48,10 @@ if nargin ~= 0
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6} );
 else
-    n=28; m=3;
+    n=99; m=40;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
-    printstruct(d.Veh);
+    printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
 
 %     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
@@ -85,9 +85,55 @@ fprintf(1,'\nRunning the simulation...\n');
 
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
-    dA(iAlg) = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
+    
+    printstruct(pA(iAlg));
+    printstruct(d.Veh);
+    tmpd = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
+    printstruct(tmpd.Veh);
+    
+    % 针对车型选择,补充变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+    tmpd.LU.LU_VehType = ones(size(tmpd.LU.ID)) * tmpd.Veh.order(1);
+    dA(iAlg)=tmpd;
+    printstruct(tmpd.Veh);
+    % ****************** 针对车型选择 获取 smalld ******************
+    tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
+    flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
+    flaggotSmallVeh = 0;
+    if isSameCol(tmpd.LU)
+        % 获取仅最后一个Bin的输入数据
+        lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false); %仅取最后一辆车内的LU
+        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin'});
+        lastd.Par = tmpd.Par;
+        lastd.Veh = tmpd.Veh;
+        
+        % 从最后一辆车不断往前循环; until第二辆车; 此处假设车辆按体积递减排序
+        nbVehType = max(tmpd.Veh.ID); %此算例车型数量3个
+        allidxVehType = nbVehType; 
+        while(allidxVehType>1) %排除第一辆车的可尝试车型数量
+            lastd.Veh = structfun(@(x) x(:,allidxVehType), tmpd.Veh,'UniformOutput',false); %从最后一种车型开始考虑
+            smalld = RunAlgorithm(lastd,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算
+            % 针对车型选择,补充变量LU_VehType :
+            % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
+            smalld.LU.LU_VehType = ones(size(smalld.LU.ID))*tmpd.Veh.order(allidxVehType); % 针对新车型选择,补充变量LU_VehType
+                
+            % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
+            usedVehIdx = max(smalld.LU.LU_Bin(1,:));
+            if usedVehIdx==1
+                flaggotSmallVeh=1;
+                break;
+            end
+            % 若放不下,选择更大车型 -> allidxVehType递减 tmpdSmall赋予空值
+            allidxVehType= allidxVehType-1;
+            smalld = [];
+        end
+    else
+        error('不能使用structfun');
+    end
+    % ****************** 针对车型选择 获取 smalld ******************
+    
+%     printstruct(dA(iAlg));
 %                if nargin == 0,    plotSolution(dA(iAlg),pA(iAlg));    end
-%                 flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
+%                  flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 end
 
 %  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -97,9 +143,13 @@ end
 % % dA = dA(1,logical(flagA));
 % % pA = pA(1,logical(flagA));
 
-% 从多次算法结果中选出从必定bin内相邻的最优结果
-if ~isempty(dA)
-    [daBest,paBest] = getbestsol(dA,pA); 
+% 从多次算法结果中选出从必定bin内相邻的最优结果 - NOTE: 采用单参数时无需考虑
+if ~isempty(dA) 
+    if size(dA,2)>1    %仅当dA有多次时采用,目前参数锁定,应只有1个
+        [daBest,paBest] = getbestsol(dA,pA); %可不考虑smalld -> 解的优劣与最后一个bin关系不大
+    else
+        daBest = dA(1); paBest = pA(1);
+    end
 else
     error('本算例内所有解都存在托盘不相邻的情况 \n');
 end
@@ -108,9 +158,24 @@ end
 % Return length(parMax) 个 solutions to BBA
 if ~isempty(daBest)
     bestOne = 1;
-    getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
+    [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
     
-                if nargin == 0,   plotSolution(daBest(bestOne),paBest(bestOne));    end
+        % ****************** 针对车型选择 获取修订的 output ******************
+    % 增加: 改小车型的解smalld的返回判断,并修改返回的部分值
+    if flaggotSmallVeh %如有当替换成功了,才执行getReturnBBA函数 以及作图
+             [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(smalld); %% 进行返回处理
+             %由于order改变了,此处仅对最后一个bin的索引进行修改
+             lastVehIdx = max(output_LU_Seq(2,:));
+             flaglastLUIdx = output_LU_Seq(2,:)==lastVehIdx;
+             output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin2;
+             output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH2;
+             output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
+    end
+    % ****************** 针对车型选择 获取修订的 output ******************
+    
+                if nargin == 0,   plotSolution(daBest(bestOne),paBest(bestOne));   
+                    if flaggotSmallVeh,    plotSolution(smalld,paBest(bestOne));   end
+                end
                 % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));        
 else
     error('本算例内未找出最优解返回BBA \n');
@@ -122,73 +187,76 @@ fprintf(1,'Simulation done.\n');
 % d = rmfield(d, {'Veh', 'LU'});
 
 %% ******* 嵌套函数  **********
-% 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
-% 参数4和参数1功能类似, 可以合并
-    function getReturnBBA(daMax) 
-        % 返回输出结果(原始顺序) 输出3个参数       
-        
-        % 返回之前计算不含margin的LU和Item的LWH+Coord.
-        [daMax.LU,daMax.Item] = updateItemMargin(daMax.LU,daMax.Item);
-        
-        % 参数1 - LU在Bin内的坐标
-        % 增加间隙-增加CoordLUBinWithBuff变量
-        % V2:  LU margin方式
-        output_CoordLUBin = daMax.LU.CoordLUBin;
-        % V1:  LU buff 间隙方式
-                % daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
-                % output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
-        
-        % 参数2 - LU的长宽高(旋转后)
-        % LWH已经为减小长宽对应margin后的实际数据变量
-        % 以下是V3 - LU margin方式
-        output_LU_LWH = daMax.LU.LWH; %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
-        
-         % 以下是V2
-         %  增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
-         %  daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
-         %  output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
-            % 以下是V1
-            %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
-            %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
-
-       
-        % 参数3 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
-        LU_Item=daMax.LU.LU_Item;        
-        LID=daMax.LU.ID;
-        PID=daMax.LU.PID;        
-        SID=daMax.LU.SID;
-        hLU=daMax.LU.LWH(3,:);
-        LU_Bin = daMax.LU.LU_Bin;
-        
-        output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin];
-
-        % 三个参数的排序后展示及顺序
-        % 排序优先顺序 tmpSeq:
-        % 如果需要按LUID先堆垛展示,后零部件展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 LU_ITEM，同一PID
-        % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8        
-            %         tmpSeq =[7,8,5,3,1,2,4,6];
-        % 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
-        % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8
-        tmpSeq =[7,8,5,3,4,1,2,6]; 
-        
-        [~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend'});
-        
-        % 结果展示顺序 tmpShow: 
-        % 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D 
-%          tmpShow =[7,8,5,3,1,2,4,6];         
-         tmpShow =[7,8,5,3,1,4];     
-        
-         % FINAL return's results;
-        output_CoordLUBin =output_CoordLUBin(:,order);
-        output_LU_LWH =output_LU_LWH(:,order);
-        output_LU_Seq =output_LU_Seq(tmpShow,order);
-
-
-        end
 
 end %END MAIN
 
 %% ******* 局部函数 ****************
+% 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
+% 参数4和参数1功能类似, 可以合并
+function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daMax)
+% 返回输出结果(原始顺序) 输出3个参数
+
+% 返回之前计算不含margin的LU和Item的LWH+Coord.
+[daMax.LU,daMax.Item] = updateItemMargin(daMax.LU,daMax.Item);
+
+% 参数1 - LU在Bin内的坐标
+% 增加间隙-增加CoordLUBinWithBuff变量
+% V2:  LU margin方式
+output_CoordLUBin = daMax.LU.CoordLUBin;
+% V1:  LU buff 间隙方式
+% daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
+% output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+
+% 参数2 - LU的长宽高(旋转后)
+% LWH已经为减小长宽对应margin后的实际数据变量
+% 以下是V3 - LU margin方式
+output_LU_LWH = daMax.LU.LWH; %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+
+% 以下是V2
+%  增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
+%  daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
+%  output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+% 以下是V1
+%         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
+%         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
+
+
+% 参数3 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
+LU_Item=daMax.LU.LU_Item;
+LID=daMax.LU.ID;
+PID=daMax.LU.PID;
+SID=daMax.LU.SID;
+hLU=daMax.LU.LWH(3,:);
+LU_Bin = daMax.LU.LU_Bin;   %唯一两行的
+LU_VehType=daMax.LU.LU_VehType;
+
+output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin;LU_VehType];
+
+% 三个参数的排序后展示及顺序
+% 排序优先顺序 tmpSeq:
+% 如果需要按LUID先堆垛展示,后零部件展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 LU_ITEM，同一PID
+% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8
+%         tmpSeq =[7,8,5,3,1,2,4,6];
+% 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
+% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8
+tmpSeq =[7,8,5,3,4,1,2,6];
+
+[~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend'});
+
+% 结果展示顺序 tmpShow:
+% 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D
+%          tmpShow =[7,8,5,3,1,2,4,6];
+tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号
+
+% FINAL return's results;
+output_CoordLUBin =output_CoordLUBin(:,order);
+output_LU_LWH =output_LU_LWH(:,order);
+output_LU_Seq =output_LU_Seq(tmpShow,order);
+
+
+end
+
+        
 function plotSolution(d,par)
 %% 画图
 %     printstruct(d);
@@ -291,7 +359,7 @@ idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
 idx =idxBin;
 if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
 idx0 =intersect(idx,idxStripLimit);
-if ~isempty(idx0), 
+if ~isempty(idx0),
     idx = idx0; 
 else
     warning('idx0 is empty');

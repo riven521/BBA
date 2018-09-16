@@ -32,8 +32,13 @@ for idx = 1:length(fields)
                 Veh.(fields{idx}) = aField';
                 warning('正在处理3个车辆的情况,未予以判断,需谨慎判断以下数据是否正确');
                 fprintf('车辆的的长宽高为: %d \n ',Veh.(fields{idx}));
+                tmpVeh = Veh.(fields{idx});
+                if ~(tmpVeh(1)*1.5 <= tmpVeh(2)) %如果第一辆车辆的宽度的1.5倍大于车辆的长度,明现为长宽高放反了
+                    Veh.(fields{idx}) = aField;
+                end             
+                
             else
-                error('不是3个托盘且是方阵,不太可能出现');
+                warning('不是3个托盘且是方阵,仅可能在非长宽高时出现');  
             end
             
         end        
@@ -60,24 +65,25 @@ for idx = 1:length(fields)
         if size(aField,1) == nLU && size(aField,2) ~= nLU
             LU.(fields{idx}) = aField';   end
         if size(aField,1) == nLU && size(aField,2) == nLU 
-            
+
             if nLU==3
                 LU.(fields{idx}) = aField';
                 warning('正在处理3个托盘的情况,需谨慎处理');    
-                 fprintf('托盘的的长宽高为: %d \n ',LU.(fields{idx}));
+                fprintf('托盘的的长宽高为: %d \n ',LU.(fields{idx}));
                 uniID = unique(LU.ID);
                 % 托盘ID - 对应长宽LW/isRota/yID/maxL  etc... 矩阵表述的转置
                 for iLU = 1:length(uniID)
                     tmpM = LU.(fields{idx});
-                    tmp =tmpM(1:2,LU.ID==iLU)';    %获取宽和长,不要高
-                    if numel(unique(tmp,'rows')) > 2 
-                        LU.(fields{idx}) = aField';
+                    tmpVeh =tmpM(1:2,LU.ID==uniID(iLU))';    %获取宽和长,不要高
+                    if isempty(tmpVeh),   error('不应该出现的错误');        end
+                    if numel(unique(tmpVeh,'rows')) > 2 
+                        LU.(fields{idx}) = aField;
                         warning('原托盘长宽高等进行了转置 \n');    
                         break;
                     end
                 end                
             else
-                 error('不是3个托盘且是方阵,不太可能出现');  
+                 warning('不是3个托盘且是方阵,仅可能在非长宽高时出现');  
             end
             
         end

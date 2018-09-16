@@ -48,6 +48,10 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     % 4 Veh从体积大->小   默认顺序
     [~,order] = sortrows(Veh.volume', [1],{'descend'});    
     Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
+    if ~isrow(order),
+        order = order';
+    end
+    Veh.order = order;
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 

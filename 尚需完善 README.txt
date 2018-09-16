@@ -153,10 +153,31 @@ V0831-1:
 
 V0831-2:
 1 修订getOrderofSID: 做了比较大的简化调整，参考getOrderofLID函数, 测试了几次没有问题。但不保险
+--------------------------------------------------------------------------------------
+V0916-1:
+1 修订initCheck中的3个托盘的问题（转置）
+2 修订initCheck中的1或2个托盘的问题（转置）
+3 修订initCheck中的3个车辆的问题（转置）
+    if ~(tmpVeh(1)*1.5 <= tmpVeh(2))
+V0916-2:    
+1 修订Vehicle问题（最后一个不满Vehicle改用小）
+难点：从大vehicle改小vehicle, LU->ITEM要重新算(高度有差); ITEM->STRIP要重新算（宽度有差）; STRIP->BIN要重新算（长度有差）。无需重新CHECKINPUT.
+2 修改getReturnBBA函数 -> 由嵌套函数放入局部函数
+    a. 增加LU_VehType=daMax.LU.LU_VehType;
+    b. 增加第1行,但是第9个放入的: tmpShow[9]
+3 完成Vehicle修订问题
+    a. main函数中94行增加% ****************** 针对车型选择 获取 smalld ： 最后一车放入更小车型后的输出
+    b. POST PROCESSING中 增加  % ****************** 针对车型选择 获取修订的 output ：修订3个output输出
+    
+
+dA(iAlg) = RunAlgorithm(d,pA(iAlg));
+[daBest,paBest] = getbestsol(dA,pA); 
+getReturnBBA(daBest(bestOne));
+function getReturnBBA(daMax)
 
 
-修订Vehicle问题（最后一个不满Vehicle改用小）
 实现指定位置摆放
+最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） - 可作为选项之一
 
 
 [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); 
