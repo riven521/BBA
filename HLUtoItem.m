@@ -39,8 +39,10 @@ hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh 
 %     Item.UID = zeros(sz);
 %     Item.PID = zeros(numel(unique(LU.PID)),sz(2));
     
-    Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为2)
+    Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为-1)
     Item.Rotaed = ones(sz)*-1;
+    Item.isFull = ones(sz)*-1;    %Item的是否满层(初始为-1)
+    Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
 % 临时使用
@@ -49,19 +51,30 @@ tmpItem_LU = zeros(1,nLU);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不
 sLU.LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
 
 iItem = 1; iLU = 1; %iStrip代表item实质
+% 固定LU, 选择ITEM; 
 while 1
     if iLU > nLU, break; end
     [thisItem,iItem] = getThisItem(iItem);
-    insertLUToItem(thisItem,iLU);     
+    insertLUToItem(thisItem,iLU);
     iLU = iLU + 1;
 end
 
 
 % Get ITEM 务必可以放 NEXT FIT 
     function [thisItem,iItem] = getThisItem(iItem)
+    % isflagHeight : 是否ITEM高度满足
+    % isNewItem2 ：是否ITEM属于新
+    % isSameID2 ： 是否ITEM内的ID相同
+    
         % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
-        isflagCurr =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
-        
+        isflagHeight =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
+        % 1 初步判断是否满层标记
+        if hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU)*2
+            Item.isFull(1,iItem) = 0;
+        else
+            Item.isFull(1,iItem) = 1;
+        end
+            
         flagLUinItem = sLU.LU_Item(1,:) == iItem;
         if ~any(flagLUinItem) %如果本iItem内不存在任意LU,即空Item
             isNewItem2 = 1;
@@ -73,17 +86,27 @@ end
         
             % 老版本V1
                 %         isSameID = Item.LID(iItem) == sLU.ID(iLU); %判断Item内部ID是否=当前iLU的ID
-                %         isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0            
+                %         isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0
         
+       % 如果是新TIEM, 一定可放；否则：如果高度满足 且 与本ITEM内的ID相同，也可放;
         if isNewItem2
                 thisItem = iItem;
         else
-            if isflagCurr && isSameID2 %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
+            if isflagHeight && isSameID2 %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
                  thisItem = iItem;
             else
+               % 2 深入判断是否满层标记
+                if isflagHeight && ~isSameID2 %如果高度允许，但LU ID不同, 表明该ITEM是非满层
+                    Item.isFull(1,iItem) = 0;  % 更新是否满层标记
+                end
+                if ~isflagHeight && isSameID2 %如果高度不允许，但LU ID相同, 表明该ITEM是满层
+                    Item.isFull(1,iItem) = 1;  % 更新是否满层标记
+                end
                 iItem = iItem + 1;
                 [thisItem,iItem] = getThisItem(iItem);
             end
+            
+
         end
     end
 
@@ -122,7 +145,31 @@ end
 
 
 
-% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增
+
+% Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
+% 如果ITEM的列数全部相同
+if isSameCol(Item)
+    Item = structfun(@(x) x( : , Item.LWH(1,:)>0 ), Item, 'UniformOutput', false);
+else
+    error('不能使用structfun');
+end
+
+% ITEM增加判断是否上轻下重的判断Item.isWeightFine
+Item = isWeightUpDown(Item,LU);
+% 如果存在上轻下重的case, 进行修复
+if ~all(Item.isWeightFine)
+    [~,b] = find(Item.isWeightFine == 0);
+    for i=1:length(b)
+        LU = repairItemWeight(LU,b(i));
+    end
+end
+Item = isWeightUpDown(Item,LU);
+if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
+
+
+
+
+% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 暂时未用
 LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
     LU.LU_Item;];
 nItem = size(Item.LWH,2);
@@ -133,17 +180,6 @@ for iItem=1:nItem
     Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
 end
 
-
-
-% Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
-% 如果ITEM的列数全部相同
-if isSameCol(Item)
-    Item = structfun(@(x) x( : , Item.LWH(1,:)>0 ), Item, 'UniformOutput', false);
-else
-    error('不能使用structfun');
-end
-
-
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);
 ItemID = [];
@@ -153,16 +189,87 @@ printscript(LU,Item);
 
 end
 
+% 判断LU是否上轻下重构成
+function Item = isWeightUpDown(Item,LU)
+for iItem = 1:max(LU.LU_Item(1,:)) %对ITEM进行循环
+    [~,idx] = find(LU.LU_Item(1,:)==iItem);
+    nbLUinItem = length(idx);
+    % 对ITME内含2个以上LU的进行判断
+    if length(idx) > 1 %Item包含不只一个Item,需要判断是否有轻重的变化
+        currLUWeight = zeros(1,nbLUinItem);
+        for iIdx = 1:nbLUinItem
+            currIdx = idx(LU.LU_Item(2,idx) == iIdx);
+            currLUWeight(iIdx) = LU.Weight(:,currIdx);          %                 currLUHight(iIdx) = LU.LWH(3,currIdx);
+        end
+        if diff(currLUWeight) > 0 % 代表下轻上重
+            % 修改LU.LU_Item的值             1 5: idx  为 1 2: LU.LU_Item(2,idx) == iIdx改为 2 1
+            Item.isWeightFine(1,iItem) = 0;
+        else
+            Item.isWeightFine(1,iItem) = 1;
+        end
+    else  %ITEM内只有1个LU, 必定满足条件
+        Item.isWeightFine(1,iItem) = 1; 
+    end
+end
+end
+
+% 对LU上轻下重构成进行修复
+function LU = repairItemWeight(LU,itemIdx)
+    [~,LUidx] = find(LU.LU_Item(1,:)==itemIdx); %找出本item对应的lu的index
+    LU.LU_Item(:,LUidx)
+    nbLUinItem = length(LUidx);
+    currLUWeight = zeros(1,nbLUinItem);
+    for iIdx = 1:nbLUinItem
+        currIdx = LUidx(LU.LU_Item(2,LUidx) == iIdx);
+        currLUWeight(iIdx) = LU.Weight(:,currIdx);
+    end
+    % 对Item内的LU进行排序获得b; 将进入顺序LU_Item的顺序2进行修正
+    [~,b] = sort(currLUWeight,'descend');
+    tt = LU.LU_Item(2,LUidx);
+    LU.LU_Item(2,LUidx) = tt(b);
+end
+
 function printscript(LU,Item)
     for iItem = 1:max(LU.LU_Item(1,:))
-        [~,idx] = find(LU.LU_Item(1,:)==iItem);
-        fprintf('item %d 的长宽高为:  ',iItem);
-        fprintf('( %d ) ',Item.LWH(:,iItem));
-        fprintf('\n');
-        fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
-        fprintf('%d ',idx);
-        fprintf('( %d ) ', LU.LWH(:,idx));
-        fprintf('\n');
+%         [~,idx] = find(LU.LU_Item(1,:)==iItem);
+%         fprintf('item %d 的长宽高为:  ',iItem);
+%         fprintf('( %d ) ',Item.LWH(:,iItem));
+%         fprintf('\n');
+%         fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
+%         fprintf('%d ',idx);
+%         fprintf('( %d ) ', LU.LWH(:,idx));
+%         fprintf('\n');
+%         fprintf('item %d 包含 original LU 索引号(高)为  \n  ',iItem);
+%         fprintf('%d ',idx);
+%         fprintf('( %d ) ', LU.LWH(3,idx)); 
+%         fprintf('\n');
+%         fprintf('item %d 包含 original LU 重量为  \n  ',iItem);
+%         fprintf('%d ',idx);
+%         fprintf('( %d ) ', LU.Weight(:,idx));
+%         fprintf('\n');
+%                fprintf('item %d 包含 original LU ***为  \n  ',iItem);
+%         fprintf('%d ',idx);
+%         fprintf('( %d ) ', LU.LU_Item(2,idx)); 
+%         fprintf('\n'); 
+%         isWeightUpDown
+%         if length(idx) > 1 %Item包含不只一个Item,需要判断是否有轻重的变化
+%             currLUWeight = zeros(1,length(idx));
+%             currLUHight = zeros(1,length(idx));
+%             for iIdx = 1:length(idx)
+%                currIdx = idx(LU.LU_Item(2,idx) == iIdx);
+%                currLUWeight(iIdx) = LU.Weight(:,currIdx);
+%                currLUHight(iIdx) = LU.LWH(3,currIdx);      
+%             end
+%             if diff(currLUWeight) > 0 % 代表下轻上重
+%                 currLUWeight
+%             end
+%             if diff(currLUHight) >0  
+%                 currLUHight
+%             end
+%         end       
+
+        
+
     end
 end
 
@@ -170,7 +277,9 @@ end
 function [tepLUorder] = getLUorder(LU)
 tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH; LU.Weight];
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
+% 供应商; 长度； ID；PID；高度；重量；
 [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6, 7],{'ascend','descend','ascend','ascend','descend','descend'}); 
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 7, 6],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[5, 1, 6, 4],{'ascend','ascend','ascend','descend'}); %5:SID; 1:ID 4:Hight

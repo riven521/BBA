@@ -189,7 +189,7 @@ function [d] = RunAlgorithm(d,p)
             
         end
         
-%         printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh); %可用,暂时注释
+         printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh); %可用,暂时注释
         %% 将最后一个车替换为更小的车（从小到大替换）
         function printOut(Bin,Strip,Item,LU,Veh)
             nBin = size(Bin.LW,2);

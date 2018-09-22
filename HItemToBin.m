@@ -18,7 +18,7 @@ LU.CoordLUBin=zeros(2,nLU);
             % LURotaed=zeros(1,nLU);
     
 iiStrip = 0;            
-% 循环每个bin
+% 循环每个bin 5555555555 非常重要的函数 55555555555555
 for iBin=1:max(Strip.Strip_Bin(1,:))
     tmpItemSeq=1;  %每个bin内顺序从1开始
     tmpLUSeq=1;
@@ -50,8 +50,9 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
             % 增加对LU的更新
             tmpLU = []; %计算CoordLUBin高度使用 % tmpLWLU = LU.LWH(:,LU.LU_Item(1,:)==thisItem); %计算
             nbLU=numel(find(LU.LU_Item(1,:)==thisItem));            
-            % 循环item每个LU
+            % 循环item每个LU, 从第一个顺序开始逐步获取LU在BIN内的坐标
             for iLU=1:nbLU
+                
                 [~,thisLU] = find(LU.LU_Item(1,:)==thisItem & LU.LU_Item(2,:)==iLU);
                 if ~isscalar(thisLU), error('意外错误');  end
                 
