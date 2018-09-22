@@ -40,8 +40,8 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动        
     elseif pwhichSortItemOrder ==2
         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,0); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-    elseif pwhichSortItemOrder ==3
-        [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(3,1)); %第二个参数：1: Hori; 0: Vert；2: 原封不动  3按缝隙最小排序      
+    elseif pwhichSortItemOrder ==3 %默认此选项
+        [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
     end
     LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
         

@@ -154,6 +154,15 @@ else
     error('不能使用structfun');
 end
 
+
+% TODO 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层
+if ~all(Item.isFull)
+    [~,b] = find(Item.isFull == 0);
+    for i=1:length(b)
+%           Item = repairItemFull(Item,hVeh,b(i)); %DONE 
+    end
+end
+
 % ITEM增加判断是否上轻下重的判断Item.isWeightFine
 Item = isWeightUpDown(Item,LU);
 % 如果存在上轻下重的case, 进行修复
@@ -165,7 +174,6 @@ if ~all(Item.isWeightFine)
 end
 Item = isWeightUpDown(Item,LU);
 if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
-
 
 
 
@@ -216,7 +224,6 @@ end
 % 对LU上轻下重构成进行修复
 function LU = repairItemWeight(LU,itemIdx)
     [~,LUidx] = find(LU.LU_Item(1,:)==itemIdx); %找出本item对应的lu的index
-    LU.LU_Item(:,LUidx)
     nbLUinItem = length(LUidx);
     currLUWeight = zeros(1,nbLUinItem);
     for iIdx = 1:nbLUinItem
@@ -227,6 +234,18 @@ function LU = repairItemWeight(LU,itemIdx)
     [~,b] = sort(currLUWeight,'descend');
     tt = LU.LU_Item(2,LUidx);
     LU.LU_Item(2,LUidx) = tt(b);
+end
+
+% 对LU是否Full构成进行修复
+function Item = repairItemFull(Item,hVeh,itemIdx)
+    % 计算本非FULL ITEM的对角线长度
+    diagItem = sqrt(Item.LWH(1,itemIdx)^2 + Item.LWH(2,itemIdx)^2);
+    % 计算本ITEM距离车顶的间隙
+    hMargin = hVeh - Item.LWH(3,itemIdx);
+    % 如果对角线长度 >= ITEM距离车顶的间隙 -> 视为满层 FULL
+    if diagItem >= hMargin
+        Item.isFull(itemIdx) = 1;
+    end
 end
 
 function printscript(LU,Item)

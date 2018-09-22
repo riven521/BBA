@@ -8,7 +8,7 @@ function [d] = RunAlgorithm(d,p)
 %                   plot(pgon);        axis equal;   axis ([0 maxX 0 maxY]);   
 %                   plot3Dshape(d.LU.LWH);
 
-        % 数据预处理
+        % 数据预处理：重点：获取LU.Rotaed,托盘是否排序
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %不可以不做 
         
         %% 启发式: LU到Item的算法    

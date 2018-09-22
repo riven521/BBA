@@ -32,7 +32,7 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
         [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip      
         if ~isscalar(thisStrip), error('意外错误');  end
         nbItem=numel(find(Item.Item_Strip(1,:)==thisStrip));
-        % 循环strip每个item
+        % 循环strip每个item,  从第一个顺序开始逐步获取ITEM在BIN内的坐标, 依据ITEM_STRIP的顺序
         for iItem=1:nbItem %同一strip内 循环取值iItem
             [~,thisItem] = find(Item.Item_Strip(1,:)==thisStrip & Item.Item_Strip(2,:)==iItem );%此Strip内第iItem个item
             if ~isscalar(thisItem), error('意外错误');  end
@@ -50,6 +50,7 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
             % 增加对LU的更新
             tmpLU = []; %计算CoordLUBin高度使用 % tmpLWLU = LU.LWH(:,LU.LU_Item(1,:)==thisItem); %计算
             nbLU=numel(find(LU.LU_Item(1,:)==thisItem));            
+            
             % 循环item每个LU, 从第一个顺序开始逐步获取LU在BIN内的坐标
             for iLU=1:nbLU
                 

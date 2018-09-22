@@ -185,7 +185,7 @@ if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
 %对LID排序: 相邻摆放的重要原则 555555555555555555555555 
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
 % S = [Strip.SID; Strip.LID; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-IDorder = getOrderofLID(SIDorder, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
+IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbLID, Strip.isFull,Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
 
 % 555查错语句：同一SID下,不允许有重复的LID
 s=[SIDorder;IDorder];

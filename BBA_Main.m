@@ -48,7 +48,7 @@ if nargin ~= 0
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6} );
 else
-    n=99; m=40;
+    n=30; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
@@ -173,8 +173,9 @@ if ~isempty(daBest)
     end
     % ****************** 针对车型选择 获取修订的 output ******************
     
-                if nargin == 0,   plotSolution(daBest(bestOne),paBest(bestOne));   
-                    if flaggotSmallVeh,    plotSolution(smalld,paBest(bestOne));   end
+                if 1 %nargin == 0,   
+                    plotSolution(daBest(bestOne),paBest(bestOne));   
+%                     if flaggotSmallVeh,    plotSolution(smalld,paBest(bestOne));   end
                 end
                 % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));        
 else

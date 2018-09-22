@@ -1,33 +1,48 @@
 %% V3 : 采用cell方式 且分开ITEM和STRIP两类 重点排除order被重复赋值的情况
 % 先按SID区分, 再给出priority为SID内部顺序
 % 重点：27-29行tmpM的顺序
-function allPriority = getOrderofLID(SIDord,ID,LW,LoadingRateLimit,Loadingrate)
+function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SLID,Sfull, Smixed, ID,LW,LoadingRateLimit,Loadingrate)
 % ID is cell type % ID = [2 3 NaN; 2 1 3; 1 3 NaN; 2 1 NaN]';
 
 if ~iscell(ID),error('输入非cell');end
 
 allPriority = zeros(1,size(ID,2));
 uniOrd = unique(SIDord);
+% 不同SID获取不同的顺序, 从SID的序号1开始
 for i=1:length(uniOrd)
+    
     idxSID = SIDord==uniOrd(i);
     
+    % 获取本SID内的STRIP对应的值tLW;tLL;tL;tID;celltID.
     tLW = LW(:,idxSID);   tLL = LoadingRateLimit(:,idxSID);     tL = Loadingrate(:,idxSID);
-    
     tID = ID(:,idxSID);   celltID = tID;
-    
+    tLID = SLID(:,idxSID);    tFull = Sfull(:,idxSID);    tMixed = Smixed(:,idxSID); tPured = Spured(:,idxSID);
+    tSingle = Ssingle(:,idxSID); %作用未知
+%     max(tL)
+%     min(tL)
+%     mean(tL)
     priority = 1;
     SIDorder = zeros(1,size(tID,2));
     szRow = cellfun(@(x)size(x,1), tID);
-    if isscalar(szRow)
+    if isscalar(szRow) %如果该STRIP的只有1STRIP，且为单纯型STRIP，赋值为1
         SIDorder = 1;
     else
         [tID, ~] = padcat(tID{:});   if iscolumn(tID), tID = tID'; end
         
-        % 1 给定不考虑相邻的Strip摆放顺序
-        tmpM = [tLL;tL;tLW;];
-            %         [~,order] = sortrows(tmpM',[1,2,4],{'descend','descend','descend'}); %order is index vector 返回原索引值 如第一个为3，表示原array中第3个目前是第1个
-        % 改用和Item2Strip类似的以高度优先的排序方式, 其次未LoadingRate
-        [~,order] = sortrows(tmpM',[4,1],{'descend','descend'}); %order is index vector 返回原索引值 如第一个为3，表示原array中第3个目前是第1个
+        % 1 给定不考虑相邻的Strip摆放顺序 ->             
+        % 改用和Item2Strip类似的以高度优先的排序方式, 其次为LoadingRate
+%         tmpM = [tLL;tL;tLW;];
+% %         [~,order] = sortrows(tmpM',[1,2,4],{'descend','descend','descend'}); %order is index vector 返回原索引值 如第一个为3，表示原array中第3个目前是第1个
+%          tmpM = [tLL;tL;tLW;];[~,order] = sortrows(tmpM',[4,1],{'descend','descend'}); %order is index vector 返回原索引值 如第一个为3，表示原array中第3个目前是第1个
+        
+% 1 单纯 > 满层 > 数量 > LoadingRate
+%         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[2,3,1,5],{'ascend','descend','descend','descend'}); 
+% 2 数量 > 单纯 > 满层 > LoadingRate
+        tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
+% 3 全纯 > 数量 > 单纯 > 满层 > LoadingRate
+%         tmpM = [tPured; tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,4,6],{'descend','descend','ascend','descend','descend'}); 
+%         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];        [~,order] = sortrows(tmpM',[2,3],{'ascend','descend'});
+        
         if ~isrow(order), order=order'; end
         
         % 2 基于1的摆放顺序, 给定最终STRIP顺序到torder
@@ -39,7 +54,7 @@ for i=1:length(uniOrd)
             
             % 2.2 找出给order(o)位置tLID对应的相邻Strip.
             tLID = celltID{:,order(o)};
-            % 首次tLID不应该出现混合型STRIP
+            % NOTE 首次tLID不应该出现混合型STRIP, 但如按高度排序, 是可能出现的
             [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tLID);
         end
     end

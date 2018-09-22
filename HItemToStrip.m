@@ -71,7 +71,11 @@ wStrip = Veh.LWH(1,1);
 Strip.LW = zeros(2,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,current 高度)
 Strip.LW(1,:) = wStrip;   %dim1-宽度剩余 
 Strip.Weight = zeros(1,nItem); % 初始赋值
-
+    Strip.isMixed = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个LID 
+    Strip.isFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
+    Strip.nbLID = ones(size(Strip.Weight))*-1;   %单STRIP内部ITEM类型个数, 混合型默认为-1
+    Strip.isAllPured = ones(size(Strip.Weight))*-1;   %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
+    Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
     % 初始化多行nItem列
 %     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
 %     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
@@ -119,7 +123,7 @@ while 1
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
-%  plot2DStrip();  hold off;%可能有问题: 一次性画图
+%   plot2DStrip();  hold off;%可能有问题: 一次性画图
 
 % 后处理 并赋值到d
 %Matalb code gerator use:
@@ -191,7 +195,54 @@ end
          %     Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
         %     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
                         %     tmpStrip_Item = tmpStrip_Item(tmpStrip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
-    %% 测试script
+
+% STRIP增加判断是否单纯型/混合型判断STRIP.isMixed
+Strip = isMixedStrip(Strip);
+% STRIP增加判断是否包含非Full的Item. STRIP.isFull
+Strip = isFullStrip(Strip,Item);
+
+%Strip.isAllPured：单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
+%Strip.nbLID： STRIP增加内部该ITEM的nbLID类型个数,数值越大,即该LU类型越多
+arrayAllLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+mixedStrip = find(Strip.isMixed(1,:) == 1);
+mixedLID = [];
+for m=1:length(mixedStrip)
+     flagitemIdx = Item.Item_Strip(1,:) == mixedStrip(m);
+     mixedLID = [mixedLID, arrayAllLID(flagitemIdx)];
+end
+mixedLID = unique(mixedLID);
+
+for i=1:length(Strip.isAllPured)
+    if ~Strip.isMixed(1,i) %如是单纯型        
+        cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
+        arrayLID = cellfun(@(x)x(1), cellLID);
+        if isscalar(unique(arrayLID)) 
+            if isscalar(arrayLID)
+                Strip.isSingleItem(1,i) = 1;
+            else
+                Strip.isSingleItem(1,i) = 0;
+            end
+            if ismember(unique(arrayLID),mixedLID)
+                Strip.isAllPured(1,i) = 0;
+            else
+                Strip.isAllPured(1,i) = 1;
+            end
+            Strip.nbLID(1,i) = sum(arrayAllLID == unique(arrayLID));
+        else
+             error('单纯型STRIP内的ITEM的类型不同'); %arrayLID            
+        end
+    end
+end
+
+
+Strip.LID
+Strip.isSingleItem %: 1:单纯且单个； 0：单纯且多个；-1：混合
+Strip.nbLID % 整数：冗余值, 具体ITEM的LID数理 -1：混合
+Strip.isAllPured % ：1：单纯且该ITEM没有混合型； 0：单纯但也由混合的； -1：混合strip
+Strip.isFull % 1：全部都是满层； 0：包含非满层
+Strip.isMixed % 1：混合层； 0：单纯层
+
+%% 测试script
     % 输出主要结果:获得每个level包含的 
     printscript();
 %     printstruct(d);
@@ -319,7 +370,9 @@ end
         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
         nstrip = sum(sItem.Item_Strip(2,:)>0);
 
-        nIDType = unique(sItem.LID);
+
+        tmpLID = cellfun(@(x)x(1), sItem.LID);        
+        nIDType = unique(tmpLID);
         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
         
         %% 画图
@@ -333,7 +386,7 @@ end
             % 获取该索引下的变量
             drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
             drawItemLWH = sItem.LWH(:,idxDrawItem);
-            drawItemId = sItem.LID(:,idxDrawItem);
+            drawItemId = tmpLID(:,idxDrawItem);
 
             % 画图：逐个item
             nThisItem = size(drawItemLWH,2);
@@ -355,6 +408,31 @@ end
         % hold off;
     end
 end
+
+% 判断STRIP是否包含非Full的Item
+function Strip = isFullStrip(Strip,Item) 
+    % 循环判断Strip是否full
+    for i=1:length(Strip.isFull)
+         if all(Item.isFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+             Strip.isFull(i) = 1;
+         else
+             Strip.isFull(i) = 0;
+         end
+    end    
+end
+
+% 判断STRIP是否混合型
+function Strip = isMixedStrip(Strip) 
+    % 循环判断Strip是否为混合型
+    for i=1:length(Strip.isMixed)
+         if numel(Strip.LID{i}) > 1
+             Strip.isMixed(i) = 1;
+         else
+             Strip.isMixed(i) = 0;
+         end
+    end    
+end
+
 
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
