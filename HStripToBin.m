@@ -100,10 +100,38 @@ else
     error('不能使用structfun');
 end
 
+% ITEM增加判断是否上轻下重的判断Item.isWeightFine
+Strip.Strip_Bin
+Strip.isFull
+Strip.isSingleItem
+
+% 如存在单个Item的strip的case 或 存在strip有不满的strip
+if any(Strip.isSingleItem | ~Strip.isFull )
+    [~,bsingle] = find(Strip.isSingleItem == 1);
+    [~,bnotfull] = find(Strip.isFull == 0);
+    b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
+   for i=1:length(b)
+%          Strip.Strip_Bin
+        Strip = repairStripPlace(Strip,b(i)); % Strip.Strip_Bin 
+%          Strip.Strip_Bin
+    end
+end
+
+    function Strip = repairStripPlace(Strip,stripidx)
+        % 找到stripidx对应的BIN下的所有Strip索引号逻辑值
+        flagIdx = Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx);    % 所有属于本Bin内的逻辑判断
+        flagBigIdx = Strip.Strip_Bin(2,:) > Strip.Strip_Bin(2,stripidx);  % 所有摆放顺序晚于stripidx的逻辑判断
+        
+        % 所有属于本Bin内 & 且摆放顺序晚于stripidx 的顺序加1, 即提前摆放
+        Strip.Strip_Bin(2,flagBigIdx & flagIdx)  = Strip.Strip_Bin(2,flagBigIdx & flagIdx)  - 1;
+        Strip.Strip_Bin(2,stripidx) = sum(flagIdx); % 当前stripidx摆放到车尾, 即顺序设置到最大
+        
+        % [~,maxSeq]=max(Strip.Strip_Bin(2,Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx) ));
+    end
 
    
 %% 测试script
-% 输出主要结果:获得每个item包含的 原始 LU序号
+% 输出主要结果:获得每个item包含的 原始 LU序号z
 printscript();
     
 

@@ -155,7 +155,7 @@ else
 end
 
 
-% TODO 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层
+% repairItemFull: 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层
 if ~all(Item.isFull)
     [~,b] = find(Item.isFull == 0);
     for i=1:length(b)
@@ -163,9 +163,9 @@ if ~all(Item.isFull)
     end
 end
 
-% ITEM增加判断是否上轻下重的判断Item.isWeightFine
+% isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
 Item = isWeightUpDown(Item,LU);
-% 如果存在上轻下重的case, 进行修复
+% repairItemWeight: 如果存在上轻下重的case, 进行修复
 if ~all(Item.isWeightFine)
     [~,b] = find(Item.isWeightFine == 0);
     for i=1:length(b)

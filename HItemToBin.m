@@ -16,8 +16,8 @@ LU.LU_Bin=zeros(2,nLU);
 LU.LU_Strip=zeros(2,nLU);
 LU.CoordLUBin=zeros(2,nLU);
             % LURotaed=zeros(1,nLU);
-    
-iiStrip = 0;            
+
+iiStrip = 0;
 % 循环每个bin 5555555555 非常重要的函数 55555555555555
 for iBin=1:max(Strip.Strip_Bin(1,:))
     tmpItemSeq=1;  %每个bin内顺序从1开始

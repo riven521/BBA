@@ -172,12 +172,7 @@ if ~isempty(daBest)
              output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
     end
     % ****************** 针对车型选择 获取修订的 output ******************
-    
-                if 1 %nargin == 0,   
-                    plotSolution(daBest(bestOne),paBest(bestOne));   
-%                     if flaggotSmallVeh,    plotSolution(smalld,paBest(bestOne));   end
-                end
-                % == plotSolution(RunAlgorithm(d,paBest(bestOne)) ,paBest(bestOne));        
+            tOne));        
 else
     error('本算例内未找出最优解返回BBA \n');
 end
