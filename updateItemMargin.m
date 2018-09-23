@@ -25,6 +25,7 @@ if sum(flagItem)~= size(tmpU,2)
 %     printstruct(LU);
 %     printstruct(Item);
 end
+
 Item.LWH(1:2, flagItem) = tmpU(1:2, :); %flagItem = 9(ItemÊýÁ¿=1); tmpU = 10 
 
 % 3 Update LU's Coord in Current Bin

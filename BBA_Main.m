@@ -48,7 +48,7 @@ if nargin ~= 0
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6} );
 else
-    n=30; m=2;
+    n=15; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
@@ -85,115 +85,106 @@ fprintf(1,'\nRunning the simulation...\n');
 
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
+    %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
+
+    % 1 运行主数据算法
+    d = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
+    d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+    % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
+    [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
+    dA(iAlg)=d;
     
-    printstruct(pA(iAlg));
-    printstruct(d.Veh);
-    tmpd = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
-    printstruct(tmpd.Veh);
-    
-    % 针对车型选择,补充变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-    tmpd.LU.LU_VehType = ones(size(tmpd.LU.ID)) * tmpd.Veh.order(1);
-    dA(iAlg)=tmpd;
-    printstruct(tmpd.Veh);
-    % ****************** 针对车型选择 获取 smalld ******************
-    tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
-    flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
-    flaggotSmallVeh = 0;
-    if isSameCol(tmpd.LU)
-        % 获取仅最后一个Bin的输入数据
-        lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false); %仅取最后一辆车内的LU
-        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin'});
-        lastd.Par = tmpd.Par;
-        lastd.Veh = tmpd.Veh;
+    % 2 运行最后一车数据算法
+    allidxVehType = max(d.Veh.ID); %此算例车型数量(已排除相同车型)
+    flaggetSmallVeh = 0;
+    d1 = getdinLastVeh(d);   
+    d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); %对调Lu.LWH的长宽 -< 之前是宽长
+    while(allidxVehType>1)
+        % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
+        d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
+        d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
         
-        % 从最后一辆车不断往前循环; until第二辆车; 此处假设车辆按体积递减排序
-        nbVehType = max(tmpd.Veh.ID); %此算例车型数量3个
-        allidxVehType = nbVehType; 
-        while(allidxVehType>1) %排除第一辆车的可尝试车型数量
-            lastd.Veh = structfun(@(x) x(:,allidxVehType), tmpd.Veh,'UniformOutput',false); %从最后一种车型开始考虑
-            smalld = RunAlgorithm(lastd,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算
-            % 针对车型选择,补充变量LU_VehType :
-            % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
-            smalld.LU.LU_VehType = ones(size(smalld.LU.ID))*tmpd.Veh.order(allidxVehType); % 针对新车型选择,补充变量LU_VehType
-                
-            % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
-            usedVehIdx = max(smalld.LU.LU_Bin(1,:));
-            if usedVehIdx==1
-                flaggotSmallVeh=1;
-                break;
-            end
-            % 若放不下,选择更大车型 -> allidxVehType递减 tmpdSmall赋予空值
-            allidxVehType= allidxVehType-1;
-            smalld = [];
+        % 2.2 判断该车型是否可用
+        % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
+        % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
+        if max(d1.LU.LU_Bin(1,:)) == 1
+            d1.LU.LU_VehType = ones(size(d1.LU.ID))*d.Veh.order(allidxVehType); % 补充变量LU_VehType
+            flaggetSmallVeh=1;
+            break;
         end
-    else
-        error('不能使用structfun');
+        
+        % 2.3 若放不下,选择更大车型 -> allidxVehType递减 d1.Veh赋予空值
+        allidxVehType= allidxVehType-1;
+        d1.Veh = [];
     end
-    % ****************** 针对车型选择 获取 smalld ******************
-    
-%     printstruct(dA(iAlg));
-%                if nargin == 0,    plotSolution(dA(iAlg),pA(iAlg));    end
-%                  flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 end
 
-%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
-
 %% Simulate - CHOOSE BEST ONE
-% 555 算法首先排除bin内相同类型托盘不相邻的解
+% 555 算法首先判断并排除bin内相同类型托盘不相邻的解 TODO 数据的CHECK
+%  flagA(iAlg) =  isAdjacent(dA(iAlg));           % 算法判断是否相同类型托盘相邻摆放 +
 % % dA = dA(1,logical(flagA));
 % % pA = pA(1,logical(flagA));
 
-% 从多次算法结果中选出从必定bin内相邻的最优结果 - NOTE: 采用单参数时无需考虑
-if ~isempty(dA) 
-    if size(dA,2)>1    %仅当dA有多次时采用,目前参数锁定,应只有1个
-        [daBest,paBest] = getbestsol(dA,pA); %可不考虑smalld -> 解的优劣与最后一个bin关系不大
-    else
-        daBest = dA(1); paBest = pA(1);
-    end
-else
-    error('本算例内所有解都存在托盘不相邻的情况 \n');
-end
+% TODO 从多次算法结果中选出从必定bin内相邻的最优结果 - NOTE: 采用单参数时无需考虑
+if isempty(dA), error('本算例内所有解都存在托盘不相邻的情况 \n'); end
+[daBest,paBest] = getbestsol(dA,pA);  %可不考虑d1 -> 解的优劣与最后一个bin关系不大
 
 %% POST PROCESSING
 % Return length(parMax) 个 solutions to BBA
-if ~isempty(daBest)
-    bestOne = 1;
-    [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个
+if isempty(daBest), error('本算例内未找出最优解返回BBA \n'); end
+
+bestOne = 1;
+[output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
+
+
+% ****************** 针对车型选择 获取修订的 output ******************
+if flaggetSmallVeh %如有当替换成功了,才执行getReturnBBA函数 以及作图
+    [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% 进行返回处理
+    %由于order改变了,此处仅对最后一个bin的索引进行修改
+    lastVehIdx = max(output_LU_Seq(2,:));
+    flaglastLUIdx = output_LU_Seq(2,:)==lastVehIdx;
     
-        % ****************** 针对车型选择 获取修订的 output ******************
-    % 增加: 改小车型的解smalld的返回判断,并修改返回的部分值
-    if flaggotSmallVeh %如有当替换成功了,才执行getReturnBBA函数 以及作图
-             [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(smalld); %% 进行返回处理
-             %由于order改变了,此处仅对最后一个bin的索引进行修改
-             lastVehIdx = max(output_LU_Seq(2,:));
-             flaglastLUIdx = output_LU_Seq(2,:)==lastVehIdx;
-             output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin2;
-             output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH2;
-             output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
-    end
-    % ****************** 针对车型选择 获取修订的 output ******************
-            tOne));        
-else
-    error('本算例内未找出最优解返回BBA \n');
+    output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin2;
+    output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH2;
+    output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
+end
+% ****************** 针对车型选择 获取修订的 output ******************
+
+if 0 %nargin == 0,
+    plotSolution(daBest(bestOne),paBest(bestOne));
+    if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
 end
 
 fprintf(1,'Simulation done.\n');
-
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-% d = rmfield(d, {'Veh', 'LU'});
-
-%% ******* 嵌套函数  **********
-
+% d = rmfield(d, {'Veh', 'LU'});%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
 end %END MAIN
 
+
+
+
+
+
+
 %% ******* 局部函数 ****************
+function lastd = getdinLastVeh(tmpd)
+    % tmpd中的Bin是排序后的, 从最小的开始试
+    tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
+    flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
+    if isSameCol(tmpd.LU)
+        % 获取仅最后一个Bin的输入数据
+        lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %仅取最后一辆车内的LU
+        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin'}); 
+        lastd.Par = tmpd.Par;
+    else
+        error('不能使用structfun');
+    end
+end
+
 % 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
 % 参数4和参数1功能类似, 可以合并
 function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daMax)
 % 返回输出结果(原始顺序) 输出3个参数
-
-% 返回之前计算不含margin的LU和Item的LWH+Coord.
-[daMax.LU,daMax.Item] = updateItemMargin(daMax.LU,daMax.Item);
 
 % 参数1 - LU在Bin内的坐标
 % 增加间隙-增加CoordLUBinWithBuff变量
@@ -248,7 +239,6 @@ tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号
 output_CoordLUBin =output_CoordLUBin(:,order);
 output_LU_LWH =output_LU_LWH(:,order);
 output_LU_Seq =output_LU_Seq(tmpShow,order);
-
 
 end
 
@@ -328,6 +318,12 @@ end
 %% **** 算法指标选择最优解 ****    
 function [daMax,parMax] = getbestsol(DaS,Par)
 
+    % 如果仅有一个可行解, 直接返回;
+    if size(DaS,2)==1    %仅当dA有多次时采用,目前参数锁定,
+        daMax = DaS(1); parMax = Par(1);
+        return
+    end
+    
 %获取评价指标和对应参数
 for r=1:length(DaS)
     resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的装载率均值最大 Itemloadingrate ItemloadingrateLimit
