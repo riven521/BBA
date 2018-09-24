@@ -74,7 +74,7 @@ end
         else
             Item.isFull(1,iItem) = 1;
         end
-            
+%             sum(flagLUinItem) < sLU.maxLayer(iLU)
         flagLUinItem = sLU.LU_Item(1,:) == iItem;
         if ~any(flagLUinItem) %如果本iItem内不存在任意LU,即空Item
             isNewItem2 = 1;

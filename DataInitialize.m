@@ -16,6 +16,7 @@ function d = DataInitialize( varargin )
 
 if isnumeric(varargin{1})
     if varargin{1}~=0
+        % 仅用了随机算例
         d=getRandDa(varargin{1},varargin{2});         %   save('rndDa.mat','d');   load('rndDa.mat');
     else
         % Defaults
@@ -66,6 +67,8 @@ else
         switch varargin{k}
             case 'LUID'
                 d.LU.ID                        = varargin{k+1};
+            case 'LUID2'
+                d.LU.ID2                      = varargin{k+1};
             case 'LULWH'
                 d.LU.LWH                    = varargin{k+1};
             case 'LUMARGIN'

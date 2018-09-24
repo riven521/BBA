@@ -35,7 +35,7 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 close all
 clc
 
-if nargin ~= 0    
+if nargin ~= 0
     d = DataInitialize( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
@@ -46,17 +46,18 @@ if nargin ~= 0
             'LUISROTA',varargin{3},...
             'LUMARGIN',varargin{4},...
             'LUWEIGHT',varargin{5},...
-            'VEHWEIGHT',varargin{6} );
+            'VEHWEIGHT',varargin{6},...
+            'LUID2',varargin{7});
 else
     n=15; m=2;
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %³µÁ¾°´µÚÒ»¸ö·ÅÖÃ,Ä¿Ç°²¢Î´°´Ìå»ı´Ó´óµ½Ğ¡ÅÅĞò; 
-
+    
 %     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
-
+printstruct(d.LU);
 %% Initialize Parameter
 nAlg = 1;
 for i = 3:3 %1-3 best first next¾ù¿É ÉèÎª3: ²»ÔÊĞíÇ°ÃæĞ¡¼äÏ¶·ÅÆäËü¶«Î÷
@@ -136,7 +137,6 @@ if isempty(daBest), error('±¾ËãÀıÄÚÎ´ÕÒ³ö×îÓÅ½â·µ»ØBBA \n'); end
 bestOne = 1;
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %ÈçÓĞ¶à¸ö,·µ»ØµÚÒ»¸ö×îÓÅ½â
 
-
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
 if flaggetSmallVeh %ÈçÓĞµ±Ìæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% ½øĞĞ·µ»Ø´¦Àí
@@ -150,7 +150,7 @@ if flaggetSmallVeh %ÈçÓĞµ±Ìæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
 end
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
 
-if 0 %nargin == 0,
+if 1 %nargin == 0,
     plotSolution(daBest(bestOne),paBest(bestOne));
     if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
 end
@@ -210,7 +210,8 @@ output_LU_LWH = daMax.LU.LWH; %output_LU_LWH£ºDOUBLE LUµÄ³¤¿í¸ß£¨Ğı×ªºó£ºÊµ¼ÊÖµ£
 
 % ²ÎÊı3 - ×îĞ¡Á£¶Èµ¥ÔªLUÕ¹Ê¾µÄ¾ÛºÏ£¨°´PID/ITEM/SID)
 LU_Item=daMax.LU.LU_Item;
-LID=daMax.LU.ID;
+% LID=daMax.LU.ID;
+LID=daMax.LU.ID2;  %LU¶Ñ¶âÓÃLUID, µ«·µ»ØË³ĞòÓÃLUID2
 PID=daMax.LU.PID;
 SID=daMax.LU.SID;
 hLU=daMax.LU.LWH(3,:);

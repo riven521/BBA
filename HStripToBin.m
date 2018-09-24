@@ -106,14 +106,26 @@ Strip.isFull
 Strip.isSingleItem
 
 % 如存在单个Item的strip的case 或 存在strip有不满的strip
+% 对其排序, loadingrate小的最后进入
 if any(Strip.isSingleItem | ~Strip.isFull )
+    % Get b : strip index to be move to end of Vehicle
     [~,bsingle] = find(Strip.isSingleItem == 1);
     [~,bnotfull] = find(Strip.isFull == 0);
     b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
-   for i=1:length(b)
-%          Strip.Strip_Bin
-        Strip = repairStripPlace(Strip,b(i)); % Strip.Strip_Bin 
-%          Strip.Strip_Bin
+    
+    % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit
+    tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b)];
+    [~,order] = sortrows(tmpM',[1,2],{'descend','descend'});
+    b = b(order);
+    
+%     Strip.loadingrate(b)
+%     Strip.Stripvolume
+%     Strip.StripvolumeLimit
+%     Strip.Itemvolume
+%     Strip.loadingrateLimit(b)
+
+    for i=1:length(b) 
+        Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
     end
 end
 

@@ -7,7 +7,7 @@ function [d] = getRandDa(n,m)
     Par.maxHeavey = 18;
 %     Par.LUbuff = [0;0]; %以后无用
     
-% Veh
+%% Veh
     Veh.ID = randperm(m);   %Veh 类型数
     Veh.buff = zeros(3,m);
     maxSeg = 1; %车辆段数 3
@@ -44,7 +44,7 @@ function [d] = getRandDa(n,m)
     Veh.yID(emptyYID,:) = [];    
     
     
-% LU   
+%% LU   
     LU.ID = randi([11,13],1,n); %ID 类型数 
     LU.buff = zeros(3,n); %以后无用
 
@@ -53,10 +53,10 @@ function [d] = getRandDa(n,m)
 %     LU.maxL = zeros(1,n);
 %     LU.yID = zeros(1,n);
 %     LU.xID = zeros(1,n);
+%     LU.UID = zeros(1,n);
     LU.margin = zeros(4,n); 
 
     LU.PID = zeros(1,n);
-%     LU.UID = zeros(1,n);
     LU.SID = zeros(1,n);
     LU.Weight = zeros(1,n);
     LU.isH = zeros(1,n);
@@ -68,6 +68,7 @@ function [d] = getRandDa(n,m)
         LU.LWH(1,idx) = randi([1486-100,1486+100]); %宽度 randi([1000,1300]);
         LU.LWH(2,idx) = randi([765-50,765+50]); %长度 randi([700,850]); 
         LU.isRota(idx) = randi([1,1]);            %是否旋转
+        LU.maxLayer(idx) = randi([1,1]);       %最大可堆垛层数
 %         LU.maxL(idx) = randi([1,4]);
 %         LU.yID(idx) = randi([0,nYID]); % TODO 后期改与车型一致
 %         LU.xID(idx) = randi([0,nXID]);
@@ -84,6 +85,7 @@ function [d] = getRandDa(n,m)
         end
     end
 
+%%
     d.LU = LU;
     d.Par = Par;
     d.Veh = Veh;
