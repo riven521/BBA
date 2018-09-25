@@ -49,7 +49,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LUID2',varargin{7});
 else
-    n=15; m=2;
+    n=55; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
@@ -57,7 +57,8 @@ else
 %     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
-printstruct(d.LU);
+printstruct(d);
+1
 %% Initialize Parameter
 nAlg = 1;
 for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
@@ -94,7 +95,8 @@ for iAlg = 1:nAlg
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
     dA(iAlg)=d;
-    d.Veh
+    printstruct(d);
+
     % 2 运行最后一车数据算法
     allidxVehType = length(unique(d.Veh.ID)); %此算例车型数量(未排除相同车型)
     flaggetSmallVeh = 0;
@@ -104,7 +106,7 @@ for iAlg = 1:nAlg
         % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
         d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
-        
+        plotSolution(d1,pA(iAlg));
         % 2.2 判断该车型是否可用
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
         % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
@@ -190,6 +192,9 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daMax)
 % 增加间隙-增加CoordLUBinWithBuff变量
 % V2:  LU margin方式
 output_CoordLUBin = daMax.LU.CoordLUBin;
+% x = [daMax.LU.LU_Bin;daMax.LU.LU_Strip;daMax.LU.CoordLUBin]
+% y=x(:,x(1,:)==3)'
+
 % V1:  LU buff 间隙方式
 % daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
 % output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
@@ -234,10 +239,14 @@ tmpSeq =[7,8,5,3,4,1,2,6];
 % 结果展示顺序 tmpShow:
 % 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D
 %          tmpShow =[7,8,5,3,1,2,4,6];
-tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号
+tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号 参数3的行号
 
 % FINAL return's results;
 output_CoordLUBin =output_CoordLUBin(:,order);
+
+% % x = [daMax.LU.LU_Bin(:,order);daMax.LU.LU_Strip(:,order);daMax.LU.CoordLUBin(:,order);output_CoordLUBin]
+% % y=x(:,x(1,:)==3)'
+
 output_LU_LWH =output_LU_LWH(:,order);
 output_LU_Seq =output_LU_Seq(tmpShow,order);
 

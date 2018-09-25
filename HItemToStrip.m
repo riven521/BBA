@@ -78,6 +78,8 @@ Strip.Weight = zeros(1,nItem); % 初始赋值
     Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
     Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item
     Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
+    Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
+
     % 初始化多行nItem列
 %     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
 %     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
@@ -148,7 +150,7 @@ end
     nbLU = size(LU.LWH,2);
     LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
     for iLU=1:nbLU
-         theItem = LU.LU_Item(1,iLU); %iLU属于第几个Item
+         theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
          LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
     end
 
@@ -242,15 +244,13 @@ for i=1:length(Strip.isAllPured)
     end
 end
 
-
 % 6: 计算Strip的最大高度, 依据内部Item的高度判定
 for i=1:length(Strip.maxHeight)
     % 计算最大值
     % Item.Item_Strip(1,:) == i) : Strip i 内部的Item flag
     Strip.maxHeight(i) = max(Item.LWH(3, Item.Item_Strip(1,:) == i));
 end
-   
-   
+
 % 7: STRIP增加判断是否包含宽度width非Full的Item. STRIP.isWidthFull
 % % % % Strip = isWidthFullStrip(Strip,Item);
 
@@ -258,7 +258,7 @@ end
 Strip.maxHeight
 Strip.LID
 Strip.isSingleItem %: 1:单纯且单个； 0：单纯且多个；-1：混合
-Strip.nbLID % 整数：冗余值, 具体ITEM的LID数理 -1：混合
+Strip.nbLID % 整数：冗余值, 具体ITEM的堆垛个数 -1：混合
 Strip.isAllPured % ：1：单纯且该ITEM没有混合型； 0：单纯但也由混合的； -1：混合strip
 Strip.isFull % 1：全部都是满层； 0：包含非满层
 Strip.isMixed % 1：混合层； 0：单纯层
@@ -442,7 +442,7 @@ function Strip = isFullStrip(Strip,Item)
     end    
 end
 
-% 判断STRIP是否包含Width非Full的Item
+% 判断STRIP是否包含Width非Full的Item 暂未考虑
 function Strip = isWidthFullStrip(Strip,Item) 
     % 循环判断Strip是否Widthfull, 首先1: Strip不是单一 2: 其次不是混合 3: LoadingRateLimit<1
     for i=1:length(Strip.isWidthFull)
@@ -477,24 +477,34 @@ end
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
 
+
 %对SID排序: SID按给定顺序排序,序号小的在前面
 szRow = cellfun(@(x)size(x,1), Item.SID);
 if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID
 SIDorder = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+
+
 
 %对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
 szRow = cellfun(@(x)size(x,1), Item.LID);
 if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个LID
 LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
 
-    % LIDorder = ones(1,length(SIDorder));
-tmpItem = [SIDorder; LIDorder; Item.LWH];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
+% LIDorder = ones(1,length(SIDorder));
+% *********** 考虑isNonMixed
+tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
 % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
-[~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
+[~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
+
+% *********** 不考虑isNonMixed
+% % tmpItem = [SIDorder; LIDorder; Item.LWH; ];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
+% % % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
+% % [~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
+
+
 %按ITEM长度/随后宽度/随后高度 排序有问题 可能相同IDLU被分开
 % 增加LUID 2: 确保即使长宽完全相同 但LUID相同的 也必须放一起
 if ~isrow(order), order=order'; end
-
 
 %         tmpLWH = Item.LWH(1:2,:);
 %         tmpIDItem = Item.LID(1,:);

@@ -75,6 +75,7 @@ function [d] = RunAlgorithm(d,p)
         %% 启发式：Strip到Bin的算法
 %         printstruct(d);
         [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,d.LU,p);
+printstruct(d.Strip)
         %% Item到bin的信息获取:
 %         printstruct(d);
 %         [d] = HItemToBin(d);

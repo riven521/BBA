@@ -43,6 +43,9 @@ hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh 
     Item.Rotaed = ones(sz)*-1;
     Item.isFull = ones(sz)*-1;    %Item的是否满层(初始为-1)
     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
+    Item.Layer = ones(sz)*-1;    %Item的放入的最大层数
+    Item.isNonMixed = ones(sz)*-1;    %Item的放入的最大层数
+    
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
 % 临时使用
@@ -70,11 +73,11 @@ end
         isflagHeight =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
         % 1 初步判断是否满层标记
         if hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU)*2
-            Item.isFull(1,iItem) = 0;
+            Item.isFull(1,iItem) = 0; % 如高度间隙 > 2个LU的高度
         else
             Item.isFull(1,iItem) = 1;
         end
-%             sum(flagLUinItem) < sLU.maxLayer(iLU)
+% %              sum(flagLUinItem) < sLU.maxLayer(iLU)
         flagLUinItem = sLU.LU_Item(1,:) == iItem;
         if ~any(flagLUinItem) %如果本iItem内不存在任意LU,即空Item
             isNewItem2 = 1;
@@ -154,12 +157,12 @@ else
     error('不能使用structfun');
 end
 
-
+% ****************** 对角线开关修复 ************ 关闭
 % repairItemFull: 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层
 if ~all(Item.isFull)
     [~,b] = find(Item.isFull == 0);
     for i=1:length(b)
-           Item = repairItemFull(Item,hVeh,b(i)); %DONE 
+% %            Item = repairItemFull(Item,hVeh,b(i)); %DONE 
     end
 end
 
@@ -175,9 +178,16 @@ end
 Item = isWeightUpDown(Item,LU);
 if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
+% Item.Layer 计算每个Iten内堆垛的层数
+for i=1:length(Item.Layer)
+    % Item i 对于的LU flag标记
+    Item.Layer(i) = sum(LU.LU_Item(1, :) == i);   
+end
 
 
-% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 暂时未用
+
+
+% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
 LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
     LU.LU_Item;];
 nItem = size(Item.LWH,2);
@@ -187,6 +197,39 @@ for iItem=1:nItem
     Item.LID(:,iItem) = num2cell(unique(tmp(2,:))',1);
     Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
 end
+
+
+% GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
+ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+for i=1:length(unique(ItemLID))
+    % Item i 对于的LU flag标记
+    flagItem = ItemLID(:) == i;
+    ItemWidth = unique(Item.LWH(1,flagItem));    
+    VehWidth = Veh.LWH(1,1);  % 车辆宽度    
+    maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放层数
+    nb = sum(flagItem);
+    if mod(nb,maxWidthLayer) == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
+        Item.isNonMixed(flagItem) = 1;
+    else
+        Item.isNonMixed(flagItem)= 0;
+    end
+end
+
+
+% reGET Item.isFull: 计算每个Item是否为满层的标记 (重新计算,替换前面的isFull计算)
+for i=1:length(Item.isFull)
+    flagLU = LU.LU_Item(1,:) == i;
+    maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
+    marginofItem = hVeh - Item.LWH(3,i); %高度间隙
+    if marginofItem >= maxHeightinLUofThisItem
+        Item.isFull(i) = 0; %Item内Lu的最高的高度
+    else
+        Item.isFull(i) = 1;
+    end
+end
+
+
+
 
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);

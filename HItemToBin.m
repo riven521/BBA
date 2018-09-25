@@ -32,26 +32,42 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
         [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip      
         
         
-        
         % 平铺要求 1:单个strip至少有多个 2: 不能是混合的 3: Item的层数要均匀,相差不能>=2
         if Strip.isSingleItem(thisStrip) ~= 1 && Strip.isMixed(thisStrip) ~= 1
-            flagItem = Item.Item_Strip(1,:) == thisStrip;
-            [~,y] = find(Item.Item_Strip(1,:) == thisStrip); %y是Item索引号,当前strip内
-            for i=1:length(y) % 每个Item的循环
-                
-                sum(LU.LU_Item(1,:) == y(i))
-                Item.Item_Strip(2,flagItem)
-                Item.LWH(:,flagItem)
-
+% %             flagItem = Item.Item_Strip(1,:) == thisStrip;
+% %             idxItem = find(flagItem)
+% %             Item.Layer(flagItem)
+% %             difLayer = diff( Item.Layer(flagItem))
+% %             di = find(abs(difLayer)>=2);
+% %              if ~isempty(di) && ~isscalar(di), error('EEE'); end
+% %              flagItem(di)
+% %              flagItem(di+1)
+% %             if abs (diff( Item.Layer(flagItem)) ) > 1 % 如果Item的层数 >= 2 则需要平铺
+% %                 LU.LU_Item(1, : )
+% %                 LU.LU_Item(2, : )
+% %                 Item.Layer(flagItem)
+% %                 for i=1:sum(flagItem)
+% %                     
+% %                 end
             end
-            Strip.isFull(thisStrip)
-            Strip.isMixed(thisStrip)
-            Strip.isSingleItem(thisStrip)
-            Strip.loadingrateLimit(thisStrip)
-
-        end
+%             [~,y] = find(Item.Item_Strip(1,:) == thisStrip); %y是Item索引号,当前strip内
+%             for i=1:length(y) % 每个Item的循环
+%                 
+%                 sum(LU.LU_Item(1,:) == y(i))
+%                 Item.Item_Strip(2,flagItem)
+%                 Item.LWH(:,flagItem)
+% 
+%             end
+%             Strip.isFull(thisStrip)
+%             Strip.isMixed(thisStrip)
+%             Strip.isSingleItem(thisStrip)
+%             Strip.loadingrateLimit(thisStrip)
+%         end
+        
+        % 平铺要求 1:单个strip只有1个, 但层数过多, 可以周边平铺
         
         
+        % 平铺要求 1:单个strip只有多个, 后面的可以往前平铺
         
         
         if ~isscalar(thisStrip), error('意外错误');  end

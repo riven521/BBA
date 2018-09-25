@@ -59,9 +59,9 @@ while 1
     iStrip = iStrip + 1;
 end
 
-% plot2DBin();
+% %  plot2DBin();
 
-
+printstruct(sStrip)
     
 % 后处理 并赋值到da
 % 获取Strip_Bin: 每个strip在哪个bin内  以及顺序
@@ -105,27 +105,38 @@ Strip.Strip_Bin
 Strip.isFull
 Strip.isSingleItem
 
+%%  *************************************** 甩尾
 % 如存在单个Item的strip的case 或 存在strip有不满的strip
 % 对其排序, loadingrate小的最后进入
 if any(Strip.isSingleItem | ~Strip.isFull )
     % Get b : strip index to be move to end of Vehicle
-    [~,bsingle] = find(Strip.isSingleItem == 1);
+%     [~,bsingle] = find(Strip.isSingleItem == 1);
     [~,bnotfull] = find(Strip.isFull == 0);
-    b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
+%     b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
+   b = unique([bnotfull],'stable');    % 最后摆放车尾的要安排在unique的最后
+   
+   if ~isempty(b)
+       % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度
+       tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
+       [~,order] = sortrows(tmpM',[1,3,2],{'descend','descend','descend'});
+       b = b(order);
+        
+       
+       Strip.seqSW(b) = 1:length(b);
+
+%%% TODO 甩尾后的展示顺序操作  ************** %%%%
     
-    % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度    
-    tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
-    [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
-    b = b(order);
-    
+   end
+
 %     Strip.loadingrate(b)
 %     Strip.Stripvolume
 %     Strip.StripvolumeLimit
 %     Strip.Itemvolume
 %     Strip.loadingrateLimit(b)
-
+ 
+%%%  ***************** 是否甩尾的开关 *************
     for i=1:length(b) 
-        Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
+         Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
     end
 end
 
