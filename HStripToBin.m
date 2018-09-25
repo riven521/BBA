@@ -113,9 +113,9 @@ if any(Strip.isSingleItem | ~Strip.isFull )
     [~,bnotfull] = find(Strip.isFull == 0);
     b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
     
-    % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit
-    tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b)];
-    [~,order] = sortrows(tmpM',[1,2],{'descend','descend'});
+    % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度    
+    tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
+    [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
     b = b(order);
     
 %     Strip.loadingrate(b)

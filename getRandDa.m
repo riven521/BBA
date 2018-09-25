@@ -46,6 +46,7 @@ function [d] = getRandDa(n,m)
     
 %% LU   
     LU.ID = randi([11,13],1,n); %ID 类型数 
+    LU.ID2 = LU.ID;
     LU.buff = zeros(3,n); %以后无用
 
     LU.LWH = zeros(3,n);

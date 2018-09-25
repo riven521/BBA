@@ -27,9 +27,33 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
     nbStrip=numel(find(Strip.Strip_Bin(1,:)==iBin));    %nbStrip：该iBin内strip数量    
     % 循环bin内每个strip
     for iStrip=1:nbStrip %从安放的第一个Strip开始逐步放置
-         iiStrip = iiStrip+1;
+        iiStrip = iiStrip+1;
         tmpLUSeqinStrip=1;
         [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip      
+        
+        
+        
+        % 平铺要求 1:单个strip至少有多个 2: 不能是混合的 3: Item的层数要均匀,相差不能>=2
+        if Strip.isSingleItem(thisStrip) ~= 1 && Strip.isMixed(thisStrip) ~= 1
+            flagItem = Item.Item_Strip(1,:) == thisStrip;
+            [~,y] = find(Item.Item_Strip(1,:) == thisStrip); %y是Item索引号,当前strip内
+            for i=1:length(y) % 每个Item的循环
+                
+                sum(LU.LU_Item(1,:) == y(i))
+                Item.Item_Strip(2,flagItem)
+                Item.LWH(:,flagItem)
+
+            end
+            Strip.isFull(thisStrip)
+            Strip.isMixed(thisStrip)
+            Strip.isSingleItem(thisStrip)
+            Strip.loadingrateLimit(thisStrip)
+
+        end
+        
+        
+        
+        
         if ~isscalar(thisStrip), error('意外错误');  end
         nbItem=numel(find(Item.Item_Strip(1,:)==thisStrip));
         % 循环strip每个item,  从第一个顺序开始逐步获取ITEM在BIN内的坐标, 依据ITEM_STRIP的顺序
@@ -46,6 +70,7 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
                 % iStrip = 1： 首个strip高度一定为0；iStrip=2：高度一定不为0
             Item.CoordItemBin(2,thisItem) = sum(Strip.LW(2,tmpStrip)); % 555 错误原因2：thisStrip顺序不确定 % 555 LWStripSort错误原因:iStrip每个bin重新取样;LWStripSort是所有的Strip %             Item.CoordItemBin(2,thisItem) = sum(tmpLWStrip(2,1:iStrip-1)); 
             Item.CoordItemBin(3,thisItem) = 0; %Item均从0开始
+            
             
             % 增加对LU的更新
             tmpLU = []; %计算CoordLUBin高度使用 % tmpLWLU = LU.LWH(:,LU.LU_Item(1,:)==thisItem); %计算

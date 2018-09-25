@@ -94,9 +94,9 @@ for iAlg = 1:nAlg
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
     dA(iAlg)=d;
-    
+    d.Veh
     % 2 运行最后一车数据算法
-    allidxVehType = max(d.Veh.ID); %此算例车型数量(已排除相同车型)
+    allidxVehType = length(unique(d.Veh.ID)); %此算例车型数量(未排除相同车型)
     flaggetSmallVeh = 0;
     d1 = getdinLastVeh(d);   
     d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); %对调Lu.LWH的长宽 -< 之前是宽长
@@ -150,7 +150,7 @@ if flaggetSmallVeh %如有当替换成功了,才执行getReturnBBA函数 以及作图
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
-if 1 %nargin == 0,
+if 0 %nargin == 0,
     plotSolution(daBest(bestOne),paBest(bestOne));
     if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
 end

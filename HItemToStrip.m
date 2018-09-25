@@ -76,6 +76,8 @@ Strip.Weight = zeros(1,nItem); % 初始赋值
     Strip.nbLID = ones(size(Strip.Weight))*-1;   %单STRIP内部ITEM类型个数, 混合型默认为-1
     Strip.isAllPured = ones(size(Strip.Weight))*-1;   %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
     Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
+    Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item
+    Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
     % 初始化多行nItem列
 %     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
 %     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
@@ -123,8 +125,9 @@ while 1
 %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
-%   plot2DStrip();  hold off;%可能有问题: 一次性画图
 
+%    plot2DStrip();  hold off;%可能有问题: 一次性画图
+% 1
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
@@ -196,11 +199,16 @@ end
         %     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
                         %     tmpStrip_Item = tmpStrip_Item(tmpStrip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
 
-% STRIP增加判断是否单纯型/混合型判断STRIP.isMixed
+                        
+                        
+                        
+% 1: STRIP增加判断是否单纯型/混合型判断STRIP.isMixed
 Strip = isMixedStrip(Strip);
-% STRIP增加判断是否包含非Full的Item. STRIP.isFull
+
+% 2: STRIP增加判断是否包含非Full的Item. STRIP.isFull
 Strip = isFullStrip(Strip,Item);
 
+% 3,4,5 : is 
 %Strip.isAllPured：单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
 %Strip.nbLID： STRIP增加内部该ITEM的nbLID类型个数,数值越大,即该LU类型越多
 arrayAllLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
@@ -235,6 +243,19 @@ for i=1:length(Strip.isAllPured)
 end
 
 
+% 6: 计算Strip的最大高度, 依据内部Item的高度判定
+for i=1:length(Strip.maxHeight)
+    % 计算最大值
+    % Item.Item_Strip(1,:) == i) : Strip i 内部的Item flag
+    Strip.maxHeight(i) = max(Item.LWH(3, Item.Item_Strip(1,:) == i));
+end
+   
+   
+% 7: STRIP增加判断是否包含宽度width非Full的Item. STRIP.isWidthFull
+% % % % Strip = isWidthFullStrip(Strip,Item);
+
+%    printstruct(Strip)
+Strip.maxHeight
 Strip.LID
 Strip.isSingleItem %: 1:单纯且单个； 0：单纯且多个；-1：混合
 Strip.nbLID % 整数：冗余值, 具体ITEM的LID数理 -1：混合
@@ -244,7 +265,7 @@ Strip.isMixed % 1：混合层； 0：单纯层
 
 %% 测试script
     % 输出主要结果:获得每个level包含的 
-    printscript();
+%     printscript();
 %     printstruct(d);
     
     %% 嵌套函数        
@@ -414,6 +435,25 @@ function Strip = isFullStrip(Strip,Item)
     % 循环判断Strip是否full
     for i=1:length(Strip.isFull)
          if all(Item.isFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+             Strip.isFull(i) = 1;
+         else
+             Strip.isFull(i) = 0;
+         end
+    end    
+end
+
+% 判断STRIP是否包含Width非Full的Item
+function Strip = isWidthFullStrip(Strip,Item) 
+    % 循环判断Strip是否Widthfull, 首先1: Strip不是单一 2: 其次不是混合 3: LoadingRateLimit<1
+    for i=1:length(Strip.isWidthFull)
+        Strip
+        if Strip.isSingleItem(i) ~= 1 && Strip.isMixed(i) ~= 1 
+            if ~all(Item.isFull(Item.Item_Strip(1,:) == i)) % 如果有任意不满的Item, 则进行本Strip内的平铺 : LU.LU_Item变化
+                Item.isFull(Item.Item_Strip(1,:) == i)
+                1
+            end
+        end
+         if all(Item.isFull(Item.Item_Strip(1,:) == i)) 
              Strip.isFull(i) = 1;
          else
              Strip.isFull(i) = 0;

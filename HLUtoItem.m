@@ -159,7 +159,7 @@ end
 if ~all(Item.isFull)
     [~,b] = find(Item.isFull == 0);
     for i=1:length(b)
-%           Item = repairItemFull(Item,hVeh,b(i)); %DONE 
+           Item = repairItemFull(Item,hVeh,b(i)); %DONE 
     end
 end
 
