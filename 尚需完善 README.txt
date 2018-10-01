@@ -174,7 +174,11 @@ V1001-1:
 0 修订updatemargin,在作图之前完成
 1 增加plot3dbpp功能 + 结合plotcube函数
 2 增加Item和Strip的多个属性计算
-3 增加甩尾功能
+3 增加甩尾功能(待完善)
+
+V1001-2:
+1 增加cpu函数(计算Item,Strip,Bin等属性计算)
+2 
 
 TODO:
 1 增加平铺功能

@@ -58,7 +58,7 @@ else
 %     load .\new\GoodIns200.mat;
 end
 printstruct(d);
-1
+
 %% Initialize Parameter
 nAlg = 1;
 for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
@@ -89,15 +89,14 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
 
-    % 1 运行主数据算法
+    % 1 获取d: 运行主数据算法
     d = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
     d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-    dA(iAlg)=d;
-    printstruct(d);
+    dA(iAlg)=d;      printstruct(d);
 
-    % 2 运行最后一车数据算法
+    % 2 获取d1和flaggetSmallVeh : 运行最后一车数据算法
     allidxVehType = length(unique(d.Veh.ID)); %此算例车型数量(未排除相同车型)
     flaggetSmallVeh = 0;
     d1 = getdinLastVeh(d);   
@@ -256,7 +255,7 @@ end
 function plotSolution(d,par)
 %% 画图
 % V3 margin 提前到RunAlgorithm运行后就执行:
-plot2DBPP(d,par);
+% plot2DBPP(d,par);
 plot3DBPP(d,par);
 
         % V1 buff version

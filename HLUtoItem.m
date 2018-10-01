@@ -41,11 +41,9 @@ hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh 
     
     Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为-1)
     Item.Rotaed = ones(sz)*-1;
-    Item.isFull = ones(sz)*-1;    %Item的是否满层(初始为-1)
-    Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
-    Item.Layer = ones(sz)*-1;    %Item的放入的最大层数
-    Item.isNonMixed = ones(sz)*-1;    %Item的放入的最大层数
     
+    Item.isFull1 = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
+
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
 % 临时使用
@@ -63,7 +61,7 @@ while 1
 end
 
 
-% Get ITEM 务必可以放 NEXT FIT 
+%% Get ITEM 务必可以放 NEXT FIT 
     function [thisItem,iItem] = getThisItem(iItem)
     % isflagHeight : 是否ITEM高度满足
     % isNewItem2 ：是否ITEM属于新
@@ -73,9 +71,9 @@ end
         isflagHeight =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
         % 1 初步判断是否满层标记
         if hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU)*2
-            Item.isFull(1,iItem) = 0; % 如高度间隙 > 2个LU的高度
+            Item.isFull1(1,iItem) = 0; % 如高度间隙 > 2个LU的高度
         else
-            Item.isFull(1,iItem) = 1;
+            Item.isFull1(1,iItem) = 1;
         end
 % %              sum(flagLUinItem) < sLU.maxLayer(iLU)
         flagLUinItem = sLU.LU_Item(1,:) == iItem;
@@ -100,10 +98,10 @@ end
             else
                % 2 深入判断是否满层标记
                 if isflagHeight && ~isSameID2 %如果高度允许，但LU ID不同, 表明该ITEM是非满层
-                    Item.isFull(1,iItem) = 0;  % 更新是否满层标记
+                    Item.isFull1(1,iItem) = 0;  % 更新是否满层标记
                 end
                 if ~isflagHeight && isSameID2 %如果高度不允许，但LU ID相同, 表明该ITEM是满层
-                    Item.isFull(1,iItem) = 1;  % 更新是否满层标记
+                    Item.isFull1(1,iItem) = 1;  % 更新是否满层标记
                 end
                 iItem = iItem + 1;
                 [thisItem,iItem] = getThisItem(iItem);
@@ -113,7 +111,7 @@ end
         end
     end
 
-% Put LU into thisItem
+%% Put LU into thisItem
     function insertLUToItem(thisItem,iLU)
         %更新Height
         Item.LWH(3,thisItem) = Item.LWH(3,thisItem)  + sLU.LWH(3,iLU);
@@ -146,9 +144,6 @@ else
     error('不能使用structfun');
 end
 
-
-
-
 % Item去除未使用 %     Item.Rotaed(:,Item.itemorder) = sLU.Rotaed;
 % 如果ITEM的列数全部相同
 if isSameCol(Item)
@@ -157,34 +152,7 @@ else
     error('不能使用structfun');
 end
 
-% ****************** 对角线开关修复 ************ 关闭
-% repairItemFull: 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层
-if ~all(Item.isFull)
-    [~,b] = find(Item.isFull == 0);
-    for i=1:length(b)
-% %            Item = repairItemFull(Item,hVeh,b(i)); %DONE 
-    end
-end
 
-% ****************** 上轻下重的判断修复 ************ 开放
-% isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
-Item = isWeightUpDown(Item,LU);
-% repairItemWeight: 如果存在上轻下重的case, 进行修复
-if ~all(Item.isWeightFine)
-    [~,b] = find(Item.isWeightFine == 0);
-    for i=1:length(b)
-        LU = repairItemWeight(LU,b(i));
-    end
-end
-Item = isWeightUpDown(Item,LU);
-if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
-
-% ****************** Iten内堆垛的层数计算 ************ 开放
-% Item.Layer 计算每个Iten内堆垛的层数
-for i=1:length(Item.Layer)
-    % Item i 对于的LU flag标记
-    Item.Layer(i) = sum(LU.LU_Item(1, :) == i);   
-end
 
 
 
@@ -200,36 +168,7 @@ for iItem=1:nItem
     Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
 end
 
-% ****************** Iten内是否为不需要混拼计算 ************ 开放
-% GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
-ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
-for i=1:length(unique(ItemLID))
-    % Item i 对于的LU flag标记
-    flagItem = ItemLID(:) == i;
-    ItemWidth = unique(Item.LWH(1,flagItem));    
-    VehWidth = Veh.LWH(1,1);  % 车辆宽度    
-    maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放层数
-    nb = sum(flagItem);
-    if mod(nb,maxWidthLayer) == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
-        Item.isNonMixed(flagItem) = 1;
-    else
-        Item.isNonMixed(flagItem)= 0;
-    end
-end
 
-
-% ****************** Iten内是否为isFull再次计算 ************ 开放
-% reGET Item.isFull: 计算每个Item是否为满层的标记 (重新计算,替换前面的isFull计算)
-for i=1:length(Item.isFull)
-    flagLU = LU.LU_Item(1,:) == i;
-    maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
-    marginofItem = hVeh - Item.LWH(3,i); %高度间隙
-    if marginofItem >= maxHeightinLUofThisItem
-        Item.isFull(i) = 0; %Item内Lu的最高的高度
-    else
-        Item.isFull(i) = 1;
-    end
-end
 
 
 
@@ -237,61 +176,11 @@ end
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);
 ItemID = [];
+
 %% 测试script TO BE FIX
 % 输出主要结果:获得每个item包含的 原始 LU序号
 printscript(LU,Item);
 
-end
-
-% 判断LU是否上轻下重构成
-function Item = isWeightUpDown(Item,LU)
-for iItem = 1:max(LU.LU_Item(1,:)) %对ITEM进行循环
-    [~,idx] = find(LU.LU_Item(1,:)==iItem);
-    nbLUinItem = length(idx);
-    % 对ITME内含2个以上LU的进行判断
-    if length(idx) > 1 %Item包含不只一个Item,需要判断是否有轻重的变化
-        currLUWeight = zeros(1,nbLUinItem);
-        for iIdx = 1:nbLUinItem
-            currIdx = idx(LU.LU_Item(2,idx) == iIdx);
-            currLUWeight(iIdx) = LU.Weight(:,currIdx);          %                 currLUHight(iIdx) = LU.LWH(3,currIdx);
-        end
-        if diff(currLUWeight) > 0 % 代表下轻上重
-            % 修改LU.LU_Item的值             1 5: idx  为 1 2: LU.LU_Item(2,idx) == iIdx改为 2 1
-            Item.isWeightFine(1,iItem) = 0;
-        else
-            Item.isWeightFine(1,iItem) = 1;
-        end
-    else  %ITEM内只有1个LU, 必定满足条件
-        Item.isWeightFine(1,iItem) = 1; 
-    end
-end
-end
-
-% 对LU上轻下重构成进行修复
-function LU = repairItemWeight(LU,itemIdx)
-    [~,LUidx] = find(LU.LU_Item(1,:)==itemIdx); %找出本item对应的lu的index
-    nbLUinItem = length(LUidx);
-    currLUWeight = zeros(1,nbLUinItem);
-    for iIdx = 1:nbLUinItem
-        currIdx = LUidx(LU.LU_Item(2,LUidx) == iIdx);
-        currLUWeight(iIdx) = LU.Weight(:,currIdx);
-    end
-    % 对Item内的LU进行排序获得b; 将进入顺序LU_Item的顺序2进行修正
-    [~,b] = sort(currLUWeight,'descend');
-    tt = LU.LU_Item(2,LUidx);
-    LU.LU_Item(2,LUidx) = tt(b);
-end
-
-% 对LU是否Full构成进行修复
-function Item = repairItemFull(Item,hVeh,itemIdx)
-    % 计算本非FULL ITEM的对角线长度
-    diagItem = sqrt(Item.LWH(1,itemIdx)^2 + Item.LWH(2,itemIdx)^2);
-    % 计算本ITEM距离车顶的间隙
-    hMargin = hVeh - Item.LWH(3,itemIdx);
-    % 如果对角线长度 >= ITEM距离车顶的间隙 -> 视为满层 FULL
-    if diagItem >= hMargin
-        Item.isFull(itemIdx) = 1;
-    end
 end
 
 function printscript(LU,Item)
@@ -353,75 +242,3 @@ if ~isrow(tepLUorder)
     tepLUorder = tepLUorder';
 end
 end
-
-
-% 将LU转换为Item的重要函数
-% % function [Item,LU_Item] = getItem(sLU,Veh)
-% % %% 初始化
-% % % nDim LU维度 nLU LU数量 nItem Item数量 nLUid LU种类
-% % % heightBin Bin最大高度
-% % 
-% % sz = size(sLU.ID);
-% % 
-% % nLU = sz(2);
-% % nLUid = size(unique(sLU.ID),2);
-% % 
-% % hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh = tmpUniqueBin(3);
-% % 
-% % % 仅需初始化需要自增的fields
-% %     % Item.LID = zeros(sz);             %Item的ID类型
-% %     % Item.SID = zeros(sz);           
-% %     % Item.UID = zeros(sz);           
-% %     % Item.isRota = ones(sz)*2;    %Item的可旋转类型(初始为2)
-% % Item.Weight = zeros(sz);     %Item的重量
-% % Item.LWH = zeros(3,sz(2));  %Item的宽长高
-% % 
-% % LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
-% % 
-% % iItem = 1;
-% % Item_LU = zeros(sz);  % 每个Item内堆垛的LU数量 后期不用
-% % for iLUid=1:nLUid
-% %     hLeft = hVeh;
-% %     for iLU=1:nLU
-% %         if sLU.ID(iLU) == iLUid %仅对当前LU对应Luid在该iLUid内的进行操作
-% %             if hLeft < sLU.LWH(3,iLU) %如当前LU高度不满足(高度在第nDim行)
-% %                 iItem =  iItem + 1;
-% %                 hLeft = hVeh; 
-% %             end
-% %             
-% %             hLeft = hLeft - sLU.LWH(3,iLU);                 %更新剩余高度
-% %             Item.LWH(1:2,iItem) = sLU.LWH(1:2,iLU);  %更新item长宽
-% %             Item.LWH(3,iItem) = Item.LWH(3,iItem) + sLU.LWH(3,iLU); %更新item高度
-% %             Item.Weight(1,iItem) = Item.Weight(1,iItem) + sLU.Weight(1,iLU); %更新item重量
-% %             
-% %             Item_LU(iItem) = Item_LU(iItem) + 1;
-% %             LU_Item(1,iLU) = iItem;
-% %             LU_Item(2,iLU) = Item_LU(iItem);
-% %             
-% %             Item.LID(1,iItem) = sLU.ID(1,iLU);               %更新ID类型
-% %             Item.SID(1,iItem) = sLU.SID(1,iLU);               
-% %             Item.UID(1,iItem) = sLU.UID(1,iLU);               
-% %             Item.isRota(1,iItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
-% %             Item.Roated(1,iItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
-% %         end
-% %     end
-% %     iItem =  iItem + 1;
-% % end
-% % 
-% % end
-
-%%  获取ITEMID类型相关数据(同类型ID的体积，面积，重量，item是否可旋转)
-% % function ItemID = getITEMIDArray(Item)
-% % 
-% % ItemID.ID = unique(Item.LID);
-% % nItemID = numel(ItemID.ID);
-% % 
-% % for iID = 1:nItemID
-% %     ItemID.Weight(iID) = sum(Item.Weight .* (Item.LID == ItemID.ID(iID)) );
-% %     ItemID.Volume(iID) = sum(prod(Item.LWH) .* (Item.LID == ItemID.ID(iID)) );
-% %     ItemID.Area(iID) = sum(prod(Item.LWH(1:2,:)) .* (Item.LID == ItemID.ID(iID)) );
-% %     ItemID.isRota(iID) =  unique(Item.isRota(Item.LID == ItemID.ID(iID))); if ~isscalar(ItemID.isRota(iID)), error('致命错误'); end
-% % end
-% % 
-% % end
-

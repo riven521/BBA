@@ -11,7 +11,7 @@ nStrip = sz(2);
 wVeh  = Veh.LWH(1,1); 
 lVeh  = Veh.LWH(2,1); 
 
-%% Strip排序 555 (如何确保相同托盘类型的相邻摆放？？？ TODO FIX ME)
+%% Strip排序 555 (如何确保相同托盘类型的相邻摆放 DONE)
     % 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
     [Strip.striporder] = getStriporder(Strip);  % Strip两排序方式 高度/长度递减
     % 获取按order排序后的Strip: sStrip    
@@ -29,12 +29,6 @@ Bin.LW = zeros(2,nStrip);    %初始化bin: dim1-bin宽度剩余 ; dim2-bin长(高)度(555
 Bin.LW(1,:) = wVeh;
 Bin.LW(2,:) = lVeh;
 Bin.Weight = zeros(1,nStrip); % 初始赋值
-
-    % 初始化多行nItem列
-%     Bin.LID = zeros(numel(unique(LU.ID)),nStrip);
-%     Bin.PID = zeros(numel(unique(LU.PID)),nStrip);
-%     Bin.SID = zeros(numel(unique(LU.SID)),nStrip);
-%     Bin.UID = zeros(numel(unique(LU.UID)),nStrip);
     
 tmpBin_Strip = zeros(1,nStrip);    % 每个Bin内的Strip数量 后期不用
 % sStrip新增
@@ -61,19 +55,12 @@ end
 
 % %  plot2DBin();
 
-printstruct(sStrip)
-    
-% 后处理 并赋值到da
-% 获取Strip_Bin: 每个strip在哪个bin内  以及顺序
-                % Strip.Strip_Bin( : , Strip.striporder) = sStrip.Strip_Bin;
 % Strip内部更新,sStrip依据order变化回来
 if isSameCol(sStrip)
     Strip = reorderStruct(Strip.striporder, sStrip);
 else
     error('不能使用structfun');
 end
-
-
 
 % 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
     nbLU = size(LU.LWH,2);
@@ -100,18 +87,18 @@ else
     error('不能使用structfun');
 end
 
-% ITEM增加判断是否上轻下重的判断Item.isWeightFine
-Strip.Strip_Bin
-Strip.isFull
-Strip.isSingleItem
+% Strip.Strip_Bin
+% Strip.isHeightFull
+% Strip.isSingleItem
 
 %%  *************************************** 甩尾 ********************************** 
 % 如存在单个Item的strip的case 或 存在strip有不满的strip
 % 对其排序, loadingrate小的最后进入
-if any(Strip.isSingleItem | ~Strip.isFull )
+% 哪些甩尾: 宽度不满或高度不满的
+if any(Strip.isSingleItem | ~Strip.isHeightFull )
     % Get b : strip index to be move to end of Vehicle
 %     [~,bsingle] = find(Strip.isSingleItem == 1);
-    [~,bnotfull] = find(Strip.isFull == 0);
+    [~,bnotfull] = find(Strip.isHeightFull == 0);
     [~,bnotwidthfull] = find(Strip.isWidthFull == 0);
 %     b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
 %    b = unique([bnotfull, bnotwidthfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
@@ -121,12 +108,9 @@ if any(Strip.isSingleItem | ~Strip.isFull )
        % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度
        tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
        [~,order] = sortrows(tmpM',[1,3,2],{'descend','descend','descend'});
-       b = b(order);        
-       
+       b = b(order);       
        Strip.seqSW(b) = 1:length(b);
-
-    %%% TODO 甩尾后的展示顺序操作  ************** %%%%
-    
+    %%% TODO 甩尾后的展示顺序操作  ************** %%%%    
    end
 
 %     Strip.loadingrate(b)
@@ -137,7 +121,7 @@ if any(Strip.isSingleItem | ~Strip.isFull )
  
 %%%  ***************** 是否甩尾的开关 *************
     for i=1:length(b) 
-         Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
+%          Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
     end
 end
 
@@ -154,9 +138,8 @@ end
     end
 
    
-%% 测试script
-% 输出主要结果:获得每个item包含的 原始 LU序号z
-printscript();
+%% 测试script 输出主要结果:获得每个item包含的 原始 LU序号z
+% printscript();
 
 %% 嵌套函数
     function printscript()
@@ -234,9 +217,9 @@ if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
 %对LID排序: 相邻摆放的重要原则 555555555555555555555555 
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
 % S = [Strip.SID; Strip.LID; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbLID, Strip.isFull,Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
+IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
 
-% 555查错语句：同一SID下,不允许有重复的LID
+% 555纠错语句：同一SID下,不允许有重复的LID
 s=[SIDorder;IDorder];
 for i=min(SIDorder):max(SIDorder)
     si = s(2,s(1,:)==i);
@@ -248,7 +231,7 @@ end
 tmpSort = [SIDorder; IDorder];     % Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
 [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
 
-        
+
 % LIDorder = getOrderofLID([Strip.SID;Strip.LID]); 
 % Strip.LID;
 % LIDorder = getOrderofID(Strip.LID); %对LID的排序: 只有一种的LID优先级高, 其次是与其它LID混合的2种STRIP；
@@ -272,133 +255,79 @@ tmpSort = [SIDorder; IDorder];     % Strip.LW(1:2,:); Strip.loadingrateLimit;Str
 %         [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
       
         if ~isrow(order), order=order'; end
-        
-                    %  t = Strip.SID;
-                    %  ss = sum(t);  %每个STRIP内包含的SID个数
-                    %  
-                    %   for i=1:size(t,1)
-                    %      if sum(ss( find(t(i,:))  ) > 1) > 1
-                    %          error('有同一个SID被2个及以上STRIP包括');
-                    %      end
-                    %  end
-                    % if  any(sum(t)>2)
-                    %     error('有同一个strip包括3个及以上各SID');
-                    % end
-                    % 
-                    %  z = zeros(1,size(t,2)); 
-                    %  k=1;
-                    %  for i=1:numel(ss)
-                    %     if ss(i) ==1
-                    %         if i>1 && ss(i-1) ==1 && find(t(:, i)==1) ~= find(t(:, i-1)==1) %判断当前与前一个strip是否属于同样SID
-                    %             k=k+1;
-                    %         end
-                    %         z(i) = k;
-                    %     elseif ss(i) >1 %只要遇到STRIP包含2个及以上的STRIP时，更新顺序        
-                    %         k=k+1;
-                    %         z(i)=k;
-                    %         k=k+1;
-                    %     end
-                    %  end
-
-                                         %  ss = sum(tSID);
-                                        %  torder = zeros(1,length(sorder));
-                                        %  k=1;
-                                        %  for i=1:length(sorder)
-                                        %      tt = tSID(sorder(i),:)
-                                        %      to
-                                        % %      tSID(sorder(i)) = [];
-                                        %      other = sorder;
-                                        %      other(sorder(i)) = [];
-                                        %      tti = tSID(sorder(other),:);
-                                        %      torder(tt==1) = k;
-                                        %      k = k+1;
-                                        %      f = tti==1 & tt==1 %本次SID有，但其它里面也有,排序为k+1
-                                        %      if any(f)
-                                        %          torder(f) = k; 
-                                        %          k = k+1;
-                                        %      end
-                                        %      1
-                                        %  end
-                                        % 
-                                        % Strip.SID
-                                        % [a,b,~]=find(Strip.SID==1)
-                                        % [a,b,~]=find(Strip.SID(:,:)==1)
-                                        % Strip.LID
     end
 
-        function [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)        
-        if p.whichBinH == 1 % 1 bestfit
-            % 条件: 寻找 bin的剩余高度 >= 本strip的高度 &且 bin的剩余重量 >= 本strip的重量 (集合中的最小值)
-            flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
-                Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) ); %
-            if isempty(flag)
-                iBin = iBin + 1; % 如果高度不满足，则bin升级
-                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);                
-            else
-                tepBins = Bin.LW(2,1 : iBin); %获取所有已安排或新安排的bin的剩余高度向量tepBins
-                tepMin = min(tepBins(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin（TODO 是否考虑重量？）
-                thisBin = find(Bin.LW(2,1:iBin)==tepMin); %找到该值tepMin对应的那个/些bin序号
-                if ~all(ismember(thisBin,flag)),      error('Not all thisBin belongs to flag ');        end
-                if length(thisBin)>1
-                    thisBin = thisBin(1);
-                end
-            end
-        elseif p.whichBinH == 2 % 1 firstfit
-            flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
-                Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) );            
-            if isempty(flag)
-                iBin = iBin + 1; 
-                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
-            else
-                thisBin = flag(1);
-                if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');       end
-            end
-        elseif p.whichBinH == 3 % 1 nextfit
-            flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & ...
-                Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );            
-            if  isempty(flaged)  %注意与之前~flag的区别
-                iBin = iBin + 1; 
-                [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);    
-            else
-                if  isempty(flaged) ,   error(' 不可能的错误 ');      end
-                thisBin = iBin; % 当前bin一定放的下
-            end
+    function [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)
+    if p.whichBinH == 1 % 1 bestfit
+        % 条件: 寻找 bin的剩余高度 >= 本strip的高度 &且 bin的剩余重量 >= 本strip的重量 (集合中的最小值)
+        flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
+            Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) ); %
+        if isempty(flag)
+            iBin = iBin + 1; % 如果高度不满足，则bin升级
+            [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
         else
-            error('错误参数设置');
+            tepBins = Bin.LW(2,1 : iBin); %获取所有已安排或新安排的bin的剩余高度向量tepBins
+            tepMin = min(tepBins(flag)); % 555 check 找出bin中能放istrip且高度最小值tepMin（TODO 是否考虑重量？）
+            thisBin = find(Bin.LW(2,1:iBin)==tepMin); %找到该值tepMin对应的那个/些bin序号
+            if ~all(ismember(thisBin,flag)),      error('Not all thisBin belongs to flag ');        end
+            if length(thisBin)>1
+                thisBin = thisBin(1);
+            end
         end
+    elseif p.whichBinH == 2 % 1 firstfit
+        flag = find(Bin.LW(2,1:iBin) >= sStrip.LW(2,iStrip)  & ...
+            Veh.Weight(1) - Bin.Weight(1 : iBin) >= sStrip.Weight(iStrip) );
+        if isempty(flag)
+            iBin = iBin + 1;
+            [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
+        else
+            thisBin = flag(1);
+            if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');       end
         end
+    elseif p.whichBinH == 3 % 1 nextfit
+        flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & ...
+            Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );
+        if  isempty(flaged)  %注意与之前~flag的区别
+            iBin = iBin + 1;
+            [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
+        else
+            if  isempty(flaged) ,   error(' 不可能的错误 ');      end
+            thisBin = iBin; % 当前bin一定放的下
+        end
+    else
+        error('错误参数设置');
+    end
+    end
 
-        
-    
     function [Bin,Strip_Bin,Bin_Strip] = insertStripToBin(iStrip, thisBin,sStrip,Bin,Strip_Bin,Bin_Strip)
-%         binBeStripArray=binBeStripArray;stripBeBinMatrixSort=stripBeBinMatrixSort;Bin.LW=Bin.LW;
-
-        % 1 更新Bin相关非Sort数据        
-        %  1.1 更新strip归属bin的信息 ：stripBeBinMatrixSort
-        Bin_Strip(thisBin) = Bin_Strip(thisBin) + 1; %本bin下第几次安置strip
-        
-        %  1.2 更新本bin的剩余长和剩余高：Bin.LW
-        Bin.LW(1,thisBin) = min(Bin.LW(1,thisBin),sStrip.LW(1,iStrip)); %更新bin剩余宽度的最小值
-        Bin.LW(2,thisBin) = Bin.LW(2,thisBin) - sStrip.LW(2,iStrip);    %更新bin剩余高度
-            
-        %  1.3 更新本bin对应的BinWeight: 
-        Bin.Weight(thisBin) =  Bin.Weight(thisBin) + sStrip.Weight(iStrip);
-        
-        % 2 更新Strip相关Sort数据
-        %  2.1 更新stripBeBinMatrixSort
-        Strip_Bin(1,iStrip) = thisBin;
-        Strip_Bin(2,iStrip) = Bin_Strip(thisBin);
-   
-            % 更新bIN中包含ID类与否
-%             Bin.LID(:,thisBin) = Bin.LID(:,thisBin) + sStrip.LID(:,iStrip); % 数值为出现次数
-%             Bin.LID(Bin.LID>0) = 1; % 数值改为出现与否
-%             Bin.PID(:,thisBin) = Bin.PID(:,thisBin) + sStrip.PID(:,iStrip); % 数值为出现次数
-%             Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
-%             Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
-%             Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
-%             Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
-%             Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
-            
-            
-       %% 其余放到ItemToBin内计算
+    %         binBeStripArray=binBeStripArray;stripBeBinMatrixSort=stripBeBinMatrixSort;Bin.LW=Bin.LW;
+    
+    % 1 更新Bin相关非Sort数据
+    %  1.1 更新strip归属bin的信息 ：stripBeBinMatrixSort
+    Bin_Strip(thisBin) = Bin_Strip(thisBin) + 1; %本bin下第几次安置strip
+    
+    %  1.2 更新本bin的剩余长和剩余高：Bin.LW
+    Bin.LW(1,thisBin) = min(Bin.LW(1,thisBin),sStrip.LW(1,iStrip)); %更新bin剩余宽度的最小值
+    Bin.LW(2,thisBin) = Bin.LW(2,thisBin) - sStrip.LW(2,iStrip);    %更新bin剩余高度
+    
+    %  1.3 更新本bin对应的BinWeight:
+    Bin.Weight(thisBin) =  Bin.Weight(thisBin) + sStrip.Weight(iStrip);
+    
+    % 2 更新Strip相关Sort数据
+    %  2.1 更新stripBeBinMatrixSort
+    Strip_Bin(1,iStrip) = thisBin;
+    Strip_Bin(2,iStrip) = Bin_Strip(thisBin);
+    
+    % 更新bIN中包含ID类与否
+    %             Bin.LID(:,thisBin) = Bin.LID(:,thisBin) + sStrip.LID(:,iStrip); % 数值为出现次数
+    %             Bin.LID(Bin.LID>0) = 1; % 数值改为出现与否
+    %             Bin.PID(:,thisBin) = Bin.PID(:,thisBin) + sStrip.PID(:,iStrip); % 数值为出现次数
+    %             Bin.PID(Bin.PID>0) = 1; % 数值改为出现与否
+    %             Bin.SID(:,thisBin) = Bin.SID(:,thisBin) + sStrip.SID(:,iStrip); % 数值为出现次数
+    %             Bin.SID(Bin.SID>0) = 1; % 数值改为出现与否
+    %             Bin.UID(:,thisBin) = Bin.UID(:,thisBin) + sStrip.UID(:,iStrip); % 数值为出现次数
+    %             Bin.UID(Bin.UID>0) = 1; % 数值改为出现与否
+    
+    
+    %% 其余放到ItemToBin内计算
     end

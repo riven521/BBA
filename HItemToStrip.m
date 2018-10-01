@@ -71,20 +71,6 @@ wStrip = Veh.LWH(1,1);
 Strip.LW = zeros(2,nItem);   %strip长宽 dim2-长度(以最高的计算) (高度仅做参考,current 高度)
 Strip.LW(1,:) = wStrip;   %dim1-宽度剩余 
 Strip.Weight = zeros(1,nItem); % 初始赋值
-    Strip.isMixed = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个LID 
-    Strip.isFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
-    Strip.nbLID = ones(size(Strip.Weight))*-1;   %单STRIP内部ITEM类型个数, 混合型默认为-1
-    Strip.isAllPured = ones(size(Strip.Weight))*-1;   %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
-    Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
-    Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item
-    Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
-    Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的最高高度. 暂未用
-
-    % 初始化多行nItem列
-%     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
-%     Strip.PID = zeros(numel(unique(LU.PID)),nItem);
-%     Strip.SID = zeros(numel(unique(LU.SID)),nItem);
-%     Strip.UID = zeros(numel(unique(LU.UID)),nItem);
     
 % 2  临时
 tmpStrip_Item = zeros(2,nItem);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不同LUID数量
@@ -103,37 +89,18 @@ iLevel = 1; iItem = 1; %iStrip代表item实质
 
 while 1
     if iItem > nItem, break; end
-                        %     tmpLevel = iLevel;
-                    %     nLID = numel(unique(sItem.LID))
-                    %     for i=1:nLID
-                    %         sItem.LID
-                    %         c = sItem.LID(i);
 
-                            % sItem如允许旋转，找出摆放最佳H/V，并对改item针对性旋转，修改LWH和Rotaed
-                    %         if sItem.isRota(iItem) == 1
-                    %             z = fff(sItem.LWH(:,iItem), wStrip );
-                    %             [sItem.Rotaed]  =placeItemHori( sItem.LWH(:,iItem),sItem.isRota(iItem) ,z);
-                    %             zzz = zeros(size(sItem.isRota));
-                    %             zzz(iItem) = sItem.Rotaed;
-                    %             sItem.LWH = getRotaedLWH(sItem.LWH, logical(zzz));
-                    %         end
-
-                    %     end
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
                 
     insertItemToStrip(thisLevel,iItem);
         
-%     plot2DStrip(); %迭代画图    
+    %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
 
 %    plot2DStrip();  hold off;%可能有问题: 一次性画图
 % 1
-
-% 后处理 并赋值到d
-%Matalb code gerator use:
-%         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
 
 % Item相关：更新的按顺序返回（无更新的不需返回）
 % LU内部更新,sLU依据order变化回来(主要为了sLU中新增的几个变量,要按顺序转回来)
@@ -145,24 +112,22 @@ else
     error('不能使用structfun');
 end
 
+%% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
+nbLU = size(LU.LWH,2);
+LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
+for iLU=1:nbLU
+    theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
+    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
+end
 
-
-% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
-    nbLU = size(LU.LWH,2);
-    LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
-    for iLU=1:nbLU
-         theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
-         LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
-    end
-
-    LU.DOC=[LU.DOC; LU.LU_Strip];
-    nStrip = size(Strip.LW,2);
-    for iStrip=1:nStrip
-        tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
-        Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
-        Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
-        Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
-    end
+LU.DOC=[LU.DOC; LU.LU_Strip];
+nStrip = size(Strip.LW,2);
+for iStrip=1:nStrip
+    tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
+    Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
+    Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
+    Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
+end
     
                     % 获取Item_Strip : 每个Item在哪个Strip内  以及顺序
                     % 获取CoordItemStrip : 每个Item在Strip的坐标
@@ -198,71 +163,8 @@ if isSameCol(Strip)
 else
     error('不能使用structfun');
 end
-         %     Strip.LW = Strip.LW(:,Strip.LW(2,:)>0); % 没有顺序 + 去除未使用的Strip    
-        %     Strip.Weight = Strip.Weight(Strip.Weight(:)>0); % 没有顺序 + 去除未使用的Strip    
-                        %     tmpStrip_Item = tmpStrip_Item(tmpStrip_Item(1,:)>0); % 没有顺序 + 去除未使用的Strip    
+                       
 
-                        
-                        
-                        
-% 1: STRIP增加判断是否单纯型/混合型判断STRIP.isMixed
-Strip = isMixedStrip(Strip);
-
-% 2: STRIP增加判断是否包含非Full的Item. STRIP.isFull
-Strip = isFullStrip(Strip,Item);
-
-% 3,4,5 : is 
-%Strip.isAllPured：单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
-%Strip.nbLID： STRIP增加内部该ITEM的nbLID类型个数,数值越大,即该LU类型越多
-arrayAllLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
-mixedStrip = find(Strip.isMixed(1,:) == 1);
-mixedLID = [];
-for m=1:length(mixedStrip)
-     flagitemIdx = Item.Item_Strip(1,:) == mixedStrip(m);
-     mixedLID = [mixedLID, arrayAllLID(flagitemIdx)];
-end
-mixedLID = unique(mixedLID);
-
-for i=1:length(Strip.isAllPured)
-    if ~Strip.isMixed(1,i) %如是单纯型        
-        cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
-        arrayLID = cellfun(@(x)x(1), cellLID);
-        if isscalar(unique(arrayLID)) 
-            if isscalar(arrayLID)
-                Strip.isSingleItem(1,i) = 1;
-            else
-                Strip.isSingleItem(1,i) = 0;
-            end
-            if ismember(unique(arrayLID),mixedLID)
-                Strip.isAllPured(1,i) = 0;
-            else
-                Strip.isAllPured(1,i) = 1;
-            end
-            Strip.nbLID(1,i) = sum(arrayAllLID == unique(arrayLID));
-        else
-             error('单纯型STRIP内的ITEM的类型不同'); %arrayLID            
-        end
-    end
-end
-
-% 6: 计算Strip的最大高度, 依据内部Item的高度判定
-for i=1:length(Strip.maxHeight)
-    % 计算最大值
-    % Item.Item_Strip(1,:) == i) : Strip i 内部的Item flag
-    Strip.maxHeight(i) = max(Item.LWH(3, Item.Item_Strip(1,:) == i));
-end
-
-% 7: STRIP增加判断是否包含宽度width非Full的Item. STRIP.isWidthFull
-Strip = isWidthFullStrip(Strip,Item);
-
-%    printstruct(Strip)
-Strip.maxHeight
-Strip.LID
-Strip.isSingleItem %: 1:单纯且单个； 0：单纯且多个；-1：混合
-Strip.nbLID % 整数：冗余值, 具体ITEM的堆垛个数 -1：混合
-Strip.isAllPured % ：1：单纯且该ITEM没有混合型； 0：单纯但也由混合的； -1：混合strip
-Strip.isFull % 1：全部都是满层； 0：包含非满层
-Strip.isMixed % 1：混合层； 0：单纯层
 
 %% 测试script
     % 输出主要结果:获得每个level包含的 
@@ -385,13 +287,11 @@ Strip.isMixed % 1：混合层； 0：单纯层
         end
     end
 
-
     function plot2DStrip()
         %% 初始化
         wStrip = wStrip;        
         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
         nstrip = sum(sItem.Item_Strip(2,:)>0);
-
 
         tmpLID = cellfun(@(x)x(1), sItem.LID);        
         nIDType = unique(tmpLID);
@@ -431,69 +331,13 @@ Strip.isMixed % 1：混合层； 0：单纯层
     end
 end
 
-% 判断STRIP是否包含非Full的Item
-function Strip = isFullStrip(Strip,Item) 
-    % 循环判断Strip是否full
-    for i=1:length(Strip.isFull)
-         if all(Item.isFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
-             Strip.isFull(i) = 1;
-         else
-             Strip.isFull(i) = 0;
-         end
-    end    
-end
-
-
-% ****************** Iten内是否为isFull再次计算 ************ 开放
-% reGET Item.isFull: 计算每个Item是否为满层的标记 (重新计算,替换前面的isFull计算)
-% % for i=1:length(Item.isFull)
-% %     flagLU = LU.LU_Item(1,:) == i;
-% %     maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
-% %     marginofItem = hVeh - Item.LWH(3,i); %高度间隙
-% %     if marginofItem >= maxHeightinLUofThisItem
-% %         Item.isFull(i) = 0; %Item内Lu的最高的高度
-% %     else
-% %         Item.isFull(i) = 1;
-% %     end
-% % end
-
-% ****************** Strip内是否包含Width非Full的Item计算 ************ 开放
-function Strip = isWidthFullStrip(Strip,Item) 
-    % 循环判断Strip是否Widthfull, 首先1: Strip不是单一 2: 其次不是混合 3: LoadingRateLimit<1
-    for i=1:length(Strip.isWidthFull)
-        flagItem = Item.Item_Strip(1,:) == i;        
-        if Strip.LW(:, i) >= max(Item.LWH(2, flagItem))
-            Strip.isWidthFullStrip(i) = 0;
-        else
-            Strip.isWidthFullStrip(i) = 1;
-        end        
-    end
-    Strip.isWidthFullStrip
-end
-
-% 判断STRIP是否混合型
-function Strip = isMixedStrip(Strip) 
-    % 循环判断Strip是否为混合型
-    for i=1:length(Strip.isMixed)
-         if numel(Strip.LID{i}) > 1
-             Strip.isMixed(i) = 1;
-         else
-             Strip.isMixed(i) = 0;
-         end
-    end    
-end
-
-
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
-
 
 %对SID排序: SID按给定顺序排序,序号小的在前面
 szRow = cellfun(@(x)size(x,1), Item.SID);
 if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID
 SIDorder = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
-
-
 
 %对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
 szRow = cellfun(@(x)size(x,1), Item.LID);
@@ -514,94 +358,76 @@ tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SI
 % % % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
 % % [~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5],{'ascend','descend','descend','descend','descend'});  
 
-
 %按ITEM长度/随后宽度/随后高度 排序有问题 可能相同IDLU被分开
 % 增加LUID 2: 确保即使长宽完全相同 但LUID相同的 也必须放一起
 if ~isrow(order), order=order'; end
-
-%         tmpLWH = Item.LWH(1:2,:);
-%         tmpIDItem = Item.LID(1,:);
-%         tmpSID = Item.SID;
-%         if whichSortItemOrder == 1 %Descend of 长(高)
-%             tmp = [tmpSID; tmpLWH; tmpIDItem; ]; %额外增加ITEM的ID到第一行形成临时变量
-%             [~,order] = sortrows(tmp',[1 3 4 ],{'ascend','descend','ascend'}); %按高度,ID(相同高度时)递减排序            
-%         end
-%         if whichSortItemOrder == 2  %Descend of shortest最短边  -> 增对Rotation增加变量
-%             tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:nDim,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
-%             [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
-             %BACKUP  [~,itemorder] = sort(tmpLWH(nDim+1,:),'descend'); %获取临时变量排序后的顺序 way2
-%         end
-%         if whichSortItemOrder == 3  %Descend of total area 总表面积  ->
-            %             printstruct(d);
-%        end        
-
 end
 
-    function [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p)  
-        % 不同whichStripH下,获得共同的thisLevel
-        if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
-            % 增对Rotation增加变量
-            if sItem.isRota(iItem) == 1 %此Item可以旋转
-                                        %             if ParaArray.whichRotation == 1
-                                        % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
-                flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
-                                  Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
-            else %此Item不可以旋转
-                % 常规条件下的选择：find宽度足够的多个level,并安置在最小剩余水平宽度的
-                flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
-            end
-            if isempty(flag)
-                iLevel = iLevel + 1;% 如果宽度不满足，则level升级
-                [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p);
-            else
-                % 获取thisLevel: 唯一与FF区别从这到thisLevel的计算（选中满足条件且最小的）
-                tmpLevels = Strip.LW(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tmpLevels
-                tepMinLeftWdith = min(tmpLevels(flag));                      %找出tepAvailableLevelArray中可容纳本iITem的剩余水平宽度的最小值，更新为tepMinLeftWdith
-                thisLevel = find(tmpLevels==tepMinLeftWdith);            %找出与最小值对应的那个/些level
-                if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
-                if length(thisLevel)>1
-                    thisLevel = thisLevel(1);
-                end
-            end
-        elseif p.whichStripH == 2 % firstfit  % firstfit下能不能直接套用bestfit的代码?
-            % 增对Rotation增加变量
-            if sItem.isRota(iItem) == 1 %此Item可以旋转
-                % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
-                flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
-                                  Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
-            else
-                % 常规条件下的选择：find宽度足够的多个level,并安置在第一个遇到的 唯一区别是thisLevel的获取
-                flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
-            end
-            if isempty(flag)
-                iLevel = iLevel + 1;% 如果宽度不满足，则level升级
-                 [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem, Strip, p); 
-            else
-                thisLevel = flag(1);
-                if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
-            end
-        elseif p.whichStripH == 3 % nextfit                 
-            % 增对Rotation增加变量
-            if sItem.isRota(iItem) == 1 %此Item可以旋转 % nextfit下不能直接套用bestfit的代码
-                % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以
-                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-%                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
-%                                       Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
-            else
-                % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽
-                flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-            end
-            if  isempty(flaged)  %注意与之前~flag的区别
-                iLevel = iLevel + 1;% 如果宽度不满足，则level升级
-                [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem, Strip, p) ;
-            else
-                if  isempty(flaged) ,   error(' 不可能的错误 ');      end
-                thisLevel = iLevel; % 当前level一定放的下
-            end
-%             end
-        
+function [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p)
+% 不同whichStripH下,获得共同的thisLevel
+if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
+    % 增对Rotation增加变量
+    if sItem.isRota(iItem) == 1 %此Item可以旋转
+        %             if ParaArray.whichRotation == 1
+        % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
+        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+            Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+    else %此Item不可以旋转
+        % 常规条件下的选择：find宽度足够的多个level,并安置在最小剩余水平宽度的
+        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+    end
+    if isempty(flag)
+        iLevel = iLevel + 1;% 如果宽度不满足，则level升级
+        [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p);
+    else
+        % 获取thisLevel: 唯一与FF区别从这到thisLevel的计算（选中满足条件且最小的）
+        tmpLevels = Strip.LW(1,1:iLevel);   %获取所有已安排或新安排的level的剩余水平平宽度向量tmpLevels
+        tepMinLeftWdith = min(tmpLevels(flag));                      %找出tepAvailableLevelArray中可容纳本iITem的剩余水平宽度的最小值，更新为tepMinLeftWdith
+        thisLevel = find(tmpLevels==tepMinLeftWdith);            %找出与最小值对应的那个/些level
+        if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
+        if length(thisLevel)>1
+            thisLevel = thisLevel(1);
         end
     end
+elseif p.whichStripH == 2 % firstfit  % firstfit下能不能直接套用bestfit的代码?
+    % 增对Rotation增加变量
+    if sItem.isRota(iItem) == 1 %此Item可以旋转
+        % 找到可以rotation下的level:任一摆放方向可放入该iItem的level
+        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+            Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+    else
+        % 常规条件下的选择：find宽度足够的多个level,并安置在第一个遇到的 唯一区别是thisLevel的获取
+        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+    end
+    if isempty(flag)
+        iLevel = iLevel + 1;% 如果宽度不满足，则level升级
+        [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem, Strip, p);
+    else
+        thisLevel = flag(1);
+        if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
+    end
+elseif p.whichStripH == 3 % nextfit
+    % 增对Rotation增加变量
+    if sItem.isRota(iItem) == 1 %此Item可以旋转 % nextfit下不能直接套用bestfit的代码
+        % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以
+        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+        %                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
+        %                                       Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
+    else
+        % 不同条件下的选择：如果当前item的宽<=当前strip的当前level的宽
+        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+    end
+    if  isempty(flaged)  %注意与之前~flag的区别
+        iLevel = iLevel + 1;% 如果宽度不满足，则level升级
+        [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem, Strip, p) ;
+    else
+        if  isempty(flaged) ,   error(' 不可能的错误 ');      end
+        thisLevel = iLevel; % 当前level一定放的下
+    end
+    %             end
+    
+end
+end
 
 
 %% DEL 代码

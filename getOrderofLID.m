@@ -1,7 +1,7 @@
 %% V3 : 采用cell方式 且分开ITEM和STRIP两类 重点排除order被重复赋值的情况
 % 先按SID区分, 再给出priority为SID内部顺序
 % 重点：27-29行tmpM的顺序
-function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SLID,Sfull, Smixed, ID,LW,LoadingRateLimit,Loadingrate)
+function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SnbItem,Sfull, Smixed, ID,LW,LoadingRateLimit,Loadingrate)
 % ID is cell type % ID = [2 3 NaN; 2 1 3; 1 3 NaN; 2 1 NaN]';
 
 if ~iscell(ID),error('输入非cell');end
@@ -16,11 +16,10 @@ for i=1:length(uniOrd)
     % 获取本SID内的STRIP对应的值tLW;tLL;tL;tID;celltID.
     tLW = LW(:,idxSID);   tLL = LoadingRateLimit(:,idxSID);     tL = Loadingrate(:,idxSID);
     tID = ID(:,idxSID);   celltID = tID;
-    tLID = SLID(:,idxSID);    tFull = Sfull(:,idxSID);    tMixed = Smixed(:,idxSID); tPured = Spured(:,idxSID);
+    tnbItem = SnbItem(:,idxSID);    tFull = Sfull(:,idxSID);    tMixed = Smixed(:,idxSID); tPured = Spured(:,idxSID);
     tSingle = Ssingle(:,idxSID); %作用未知
-%     max(tL)
-%     min(tL)
-%     mean(tL)
+    
+%     max(tL)  %     min(tL) %     mean(tL)
     priority = 1;
     SIDorder = zeros(1,size(tID,2));
     szRow = cellfun(@(x)size(x,1), tID);
@@ -38,7 +37,7 @@ for i=1:length(uniOrd)
 % 1 单纯 > 满层 > 数量 > LoadingRate
 %         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[2,3,1,5],{'ascend','descend','descend','descend'}); 
 % 2 数量 > 单纯 > 满层 > LoadingRate
-        tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
+        tmpM = [tnbItem; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
 % 3 全纯 > 数量 > 单纯 > 满层 > LoadingRate
 %         tmpM = [tPured; tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,4,6],{'descend','descend','ascend','descend','descend'}); 
 %         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];        [~,order] = sortrows(tmpM',[2,3],{'ascend','descend'});
@@ -53,9 +52,9 @@ for i=1:length(uniOrd)
             SIDorder(order(o)) = priority;  priority=priority+1;
             
             % 2.2 找出给order(o)位置tLID对应的相邻Strip.
-            tLID = celltID{:,order(o)};
+            tnbItem = celltID{:,order(o)};
             % NOTE 首次tLID不应该出现混合型STRIP, 但如按高度排序, 是可能出现的
-            [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tLID);
+            [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tnbItem);
         end
     end
     allPriority(idxSID) = SIDorder;

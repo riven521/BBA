@@ -5,8 +5,22 @@ fields = fieldnames(par);
 aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 
+% 1: 按照LID区分颜色
+% 2: 按照LU isHeightFull区分颜色
+colorType = 1;  
 
-nIDType = unique(d.LU.ID);
+if colorType == 1
+ nIDType = unique(d.LU.ID);
+elseif colorType == 2
+    d.LU.isFull = ones(size(d.LU.ID))*1;
+    nIDType = unique(d.Item.isHeightFull);
+    f = find(d.Item.isHeightFull == 0);    
+    for i=1:numel(f)
+        f2 = d.LU.LU_Item(1,:) == f(i);
+        d.LU.isFull(f2) = 0;
+    end
+end
+
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 nBin = max(d.LU.LU_Bin(1,:)); %bin的个数;
 
@@ -16,7 +30,13 @@ for ibin=1:nBin
     
     yxz = d.LU.LWH(:,f);
     coord = d.LU.CoordLUBin(:,f);
-    lid  = d.LU.ID(:,f);
+    
+    if colorType == 1
+        lid  = d.LU.ID(:,f);
+      elseif colorType == 2   
+        lid  = d.LU.isFull(:,f);
+    end
+    
     seq = d.LU.LU_Bin(2,f);
     
     for i=1:numel(seq)
