@@ -169,16 +169,19 @@ V0916-2:
     a. main函数中94行增加% ****************** 针对车型选择 获取 smalld ： 最后一车放入更小车型后的输出
     b. POST PROCESSING中 增加  % ****************** 针对车型选择 获取修订的 output ：修订3个output输出
     
+--------------------------------------------------------------------------------------
+V1001-1:
+0 修订updatemargin,在作图之前完成
+1 增加plot3dbpp功能 + 结合plotcube函数
+2 增加Item和Strip的多个属性计算
+3 增加甩尾功能
 
-dA(iAlg) = RunAlgorithm(d,pA(iAlg));
-[daBest,paBest] = getbestsol(dA,pA); 
-getReturnBBA(daBest(bestOne));
-function getReturnBBA(daMax)
-
-
-实现指定位置摆放
-最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） - 可作为选项之一
-
+TODO:
+1 增加平铺功能
+2 甩尾后展示顺序功能
+3 最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） - 可作为选项之一
+4 实现指定位置摆放
+5 修订莫名BUG ncol2错误; 内存溢出错误
 
 [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); 
 [d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);
@@ -188,15 +191,12 @@ function getReturnBBA(daMax)
   d = computeLoadingRate2DBin(d);
 
 
-
 TODO:
-0 plot strip时更新LW和Coord，确保含margin的显示正确
+0 plot strip时更新LW和Coord，确保含margin的显示正确 DONE 
 1 从getbestsol由指标判断->最好变为由摆放顺序和算法直接获取最优，无需指标判断。 DONE
 2 增加同BIN/STRIP包含多个指标SID/PID等如何计算的问题？ DONE cell patcat
-3 isAdjacent为基础增加更多解的check判断函数 
+3 isAdjacent为基础增加更多解的check判断函数  
 4 getStriporder：zs zl 等STRIP排序确保相同SID在一个里面 DONE 
-
-
 
 TODO:
 1 增加strip新（LUID类别，LU剩余宽度是否可放另一个小LU，即是否满level）

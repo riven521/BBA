@@ -1,7 +1,14 @@
-function [] = plot2DBPP(d,ParaArray)
+function [] = plot2DBPP(d,par)
 
 % 作图函数:二维BPP
 % 初始化
+
+fields = fieldnames(par);
+aField = [];
+for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
+figure('name',num2str(aField));
+
+
 nDim = size(d.Item.LWH,1);  if nDim ==3, nDim = nDim-1;end
 nThisItem = size(d.Item.LWH,2);
 

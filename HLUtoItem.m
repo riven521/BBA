@@ -166,6 +166,7 @@ if ~all(Item.isFull)
     end
 end
 
+% ****************** 上轻下重的判断修复 ************ 开放
 % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
 Item = isWeightUpDown(Item,LU);
 % repairItemWeight: 如果存在上轻下重的case, 进行修复
@@ -178,6 +179,7 @@ end
 Item = isWeightUpDown(Item,LU);
 if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
+% ****************** Iten内堆垛的层数计算 ************ 开放
 % Item.Layer 计算每个Iten内堆垛的层数
 for i=1:length(Item.Layer)
     % Item i 对于的LU flag标记
@@ -198,7 +200,7 @@ for iItem=1:nItem
     Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
 end
 
-
+% ****************** Iten内是否为不需要混拼计算 ************ 开放
 % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
 ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
 for i=1:length(unique(ItemLID))
@@ -216,6 +218,7 @@ for i=1:length(unique(ItemLID))
 end
 
 
+% ****************** Iten内是否为isFull再次计算 ************ 开放
 % reGET Item.isFull: 计算每个Item是否为满层的标记 (重新计算,替换前面的isFull计算)
 for i=1:length(Item.isFull)
     flagLU = LU.LU_Item(1,:) == i;

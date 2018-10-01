@@ -106,7 +106,7 @@ for iAlg = 1:nAlg
         % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
         d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
-        plotSolution(d1,pA(iAlg));
+%         plotSolution(d1,pA(iAlg));
         % 2.2 判断该车型是否可用
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
         % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
@@ -152,9 +152,9 @@ if flaggetSmallVeh %如有当替换成功了,才执行getReturnBBA函数 以及作图
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
-if 0 %nargin == 0,
+if 1 %nargin == 0,
     plotSolution(daBest(bestOne),paBest(bestOne));
-    if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
+%     if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
 end
 
 fprintf(1,'Simulation done.\n');
@@ -255,14 +255,9 @@ end
         
 function plotSolution(d,par)
 %% 画图
-%     printstruct(d);
-%     plot3DBPP(d,ParaArray);
-% 以下修订纯为画图使用
-
-fields = fieldnames(par);
-aField = [];
-for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
-figure('name',num2str(aField));
+% V3 margin 提前到RunAlgorithm运行后就执行:
+plot2DBPP(d,par);
+plot3DBPP(d,par);
 
         % V1 buff version
         % d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
@@ -270,11 +265,10 @@ figure('name',num2str(aField));
         % d.Item.LWH(2,:) = d.Item.LWH(2,:) - (d.LU.margin(3,: ) + d.LU.margin(4,: )); 
         % d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
 
-% V2 margin version
-% 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
- [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-
-plot2DBPP(d,par);
+        % V2 margin version
+        % 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
+        % [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
+        
 
 end
 

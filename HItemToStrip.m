@@ -78,7 +78,7 @@ Strip.Weight = zeros(1,nItem); % 初始赋值
     Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
     Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item
     Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
-    Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
+    Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的最高高度. 暂未用
 
     % 初始化多行nItem列
 %     Strip.LID = zeros(numel(unique(LU.ID)),nItem);
@@ -130,6 +130,7 @@ end
 
 %    plot2DStrip();  hold off;%可能有问题: 一次性画图
 % 1
+
 % 后处理 并赋值到d
 %Matalb code gerator use:
 %         Item_Strip=sItem.Item_Strip; CoordItemStrip=sItem.CoordItemStrip;
@@ -252,7 +253,7 @@ for i=1:length(Strip.maxHeight)
 end
 
 % 7: STRIP增加判断是否包含宽度width非Full的Item. STRIP.isWidthFull
-% % % % Strip = isWidthFullStrip(Strip,Item);
+Strip = isWidthFullStrip(Strip,Item);
 
 %    printstruct(Strip)
 Strip.maxHeight
@@ -442,23 +443,32 @@ function Strip = isFullStrip(Strip,Item)
     end    
 end
 
-% 判断STRIP是否包含Width非Full的Item 暂未考虑
+
+% ****************** Iten内是否为isFull再次计算 ************ 开放
+% reGET Item.isFull: 计算每个Item是否为满层的标记 (重新计算,替换前面的isFull计算)
+% % for i=1:length(Item.isFull)
+% %     flagLU = LU.LU_Item(1,:) == i;
+% %     maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
+% %     marginofItem = hVeh - Item.LWH(3,i); %高度间隙
+% %     if marginofItem >= maxHeightinLUofThisItem
+% %         Item.isFull(i) = 0; %Item内Lu的最高的高度
+% %     else
+% %         Item.isFull(i) = 1;
+% %     end
+% % end
+
+% ****************** Strip内是否包含Width非Full的Item计算 ************ 开放
 function Strip = isWidthFullStrip(Strip,Item) 
     % 循环判断Strip是否Widthfull, 首先1: Strip不是单一 2: 其次不是混合 3: LoadingRateLimit<1
     for i=1:length(Strip.isWidthFull)
-        Strip
-        if Strip.isSingleItem(i) ~= 1 && Strip.isMixed(i) ~= 1 
-            if ~all(Item.isFull(Item.Item_Strip(1,:) == i)) % 如果有任意不满的Item, 则进行本Strip内的平铺 : LU.LU_Item变化
-                Item.isFull(Item.Item_Strip(1,:) == i)
-                1
-            end
-        end
-         if all(Item.isFull(Item.Item_Strip(1,:) == i)) 
-             Strip.isFull(i) = 1;
-         else
-             Strip.isFull(i) = 0;
-         end
-    end    
+        flagItem = Item.Item_Strip(1,:) == i;        
+        if Strip.LW(:, i) >= max(Item.LWH(2, flagItem))
+            Strip.isWidthFullStrip(i) = 0;
+        else
+            Strip.isWidthFullStrip(i) = 1;
+        end        
+    end
+    Strip.isWidthFullStrip
 end
 
 % 判断STRIP是否混合型
@@ -494,7 +504,10 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % *********** 考虑isNonMixed
 tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
 % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
-[~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
+% 增加isNonMixed
+% [~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
+% 增加判定Item先长度,后高度排序. 
+[~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
 
 % *********** 不考虑isNonMixed
 % % tmpItem = [SIDorder; LIDorder; Item.LWH; ];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
