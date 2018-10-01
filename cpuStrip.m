@@ -110,9 +110,9 @@ function Strip = isWidthFullStrip(Strip,Item)
         flagItem = Item.Item_Strip(1,:) == i;        
         max(Item.LWH(1, flagItem))
         if Strip.LW(1, i) >= min(Item.LWH(1, flagItem))
-            Strip.isWidthFullStrip(i) = 0;
+            Strip.isWidthFull(i) = 0;
         else
-            Strip.isWidthFullStrip(i) = 1;
+            Strip.isWidthFull(i) = 1;
         end        
     end
 end

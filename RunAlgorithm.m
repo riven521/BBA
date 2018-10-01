@@ -15,7 +15,6 @@ function [d] = RunAlgorithm(d,p)
         
         [d.Item] = cpuItem(d.Item,d.LU,d.Veh);
 
-                        %         printstruct(d.LU);         printstruct(d.Item);
                         %         pgon = getPolyshape(d.Item.LWH);    %          figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
 %         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
@@ -24,6 +23,9 @@ function [d] = RunAlgorithm(d,p)
         
         [d.Strip] = cpuStrip(d.Strip,d.Item,d.Veh);
 
+            d.Item.LWH  
+            d.Item.LID
+                                 printstruct(d.Item);
                 %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
 %         d = modifyStripWithOneItem(d);
 %         function d = modifyStripWithOneItem(d)

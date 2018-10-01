@@ -118,6 +118,7 @@ LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
 for iLU=1:nbLU
     theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
     LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
+
 end
 
 LU.DOC=[LU.DOC; LU.LU_Strip];
@@ -347,11 +348,15 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % LIDorder = ones(1,length(SIDorder));
 % *********** 考虑isNonMixed
 tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
-% [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
+        % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
+
 % 增加isNonMixed
-% [~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
-% 增加判定Item先长度,后高度排序. 
-[~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
+    % [~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
+    % 增加判定Item先长度,后高度排序. % 会出现nbcol2错误:
+    % 1: SID ; 2: isNonMixed; 3: Longth/Height; 4: Height 5:Width; 6: LID; 
+    % [~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
+% 目前顺序 : 1: SID ; 2: isNonMixed; 3: Longth/Height; 4:Width; 5: LID; 6: Height
+[~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 
 % *********** 不考虑isNonMixed
 % % tmpItem = [SIDorder; LIDorder; Item.LWH; ];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
@@ -428,75 +433,3 @@ elseif p.whichStripH == 3 % nextfit
     
 end
 end
-
-
-%% DEL 代码
-
-% %     function insertItemToStrip(thisLevel)
-% % %         CoordItemStripSort=CoordItemStripSort;LWStrip=LWStrip;
-% % %         %为了matlab的coder 无用
-% % %         ItemRotaSort=ItemRotaSort;ItemLWSort=ItemLWSort;
-% % %         stripBeItemArray=stripBeItemArray;sItem.Item_Strip=sItem.Item_Strip;
-% %         
-% %         % 1 更新CoordItemStripSort
-% %         CoordItemStripSort(1,iStrip) = widthStrip - LWStrip(1,thisLevel);  %更新x坐标
-% %         CoordItemStripSort(2,iStrip) = sum(LWStrip(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
-% %         
-% %         % 2 更新LWStrip
-% %         % 2 更新stripBeItemArray
-% %         if ParaArray.whichRotation == 1
-% %             % 判断语句: 5个
-% %             isflagHori = LWStrip(1,thisLevel) >=  ItemLWSort(1,iStrip); %判断是否 wleft >= longest
-% %             isflagVert = LWStrip(1,thisLevel) >= ItemLWSort(2,iStrip);  %判断是否 wleft >= shortest
-% %             isNewLevel = LWStrip(1,thisLevel) == widthStrip; % 判断是否 new Level
-% %             
-% %             % 更新strip信息
-% %             if isNewLevel
-% %                 if ParaArray.whichRotationHori == 2 % 新level, 必定按照vertical方式(安置)
-% %                     if ~isflagVert,  error('1'); end
-% %                     updateStripVertical();
-% %                 else % 0-1 ：% 新level, 必定按照horizontally方式(即默认方式安置)
-% %                     if ~isflagHori,  error('1'); end
-% %                     updateStripHorizontal();
-% %                 end
-% %             else % 如果非新level
-% %                 if ParaArray.whichRotationHori == 1 % 非新level, 优先按照horizontall方式(安置)
-% %                     if isflagHori
-% %                         updateStripHorizontal();
-% %                     elseif isflagVert
-% %                         updateStripVertical();
-% %                     else
-% %                         error('level选择错误,无论横竖都放不下');
-% %                     end
-% %                 else % 0/2 : 非新level, 必定按照vertical方式(安置) v一定可以，h不一定可以 (注意v可以，而h不可以的可能性，如初始都未hotizntal orientation就不可能)
-% %                     if ~isflagVert,  error('1');  end
-% %                     updateStripVertical();
-% %                 end
-% %             end
-% %         elseif ParaArray.whichRotation == 0
-% %             % 更新strip信息
-% %             LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - ItemLWSort(1,iStrip); %更新wleft
-% %             LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel),ItemLWSort(2,iStrip)); % 如果物品高度>本strip高度->更新strip高度lleft
-% %         end
-% %         
-% %         % 3 更新item归属strip信息itemBeStripMatrixSort + 更新stripBeItemArray
-% %         stripBeItemArray(thisLevel) = stripBeItemArray(thisLevel) + 1; %只要该level安放一个item,数量就增加1
-% %         itemBeStripMatrixSort(1,iStrip) = thisLevel;    %第几个level
-% %         itemBeStripMatrixSort(2,iStrip) = stripBeItemArray(thisLevel); %本level下第几次安置
-% %         
-% %         % 4 二级嵌套函数
-% %         function updateStripVertical()
-% %             LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - ItemLWSort(2,iStrip); %更新wleft by Vertically
-% %             LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel), ItemLWSort(1,iStrip)); %更新strip高度lleft(取最大值)
-% %             % 当isflagVert==1 不仅标记 还要把物品真正的rotation(反)过去
-% %             ItemRotaSort(iStrip) = ~ItemRotaSort(iStrip);
-% %             tep = ItemLWSort(1,iStrip);
-% %             ItemLWSort(1,iStrip) = ItemLWSort(2,iStrip);
-% %             ItemLWSort(2,iStrip) = tep;
-% %         end
-% %         function updateStripHorizontal()
-% %             LWStrip(1,thisLevel) = LWStrip(1,thisLevel) - ItemLWSort(1,iStrip); %更新wleft by Horizontally
-% %             LWStrip(2,thisLevel) = max(LWStrip(2,thisLevel), ItemLWSort(2,iStrip)); %更新strip高度lleft(取最大值)
-% %         end
-% %             
-% %     end

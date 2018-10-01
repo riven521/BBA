@@ -178,7 +178,15 @@ V1001-1:
 
 V1001-2:
 1 增加cpu函数(计算Item,Strip,Bin等属性计算)
-2 
+
+V1001-3:
+1 修复getITEMorder:bug: 出现nbcol2错误 -> 原因在于对Item优先高度排序,致使混合Strip过多且重复.
+% 目前顺序 : 1: SID ; 2: isNonMixed; 3: Longth/Height; 4:Width; 5: LID; 6: Height
+[~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
+
+
+1 甩尾功能完善 + 测试
+
 
 TODO:
 1 增加平铺功能

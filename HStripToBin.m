@@ -92,32 +92,26 @@ end
 % Strip.isSingleItem
 
 %%  *************************************** 甩尾 ********************************** 
-% 如存在单个Item的strip的case 或 存在strip有不满的strip
-% 对其排序, loadingrate小的最后进入
-% 哪些甩尾: 宽度不满或高度不满的
-if any(Strip.isSingleItem | ~Strip.isHeightFull )
+% 1 哪些甩尾: 宽度不满或高度不满的
+if any(Strip.isWidthFull | ~Strip.isHeightFull )
     % Get b : strip index to be move to end of Vehicle
-%     [~,bsingle] = find(Strip.isSingleItem == 1);
-    [~,bnotfull] = find(Strip.isHeightFull == 0);
+    [~,bnotheightfull] = find(Strip.isHeightFull == 0);
     [~,bnotwidthfull] = find(Strip.isWidthFull == 0);
-%     b = unique([bnotfull bsingle],'stable');    % 最后摆放车尾的要安排在unique的最后
-%    b = unique([bnotfull, bnotwidthfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
-      b = unique([bnotfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
- 
+    b = unique([bnotheightfull, bnotwidthfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
+% b = unique([bnotheightfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
+
+% 2 如何排序, loadingrate小的最后进入
    if ~isempty(b)
        % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度
        tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
        [~,order] = sortrows(tmpM',[1,3,2],{'descend','descend','descend'});
-       b = b(order);       
-       Strip.seqSW(b) = 1:length(b);
+       b = b(order);
+       
+    %        Strip.seqSW(b) = 1:length(b);
     %%% TODO 甩尾后的展示顺序操作  ************** %%%%    
    end
-
-%     Strip.loadingrate(b)
-%     Strip.Stripvolume
-%     Strip.StripvolumeLimit
-%     Strip.Itemvolume
-%     Strip.loadingrateLimit(b)
+   
+   %     Strip.loadingrateLimit(b)
  
 %%%  ***************** 是否甩尾的开关 *************
     for i=1:length(b) 
@@ -126,11 +120,11 @@ if any(Strip.isSingleItem | ~Strip.isHeightFull )
 end
 
     function Strip = repairStripPlace(Strip,stripidx)
-        % 找到stripidx对应的BIN下的所有Strip索引号逻辑值
+        % 1 找到stripidx对应的BIN下的所有Strip索引号逻辑值
         flagIdx = Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx);    % 所有属于本Bin内的逻辑判断
         flagBigIdx = Strip.Strip_Bin(2,:) > Strip.Strip_Bin(2,stripidx);  % 所有摆放顺序晚于stripidx的逻辑判断
         
-        % 所有属于本Bin内 & 且摆放顺序晚于stripidx 的顺序加1, 即提前摆放
+        % 2 所有属于本Bin内 & 且摆放顺序晚于stripidx 的顺序加1, 即提前摆放
         Strip.Strip_Bin(2,flagBigIdx & flagIdx)  = Strip.Strip_Bin(2,flagBigIdx & flagIdx)  - 1;
         Strip.Strip_Bin(2,stripidx) = sum(flagIdx); % 当前stripidx摆放到车尾, 即顺序设置到最大
         
@@ -224,7 +218,7 @@ s=[SIDorder;IDorder];
 for i=min(SIDorder):max(SIDorder)
     si = s(2,s(1,:)==i);
     if numel(unique(si)) ~= numel(si)
-        error('eeeee');
+%         error('eeeee');
     end
 end
 
