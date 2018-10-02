@@ -49,7 +49,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LUID2',varargin{7});
 else
-    n=85; m=2;
+    n=12; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
@@ -152,6 +152,10 @@ end
 % ****************** 针对车型选择 获取修订的 output ******************
 
 if 1 %nargin == 0,
+    dd = daBest(bestOne);
+    dd.Strip.Strip_Bin
+    dd.Strip.isShuaiWei
+    
     plotSolution(daBest(bestOne),paBest(bestOne));
 %     if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
 end

@@ -62,8 +62,6 @@ else
     error('不能使用structfun');
 end
 
-
- 
 % 获取Bin: 去除未使用的Bin 注意Bin结构体的变化
 if isSameCol(Bin)
     Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
@@ -71,51 +69,6 @@ else
     error('不能使用structfun');
 end
 
-% Strip.Strip_Bin
-% Strip.isHeightFull
-% Strip.isSingleItem
-
-%%  *************************************** 甩尾 ********************************** 
-% 1 哪些甩尾: 宽度不满或高度不满的
-if any(Strip.isWidthFull | ~Strip.isHeightFull )
-    % Get b : strip index to be move to end of Vehicle
-    [~,bnotheightfull] = find(Strip.isHeightFull == 0);
-    [~,bnotwidthfull] = find(Strip.isWidthFull == 0);
-    b = unique([bnotheightfull, bnotwidthfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
-% b = unique([bnotheightfull],'stable');    % 最后摆放车尾的要安排在unique的最后? 看order
-
-% 2 如何排序, loadingrate小的最后进入
-   if ~isempty(b)
-       % Sort b : 对b的排序: 优先LoadingRate大, 其次LRLimit, 再次strip的高度
-       tmpM = [Strip.loadingrate(b);Strip.loadingrateLimit(b); Strip.maxHeight(b)];
-       [~,order] = sortrows(tmpM',[1,3,2],{'descend','descend','descend'});
-       b = b(order);
-       
-    %        Strip.seqSW(b) = 1:length(b);
-    %%% TODO 甩尾后的展示顺序操作  ************** %%%%    
-   end
-   
-   %     Strip.loadingrateLimit(b)
- 
-%%%  ***************** 是否甩尾的开关 *************
-    for i=1:length(b) 
-%          Strip = repairStripPlace(Strip,b(i));    % Strip.Strip_Bin 
-    end
-end
-
-    function Strip = repairStripPlace(Strip,stripidx)
-        % 1 找到stripidx对应的BIN下的所有Strip索引号逻辑值
-        flagIdx = Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx);    % 所有属于本Bin内的逻辑判断
-        flagBigIdx = Strip.Strip_Bin(2,:) > Strip.Strip_Bin(2,stripidx);  % 所有摆放顺序晚于stripidx的逻辑判断
-        
-        % 2 所有属于本Bin内 & 且摆放顺序晚于stripidx 的顺序加1, 即提前摆放
-        Strip.Strip_Bin(2,flagBigIdx & flagIdx)  = Strip.Strip_Bin(2,flagBigIdx & flagIdx)  - 1;
-        Strip.Strip_Bin(2,stripidx) = sum(flagIdx); % 当前stripidx摆放到车尾, 即顺序设置到最大
-        
-        % [~,maxSeq]=max(Strip.Strip_Bin(2,Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx) ));
-    end
-
-   
 %% 测试script 输出主要结果:获得每个item包含的 原始 LU序号z
 % printscript();
 

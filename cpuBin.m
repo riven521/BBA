@@ -2,14 +2,13 @@
 % 1 Strip.isMixed % 1：混合层； 0：单纯层
 
 %% 函数
-function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
+function   [Bin,Strip,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
 %% 初始化
     sz = size(Bin.Weight);
     Bin.Binarea = ones(sz)*-1; 
     Bin.Itemarea =  ones(sz)*-1; 
     Bin.Itemloadingrate =  ones(sz)*-1; 
     Bin.ItemloadingrateLimit =  ones(sz)*-1; 
-    
 
 %% 0: 计算LU_Bin and BIN的PID,LID,SID
 % 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增

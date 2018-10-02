@@ -15,11 +15,11 @@ function [d] = RunAlgorithm(d,p)
         
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);
 
-                        %         pgon = getPolyshape(d.Item.LWH);    %          figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
+                        %  pgon = getPolyshape(d.Item.LWH);    % figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
 %         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式Item到Strip的算法
-        [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);                %         printstruct(d);   %  printstruct(d.Item);
+        [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
         
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
@@ -45,18 +45,25 @@ function [d] = RunAlgorithm(d,p)
 %         end
 
         %% 启发式：Strip到Bin的算法
-        [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,d.LU,p);
-        
+        [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);
+       
         % 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
-        [d.Strip,d.Bin]= HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
-        
-        % 量大车头方案1: 每个Bin内strip比较量
-        %     [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
-        
-        %% Item到bin的信息获取:
-        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);          printstruct(d.Item);
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);
+        [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
 
+        % 量大车头方案1: 每个Bin内strip比较量
+        % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
+        
+        % ******* 增加甩尾操作 ***********
+        [d.Strip] = HStripSW(d.Strip);
+            %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
+                
+        %% Item到bin的信息获取:
+       % 甩尾必须在计算LU在Bin内的系数前进行
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);      printstruct(d.Item);
+        
+        [d.Bin,d.Strip,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
+
+       
 %     printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh); %可用,暂时注释
         function printOut(Bin,Strip,Item,LU,Veh)
             nBin = size(Bin.LW,2);

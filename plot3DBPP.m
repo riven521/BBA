@@ -9,6 +9,7 @@ for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 % 2: 按照Item内Lu isHeightFull区分颜色
 % 3: 按照Strip内Lu isWidthFull区分颜色
 % 23: 按照Strip内Lu isWidthFull和isHeightFull区分颜色
+% 4: 按照Strip内LU是否甩尾区分颜色
 colorType = 1;  
 
 if colorType == 1
@@ -44,6 +45,14 @@ elseif colorType == 23
         f2 = d.LU.LU_Strip(1,:) == f(i);
         d.LU.isWidthFull(f2) = 0;
     end
+elseif colorType == 4
+     d.LU.isSW = ones(size(d.LU.ID))*1;
+    nIDType = unique(d.Strip.isShuaiWei);
+    f = find(d.Strip.isShuaiWei == 0);    
+    for i=1:numel(f)
+        f2 = d.LU.LU_Strip(1,:) == f(i);         %         f22 = find(d.LU.LU_Strip(1,:) == f(i))
+        d.LU.isSW(f2) = 0;
+    end
 end
 
 % d.Strip.LW(:,15)
@@ -66,6 +75,8 @@ for ibin=1:nBin
         lid1  = logical(d.LU.isHeightFull(:,f));
         lid2  = logical(d.LU.isWidthFull(:,f));
         lid = lid1 & lid2;
+    elseif colorType == 4
+        lid  = d.LU.isSW(:,f);
     end
     % LU在Bin内的顺序
     seq = d.LU.LU_Bin(2,f);
