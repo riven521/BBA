@@ -5,7 +5,7 @@
 % 4 Strip.maxHeight % Strip内所有Item的最大高度
 
 % 5 Strip.nbItem % 整数：冗余值, 具体ITEM的堆垛个数 车头摆放依据 -1：混合strip
-% 6 Strip.isAllPured % ：1：单纯且该ITEM没有混合型； 0：单纯但也由混合的； -1：混合strip
+% 6 Strip.isAllPured % ：1：单纯且该ITEM没有混合型； 0：单纯但其它strip有混合的； -1：混合strip
 % 7 Strip.isSingleItem %: 1:单纯且单个； 0：单纯且多个；-1：混合strip
 
 % 8 Strip.loadingrate   % 每个strip的装载比率
@@ -15,7 +15,7 @@
 % Strip.LID
 
 %% 函数
-function   [Strip] = cpuStrip(Strip,Item,Veh)
+function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
 %% 初始化
     Strip.isMixed = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个LID 
     Strip.isHeightFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
@@ -31,6 +31,26 @@ function   [Strip] = cpuStrip(Strip,Item,Veh)
     Strip.Itemvolume = ones(size(Strip.Weight))*-1; %每个strip包含的Item装载体积
     Strip.loadingrate = ones(size(Strip.Weight))*-1; % 每个strip的装载比率
     Strip.loadingrateLimit = ones(size(Strip.Weight))*-1;     % 每个strip的有限装载比率
+    
+    
+
+%% 0.0 计算LU_Strip, Strip内的PID,LID,SID
+% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
+nbLU = size(LU.LWH,2);
+LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
+for iLU=1:nbLU
+    theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
+    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
+end
+
+LU.DOC=[LU.DOC; LU.LU_Strip];
+nStrip = size(Strip.LW,2);
+for iStrip=1:nStrip
+    tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
+    Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
+    Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
+    Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
+end
     
 %% 0: 计算strip装载率
 Strip = computeLoadingRateStrip(Strip,Item,Veh); 
@@ -52,62 +72,71 @@ for i=1:length(Strip.maxHeight)
 end
 
 %% 5,6,7
-%Strip.isAllPured：单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
-%Strip.nbItem: STRIP增加内部该ITEM的nbLID类型个数,数值越大,即该LU类型越多
-%Strip.isSingleItem: Strip
-arrayAllLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+%Strip.isAllPured：混合:-1; 单纯: 1 (混合strip内没有改ID) ; 0 (混合strip内含有该单纯strip的ID)
+%Strip.nbItem: 混合:-1; 单纯: 对应Strip内部该Item的nbLID类型个数,数值越大,即该LU类型越多
+%Strip.isSingleItem: 混合: -1; 单纯: Strip内仅有一个Item,必定是单纯的.
+LIDinItemsArray = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
 mixedStrip = find(Strip.isMixed(1,:) == 1);
 mixedLID = [];
 for m=1:length(mixedStrip)
-     flagitemIdx = Item.Item_Strip(1,:) == mixedStrip(m);
-     mixedLID = [mixedLID, arrayAllLID(flagitemIdx)];
+     f = Item.Item_Strip(1,:) == mixedStrip(m);
+     mixedLID = [mixedLID, LIDinItemsArray(f)];
 end
 mixedLID = unique(mixedLID);
+
+uniItem = unique(Item.Item_Strip(1,:));
 for i=1:length(Strip.isAllPured)
     if ~Strip.isMixed(1,i) %如是单纯型        
-        cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
-        arrayLID = cellfun(@(x)x(1), cellLID);
-        if isscalar(unique(arrayLID)) 
-            if isscalar(arrayLID)
+        cellLID = Item.LID(Item.Item_Strip(1,:) == uniItem(i)); % cellLID: 本Strip内的ITEM对应的LID值
+            %         cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
+        LIDinThisItemArray = cellfun(@(x)x(1), cellLID);
+        if isscalar(unique(LIDinThisItemArray)) 
+            
+            if isscalar(LIDinThisItemArray)
                 Strip.isSingleItem(1,i) = 1;
             else
                 Strip.isSingleItem(1,i) = 0;
             end
-            if ismember(unique(arrayLID),mixedLID)
+            
+            if ismember(unique(LIDinThisItemArray),mixedLID)
                 Strip.isAllPured(1,i) = 0;
             else
                 Strip.isAllPured(1,i) = 1;
             end
-            Strip.nbItem(1,i) = sum(arrayAllLID == unique(arrayLID));
+            
+            Strip.nbItem(1,i) = sum(LIDinItemsArray == unique(LIDinThisItemArray));
+            
         else
              error('单纯型STRIP内的ITEM的类型不同'); %arrayLID            
         end
     end
 end
 
-
 end
 
 %% 局部函数 %%
 
 %% 函数1: 判断STRIP是否包含非HeightFull的Item
-function Strip = isFullStrip(Strip,Item) 
+function Strip = isFullStrip(Strip,Item)
     % 循环判断Strip是否full
+    uniItem = unique(Item.Item_Strip(1,:));
     for i=1:length(Strip.isHeightFull)
-         if all(Item.isHeightFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+%          if all(Item.isHeightFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+         if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniItem(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
              Strip.isHeightFull(i) = 1;
          else
              Strip.isHeightFull(i) = 0;
          end
-    end    
+    end
 end
 
-%% 函数2: 判断STRIP是否包含非WightFull的Item
+%% 函数2: 判断STRIP是否包含非WidthFull的Item
 % ****************** Strip内是否包含Width非Full的Item计算 ************ 开放
 function Strip = isWidthFullStrip(Strip,Item) 
     % 循环判断Strip是否Widthfull, 宽度间隙 >= 本Strip包含的Item的宽度最小值
+    uniItem = unique(Item.Item_Strip(1,:));
     for i=1:length(Strip.isWidthFull)
-        flagItem = Item.Item_Strip(1,:) == i;        
+        flagItem = Item.Item_Strip(1,:) == uniItem(i); 
         max(Item.LWH(1, flagItem))
         if Strip.LW(1, i) >= min(Item.LWH(1, flagItem))
             Strip.isWidthFull(i) = 0;
@@ -140,9 +169,10 @@ function Strip = computeLoadingRateStrip(Strip,Item,Veh)
     Strip.StripvolumeLimit = Strip.LW(2,:) .* (Veh.LWH(1,1) - Strip.LW(1,:));
     a = Item.LWH;
     b = Item.Item_Strip;
+    uniItem = unique(Item.Item_Strip(1,:));
     for iStrip =1:nStrip
         %每个strip包含的Item装载体积
-        Strip.Itemvolume(iStrip)= sum(a(1, (b(1,:)==iStrip)) .* a(2, (b(1,:)==iStrip)));
+        Strip.Itemvolume(iStrip)= sum(a(1, (b(1,:)==uniItem(iStrip))) .* a(2, (b(1,:)==uniItem(iStrip))));
     end
     %每个strip的装载比率
     Strip.loadingrate =  Strip.Itemvolume ./ Strip.Stripvolume;

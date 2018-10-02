@@ -45,7 +45,7 @@ sStrip.Strip_Bin = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
 iStrip=1; iBin=1;
 while 1
     if iStrip > nStrip, break; end
-    
+
     [thisBin,iBin] = getThisBin(iBin, iStrip, sStrip, Veh, Bin, p);    % 获取Bin号
     
     [Bin,sStrip.Strip_Bin,tmpBin_Strip] = insertStripToBin(iStrip, thisBin, sStrip, Bin, sStrip.Strip_Bin, tmpBin_Strip);
@@ -62,24 +62,8 @@ else
     error('不能使用structfun');
 end
 
-% 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
-    nbLU = size(LU.LWH,2);
-    LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
-    for iLU=1:nbLU
-         theStrip = LU.LU_Strip(1,iLU); %iLU属于第几个Item
-         LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
-    end
 
-    LU.DOC=[LU.DOC; LU.LU_Bin];
-    nBin = size(Bin.LW,2);
-    for iBin=1:nBin
-        tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
-        Bin.PID2(:,iBin) = num2cell(unique(tmp(1,:))',1);
-        Bin.LID2(:,iBin) = num2cell(unique(tmp(2,:))',1);
-        Bin.SID2(:,iBin) = num2cell(unique(tmp(3,:))',1);
-    end
-    
-    
+ 
 % 获取Bin: 去除未使用的Bin 注意Bin结构体的变化
 if isSameCol(Bin)
     Bin = structfun(@(x) x( : , Bin.Weight(1,:)>0 ), Bin, 'UniformOutput', false);
@@ -202,6 +186,7 @@ function order = getStriporder(Strip)
 %对SID排序: SID按给定顺序排序,序号小的在前面; 
 % 重点在于同一STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而单纯型非混合的；
 % 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
+Strip.SID
 SIDorder = getOrderofSID(Strip.SID); %SID一定是从1-n的过程
 if ~issorted(SIDorder), error('SID未按由小到大排序，请检查'); end
 if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end

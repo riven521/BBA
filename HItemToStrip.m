@@ -113,24 +113,6 @@ else
     error('不能使用structfun');
 end
 
-%% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
-nbLU = size(LU.LWH,2);
-LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
-for iLU=1:nbLU
-    theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
-    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
-
-end
-
-LU.DOC=[LU.DOC; LU.LU_Strip];
-nStrip = size(Strip.LW,2);
-for iStrip=1:nStrip
-    tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
-    Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
-    Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
-    Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
-end
-    
                     % 获取Item_Strip : 每个Item在哪个Strip内  以及顺序
                     % 获取CoordItemStrip : 每个Item在Strip的坐标
                     %     Item.Item_Strip(:,Item.itemorder) = sItem.Item_Strip;
@@ -352,6 +334,9 @@ end
     end
 end
 
+%% 局部函数 %%
+
+%% 函数1: getITEMorder
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
 
@@ -389,6 +374,7 @@ tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SI
 if ~isrow(order), order=order'; end
 end
 
+%% 函数2: getThisLevel
 function [thisLevel,iLevel] = getThisLevel( iItem, iLevel, sItem,  Strip, p)
 % 不同whichStripH下,获得共同的thisLevel
 if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit

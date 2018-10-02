@@ -2,7 +2,7 @@
 % 1 Strip.isMixed % 1：混合层； 0：单纯层
 
 %% 函数
-function   [Bin] = cpuBin(Bin,Item,Veh)
+function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
 %% 初始化
     sz = size(Bin.Weight);
     Bin.Binarea = ones(sz)*-1; 
@@ -10,12 +10,29 @@ function   [Bin] = cpuBin(Bin,Item,Veh)
     Bin.Itemloadingrate =  ones(sz)*-1; 
     Bin.ItemloadingrateLimit =  ones(sz)*-1; 
     
-%% 0: 计算bin装载率
+
+%% 0: 计算LU_Bin and BIN的PID,LID,SID
+% 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
+% % % nbLU = size(LU.LWH,2);
+% % % LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
+% % % for iLU=1:nbLU
+% % %     theStrip = LU.LU_Strip(1,iLU); %iLU属于第几个Item
+% % %     LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
+% % % end
+
+LU.DOC=[LU.DOC; LU.LU_Bin];
+nBin = size(Bin.LW,2);
+for iBin=1:nBin
+    tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
+    Bin.PID2(:,iBin) = num2cell(unique(tmp(1,:))',1);
+    Bin.LID2(:,iBin) = num2cell(unique(tmp(2,:))',1);
+    Bin.SID2(:,iBin) = num2cell(unique(tmp(3,:))',1);
+end
+    
+%% 1: 计算bin装载率
 % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
 % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
 Bin = computeLoadingRate2DBin(Bin,Item,Veh); 
-
-%% 1:
 
 end
 

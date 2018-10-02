@@ -34,7 +34,7 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
         
         
         % 平铺要求 1:单个strip至少有多个 2: 不能是混合的 3: Item的层数要均匀,相差不能>=2
-        if Strip.isSingleItem(thisStrip) ~= 1 && Strip.isMixed(thisStrip) ~= 1
+%         if Strip.isSingleItem(thisStrip) ~= 1 && Strip.isMixed(thisStrip) ~= 1
 % %             flagItem = Item.Item_Strip(1,:) == thisStrip;
 % %             idxItem = find(flagItem)
 % %             Item.Layer(flagItem)
@@ -50,7 +50,7 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
 % %                 for i=1:sum(flagItem)
 % %                     
 % %                 end
-            end
+%             end
 %             [~,y] = find(Item.Item_Strip(1,:) == thisStrip); %y是Item索引号,当前strip内
 %             for i=1:length(y) % 每个Item的循环
 %                 
@@ -71,7 +71,9 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
         % 平铺要求 1:单个strip只有多个, 后面的可以往前平铺
         
         
-        if ~isscalar(thisStrip), error('意外错误');  end
+        if ~isscalar(thisStrip), 
+            error('意外错误'); 
+        end
         nbItem=numel(find(Item.Item_Strip(1,:)==thisStrip));
         % 循环strip每个item,  从第一个顺序开始逐步获取ITEM在BIN内的坐标, 依据ITEM_STRIP的顺序
         for iItem=1:nbItem %同一strip内 循环取值iItem

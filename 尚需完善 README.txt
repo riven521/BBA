@@ -185,6 +185,19 @@ V1001-3:
 [~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 
 V1002-1:
+1 增加plot3dstrip:在strip阶段进行作图;以Item为基础
+
+V1002-2:
+1 修正Bin内顺序. 目前Strip顺序固定后,进入不同Bin的结果会变差; 准备修改为每次进入新Bin,排除已安排的strip,余下strip重新进bin
+
+V1002-3:
+1 增加量大车头方案2个, 函数名HreStripToBin和HreStripToEachBin
+2 LU.DOC的计算全部移动到cpu***函数中
+3 Main函数:m修改为3
+
+
+修正Bin内顺序. 目前Strip顺序固定后,进入不同Bin的结果会变差; 准备修改为每次进入新Bin,排除已安排的strip,余下strip重新进bin
+
 1 甩尾功能完善 + 测试
 
 

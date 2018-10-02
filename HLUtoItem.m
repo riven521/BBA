@@ -153,26 +153,6 @@ else
 end
 
 
-
-
-
-
-% 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
-LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
-    LU.LU_Item;];
-nItem = size(Item.LWH,2);
-for iItem=1:nItem
-    tmp = LU.DOC([1,2,3], LU.DOC(6,:) == iItem);
-    Item.PID(:,iItem) = num2cell(unique(tmp(1,:))',1); %unique(tmp(1,:))';
-    Item.LID(:,iItem) = num2cell(unique(tmp(2,:))',1);
-    Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
-end
-
-
-
-
-
-
 % 额外变量 ItemID
 % ItemID = getITEMIDArray(Item);
 ItemID = [];
