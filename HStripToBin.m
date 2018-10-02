@@ -196,11 +196,9 @@ end
 
 end
 
+%% 局部函数
 
-    function order = getStriporder(Strip)
-%         tmpLWStrip = Strip.LW(1:2,:);
-%         [~,order] = sort(tmpLWStrip(2,:),'descend');  %对strip进行排序,只需要它的顺序ord;按第nDim=2行排序（长/高度)
-       
+function order = getStriporder(Strip)
 %对SID排序: SID按给定顺序排序,序号小的在前面; 
 % 重点在于同一STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而单纯型非混合的；
 % 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
@@ -210,21 +208,19 @@ if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
 
 %对LID排序: 相邻摆放的重要原则 555555555555555555555555 
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
-% S = [Strip.SID; Strip.LID; Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
+IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,...
+                                        Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
 
-% 555纠错语句：同一SID下,不允许有重复的LID
+% 555 纠错语句：同一SID下,不允许有重复的LID
 s=[SIDorder;IDorder];
 for i=min(SIDorder):max(SIDorder)
     si = s(2,s(1,:)==i);
-    if numel(unique(si)) ~= numel(si)
-%         error('eeeee');
-    end
+    if numel(unique(si)) ~= numel(si),     error('同一SID下, 有重复的LID');   end
 end
 
-tmpSort = [SIDorder; IDorder];     % Strip.LW(1:2,:); Strip.loadingrateLimit;Strip.loadingrate];
-[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'}); %[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
-
+tmpSort = [SIDorder; IDorder];
+[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+if ~isrow(order), order=order'; end
 
 % LIDorder = getOrderofLID([Strip.SID;Strip.LID]); 
 % Strip.LID;
@@ -247,9 +243,7 @@ tmpSort = [SIDorder; IDorder];     % Strip.LW(1:2,:); Strip.loadingrateLimit;Str
 %         [~,order] = sortrows(tmpLWH',[3 1 ],{'descend','descend'}); %按高度,ID(相同高度时)递减排序
 %         tmpLWH = [tmpLWHItem; min(tmpLWHItem(1:2,:))]; %额外增加最短边到第三行形成临时变量tmpLWH
 %         [~,order] = sortrows(tmpLWH',[3 2 1],{'descend','descend','descend'}); %way1 按最短边,高度,宽度递减排序
-      
-        if ~isrow(order), order=order'; end
-    end
+end
 
     function [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p)
     if p.whichBinH == 1 % 1 bestfit

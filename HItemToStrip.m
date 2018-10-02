@@ -92,15 +92,16 @@ while 1
 
     % 依据不同规则找到能放入当前item的strips/levels中的一个    
     [thisLevel,iLevel] = getThisLevel(iItem,iLevel,sItem, Strip, p);     %iLevel会在次函数内不断递增，永远指示当前最新的level
-                
+    
     insertItemToStrip(thisLevel,iItem);
-        
     %     plot2DStrip(); %迭代画图    
     iItem = iItem + 1;
 end
-
-%    plot2DStrip();  hold off;%可能有问题: 一次性画图
-% 1
+    
+% figure(randi(1000));
+% plot2DStrip();  %可能有问题: 一次性画图
+figure(randi(1000));
+plot3DStrip();
 
 % Item相关：更新的按顺序返回（无更新的不需返回）
 % LU内部更新,sLU依据order变化回来(主要为了sLU中新增的几个变量,要按顺序转回来)
@@ -164,8 +165,7 @@ if isSameCol(Strip)
 else
     error('不能使用structfun');
 end
-                       
-
+                 
 
 %% 测试script
     % 输出主要结果:获得每个level包含的 
@@ -287,6 +287,26 @@ end
             fprintf('\n');
         end
     end
+    
+    % sItem进行三维作图
+    function plot3DStrip()
+        nIDType = unique(LU.ID);
+        nColors = hsv(length(nIDType)); %不同类型Item的LU赋予不同颜色
+        
+        yxz = sItem.LWH;
+        coord = sItem.CoordItemStrip;   coord(3,:) = 0;
+        
+        for i=1:numel(sItem.Weight)
+            j=sItem.LID(i);
+            LUColor = 0.8*nColors(nIDType==j{1}, : );
+            plotcube(yxz(:,i)',coord(:,i)',0.7,LUColor);
+            
+            % Set the lable and the font size
+            axis equal;         grid on;        view(60,40);
+            xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+            xlim([0 Veh.LWH(1,1)]);         zlim([0 Veh.LWH(3,1)]);
+        end
+    end
 
     function plot2DStrip()
         %% 初始化
@@ -357,6 +377,7 @@ tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SI
     % [~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
 % 目前顺序 : 1: SID ; 2: isNonMixed; 3: Longth/Height; 4:Width; 5: LID; 6: Height
 [~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
+% [~,order] = sortrows(tmpItem',[1,6, 2, 4, 3, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 
 % *********** 不考虑isNonMixed
 % % tmpItem = [SIDorder; LIDorder; Item.LWH; ];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];

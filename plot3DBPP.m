@@ -76,7 +76,7 @@ for ibin=1:nBin
         plotcube(yxz(:,idx)',coord(:,idx)',0.7,LUColor);
         
         % Set the lable and the font size
-        axis equal;         grid on;        view(130,30);
+        axis equal;         grid on;        view(60,40);
         xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         xlim([0 d.Veh.LWH(1,1)]);         ylim([0 d.Veh.LWH(2,1)]);       zlim([0 d.Veh.LWH(3,1)]);        
     end

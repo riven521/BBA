@@ -184,7 +184,7 @@ V1001-3:
 % 目前顺序 : 1: SID ; 2: isNonMixed; 3: Longth/Height; 4:Width; 5: LID; 6: Height
 [~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 
-
+V1002-1:
 1 甩尾功能完善 + 测试
 
 
@@ -193,15 +193,8 @@ TODO:
 2 甩尾后展示顺序功能
 3 最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） - 可作为选项之一
 4 实现指定位置摆放
-5 修订莫名BUG ncol2错误; 内存溢出错误
-
-[d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); 
-[d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);
- d = computeLoadingRateStrip(d);
- [d.Strip,d.Bin]= HStripToBin(d.Strip,d.Veh,d.LU,p);
-  [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
-  d = computeLoadingRate2DBin(d);
-
+5 修订莫名BUG ncol2错误; DONE
+6 内存溢出错误
 
 TODO:
 0 plot strip时更新LW和Coord，确保含margin的显示正确 DONE 
