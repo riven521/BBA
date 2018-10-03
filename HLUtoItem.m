@@ -42,7 +42,7 @@ hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh 
     Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为-1)
     Item.Rotaed = ones(sz)*-1;
     
-    Item.isFull1 = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
+    Item.HeightL = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
 
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
@@ -66,43 +66,34 @@ end
     % isflagHeight : 是否ITEM高度满足
     % isNewItem2 ：是否ITEM属于新
     % isSameID2 ： 是否ITEM内的ID相同
+    % isflagLayer ： 是否ITEM高度层数满足
     
         % 同样SID/UID 同样LUID Item高度满足 未考虑Weight等
-        isflagHeight =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
-        % 1 初步判断是否满层标记
-        if hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU)*2
-            Item.isFull1(1,iItem) = 0; % 如高度间隙 > 2个LU的高度
-        else
-            Item.isFull1(1,iItem) = 1;
-        end
-% %              sum(flagLUinItem) < sLU.maxLayer(iLU)
+         isflagHeight =hVeh - Item.LWH(3,iItem) >= sLU.LWH(3,iLU); %判断是否current's item剩余宽度 >= 当前iLU高度
+        
         flagLUinItem = sLU.LU_Item(1,:) == iItem;
         if ~any(flagLUinItem) %如果本iItem内不存在任意LU,即空Item
             isNewItem2 = 1;
         else
             isNewItem2 = 0;
-            if ~isscalar(unique(sLU.ID(flagLUinItem))),    error('超预期错误');     end            
+            % 1 计算isSameID2
+            if ~isscalar(unique(sLU.ID(flagLUinItem))),    error('Item内LUID不同,超预期错误');     end            
             isSameID2 = unique(sLU.ID(flagLUinItem)) ==  sLU.ID(iLU);  %改用V2版本:判断iLU与Item内LU是否属于同一个ID
+            % 2 计算isflagLayer
+            isflagLayer =  Item.HeightL(iItem) <  sLU.HightL(iLU);  % 非空Item内的高度Layer < 此LU规定的最高高度Layer
         end
         
             % 老版本V1
                 %         isSameID = Item.LID(iItem) == sLU.ID(iLU); %判断Item内部ID是否=当前iLU的ID
                 %         isNewItem = Item.LWH(3,iItem) == 0; % 判断是否 new Item 高度==0
         
-       % 如果是新TIEM, 一定可放；否则：如果高度满足 且 与本ITEM内的ID相同，也可放;
+       % 如果是新TIEM, 一定可放；否则：如果高度满足 且最高层数允许 且 与本ITEM内的ID相同，也可放;
         if isNewItem2
                 thisItem = iItem;
         else
-            if isflagHeight && isSameID2 %如果高度允许 且LU ID相同 %TODO 后期增加要求重量低于本ITEM内重量
+            if isflagHeight && isflagLayer && isSameID2 %如果高度允许 且最高层数允许 且LU ID相同
                  thisItem = iItem;
             else
-               % 2 深入判断是否满层标记
-                if isflagHeight && ~isSameID2 %如果高度允许，但LU ID不同, 表明该ITEM是非满层
-                    Item.isFull1(1,iItem) = 0;  % 更新是否满层标记
-                end
-                if ~isflagHeight && isSameID2 %如果高度不允许，但LU ID相同, 表明该ITEM是满层
-                    Item.isFull1(1,iItem) = 1;  % 更新是否满层标记
-                end
                 iItem = iItem + 1;
                 [thisItem,iItem] = getThisItem(iItem);
             end
@@ -128,6 +119,9 @@ end
 
         Item.isRota(1,thisItem) = sLU.isRota(1,iLU);  %更新ID可旋转类型
         Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
+        
+        flagLUinItem = sLU.LU_Item(1,:) == thisItem;
+        Item.HeightL(thisItem) = sum(flagLUinItem); %更新Item已安置层数
         
 %         Item.LID(1,thisItem) = sLU.ID(1,iLU); %更新ID类型        
 %         Item.SID(1,thisItem) = sLU.SID(1,iLU);   % Item.UID(1,thisItem) = sLU.UID(1,iLU);

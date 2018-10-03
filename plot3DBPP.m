@@ -10,16 +10,25 @@ for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
 % 3: 按照Strip内Lu isWidthFull区分颜色
 % 23: 按照Strip内Lu isWidthFull和isHeightFull区分颜色
 % 4: 按照Strip内LU是否甩尾区分颜色
-colorType = 1;  
+colorType = 1;
 
 if colorType == 1
  nIDType = unique(d.LU.ID);
 elseif colorType == 2
+% 依据Item的isHeightFull判断
+%     d.LU.isHeightFull = ones(size(d.LU.ID))*1;
+%     nIDType = unique(d.Item.isHeightFull);
+%     f = find(d.Item.isHeightFull == 0);    
+%     for i=1:numel(f)
+%         f2 = d.LU.LU_Item(1,:) == f(i);
+%         d.LU.isHeightFull(f2) = 0;
+%     end
+% 依据Strip的isHeightFull判断
     d.LU.isHeightFull = ones(size(d.LU.ID))*1;
-    nIDType = unique(d.Item.isHeightFull);
-    f = find(d.Item.isHeightFull == 0);    
+    nIDType = unique(d.Strip.isHeightFull);
+    f = find(d.Strip.isHeightFull == 0);    
     for i=1:numel(f)
-        f2 = d.LU.LU_Item(1,:) == f(i);
+        f2 = d.LU.LU_Strip(1,:) == f(i);
         d.LU.isHeightFull(f2) = 0;
     end
 elseif colorType == 3

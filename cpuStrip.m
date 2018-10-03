@@ -118,16 +118,45 @@ end
 
 %% 函数1: 判断STRIP是否包含非HeightFull的Item
 function Strip = isFullStrip(Strip,Item)
-    % 循环判断Strip是否full
-    uniItem = unique(Item.Item_Strip(1,:));
+    % 1 循环判断Strip是否包含Item为full的,如包含,则Strip为full
+    uniStrip = unique(Item.Item_Strip(1,:));
     for i=1:length(Strip.isHeightFull)
 %          if all(Item.isHeightFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
-         if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniItem(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+         if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
              Strip.isHeightFull(i) = 1;
          else
              Strip.isHeightFull(i) = 0;
          end
     end
+    
+    % 2 循环判断Strip内部Item之间的最大差值, 是否<= 最小的对角线或一共绝对值, 如是,均为Full; 
+    for i=1:length(Strip.isHeightFull)
+        fItem = Item.Item_Strip(1,:) == uniStrip(i);        
+        diagItem = sqrt(Item.LWH(1,fItem).^2 + Item.LWH(2,fItem).^2);
+        % 高度间隙
+        maxHeightDiff = max(abs(diff(Item.LWH(3,fItem))));
+        
+        % 对比1: 最小的Item对角线
+        minDiagItem = min(diagItem);
+        % 对比2: 最高的Item的1/3
+        oneThirdsHeightItem = max(Item.LWH(3,fItem))*1/3
+        % 对比3: 绝对值
+        absHeight = 300;
+        
+        % 对比2: 最大差值, 是否<= 1/3最高Item
+        if ~isempty(maxHeightDiff)
+            if maxHeightDiff <= oneThirdsHeightItem 
+                if Strip.isHeightFull(i) ==0
+                     Strip.isHeightFull(i) = 1;
+                end
+            else
+                if Strip.isHeightFull(i) ==1
+                     Strip.isHeightFull(i) = 0;
+                end            
+            end
+        end
+        
+    end   
 end
 
 %% 函数2: 判断STRIP是否包含非WidthFull的Item

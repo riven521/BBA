@@ -196,6 +196,12 @@ V1002-3:
 3 Main函数:m修改为3
 
 V1002-4:
+1 甩尾单独放到函数HStripSW中
+
+V1002-5:
+1 新增:cpuStrip中单独增加Strip.isHeightFull的判断,依据|maxH-minH| >= 最高值的1/3也为full 
+2 
+
 
 修正Bin内顺序. 目前Strip顺序固定后,进入不同Bin的结果会变差; 准备修改为每次进入新Bin,排除已安排的strip,余下strip重新进bin
 

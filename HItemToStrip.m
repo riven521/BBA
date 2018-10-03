@@ -354,14 +354,15 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % *********** 考虑isNonMixed
 tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
         % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
-
 % 增加isNonMixed
     % [~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
     % 增加判定Item先长度,后高度排序. % 会出现nbcol2错误:
     % 1: SID ; 2: isNonMixed; 3: Longth/Height; 4: Height 5:Width; 6: LID; 
     % [~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
-% 目前顺序 : 1: SID ; 2: isNonMixed; 3: Longth/Height; 4:Width; 5: LID; 6: Height
-[~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
+% 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
+% [~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','ascend'});
+[~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});
+
 % [~,order] = sortrows(tmpItem',[1,6, 2, 4, 3, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 
 % *********** 不考虑isNonMixed

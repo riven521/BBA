@@ -101,7 +101,7 @@ else
     m = length(d.Veh.ID);
     
     if ~isfield(d.LU, 'isRota'),  d.LU.isRota = ones(1,n); end %与ID一致
-    if ~isfield(d.LU, 'maxL'),     d.LU.maxL = 3*ones(1,n); end% maximum layer in any vehicle  与ID一致
+    if ~isfield(d.LU, 'maxL'),     d.LU.maxL = ones(3,n); end% maximum layer in any vehicle  与ID一致
     if ~isfield(d.LU, 'yID'),       d.LU.yID = zeros(1,n);  end% palce in any type of vehicle 与ID一致
     if ~isfield(d.LU, 'xID'),     % d.LU.xID = zeros(size(d.LU.ID)); % 与ID一致
     if ~isfield(d.LU, 'margin'),     d.LU.margin = zeros(4,n); end %L R F B (4,n) 与ID一致

@@ -10,6 +10,7 @@ function [d] = RunAlgorithm(d,p)
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %必须做
         
+
         %% 启发式: LU到Item的算法    
         [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
         
@@ -53,7 +54,7 @@ function [d] = RunAlgorithm(d,p)
         % 量大车头方案1: 每个Bin内strip比较量
         % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         
-        % ******* 增加甩尾操作 ***********
+        %% ********** 增加Strip的甩尾优化 ***********
         [d.Strip] = HStripSW(d.Strip);
             %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
                 
@@ -62,8 +63,48 @@ function [d] = RunAlgorithm(d,p)
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);      printstruct(d.Item);
         
         [d.Bin,d.Strip,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
-
-       
+        
+        %% ********** 平铺优化 **********
+% %         if any(d.Strip.isWidthFull)
+% %             fw = d.Strip.isWidthFull == 0;
+% %             fm = d.Strip.isMixed == 0;
+% %             %             fi = find(fw);
+% %             nbbin = numel(d.Bin.Weight);
+% %             %    for i=1:sum(fi)
+% %             for i=1:nbbin
+% %                 f2 = d.Strip.Strip_Bin(1,:) == i;
+% %                 f3 = f2 & fw & fm;   %即在bin i内, 又是isWidthFull的strip            
+% % %                 f2 = d.Strip.Strip_Bin(1,:) == d.Strip.Strip_Bin(1,fi(i)); % 与本fi(i)处在同一bin内的isWidthFull的个数
+% % %                 f3 = f2 & f;                
+% %                 if sum(f3) > 1                    
+% %                     error('与本fi(i)处在同一bin内的isWidthFull的个数>1');
+% %                 end
+% %                 fi3 = find(f3);
+% %                 
+% %                 d.Strip
+% %                 d.Strip.LW
+% %                 
+% %                 % 需要平铺的strip对于的item和lu的logical值
+% %                 fitem =d.Item.Item_Strip(1,:) == fi3;
+% %                 flu =d.LU.LU_Strip(1,:) == fi3;
+% %                 d.LU
+% %                 d.Item
+% %                 1
+% %                 % 修改LU.CoordLUBin的值
+% %                 % 修改LU.LU_Item变化的多个值
+% %                 % 修改Item.LWH的值
+% %                 % 修改Item.isFull1的值,Weight,isHeightFull,isWeightFine,Layer,PID,LID,SID
+% %                 % CoordItemBin, CoordItemStrip, Item_Strip(上下调整会变化)
+% %                 
+% %                 %             d.Strip
+% %                 d.Strip.isMixed
+% %                 d.Strip.isAllPured
+% %                 d.Strip.maxHeight
+% %             end    
+% %         1
+% %         end
+        
+        %% 打印输出
 %     printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh); %可用,暂时注释
         function printOut(Bin,Strip,Item,LU,Veh)
             nBin = size(Bin.LW,2);

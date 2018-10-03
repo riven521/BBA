@@ -71,9 +71,9 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     for iItem=1:length(unique(ItemLID))
         % Item i 对于的LU flag标记
         flagItem = ItemLID(:) == iItem;
-        ItemWidth = unique(Item.LWH(1,flagItem));    
+        ItemWidth = unique(Item.LWH(1,flagItem));     % Item宽度    
         VehWidth = Veh.LWH(1,1);  % 车辆宽度    
-        maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放层数
+        maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放宽度层数
         nb = sum(flagItem);
         if mod(nb,maxWidthLayer) == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
             Item.isNonMixed(flagItem) = 1;

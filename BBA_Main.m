@@ -51,14 +51,21 @@ if nargin ~= 0
 else
     n=12; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    
+
     filename = strcat('GoodIns',num2str(n));
-    printstruct(d.Veh);  %车辆按第一个放置,目前并未按体积从大到小排序; 
+    printstruct(d.Veh);  %车辆按第一个放置,已对其按体积从大到小排序; 
     
 %     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
 printstruct(d);
 
+%% 没有属性的临时增加
+    n = numel(d.LU.Weight);
+    if ~isfield(d.LU, 'maxL'),     d.LU.maxL = ones(3,n); end% maximum layer in three dimension
+    if ~isfield(d.LU, 'HightL'),     d.LU.HightL = ones(1,n); end% maximum layer in three dimension
+    
 %% Initialize Parameter
 nAlg = 1;
 for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
