@@ -59,12 +59,12 @@ else
 %     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
-printstruct(d);
+% printstruct(d);
 
 %% 没有属性的临时增加
     n = numel(d.LU.Weight);
-    if ~isfield(d.LU, 'maxL'),     d.LU.maxL = ones(3,n); end% maximum layer in three dimension
-    if ~isfield(d.LU, 'HightL'),     d.LU.HightL = ones(1,n); end% maximum layer in three dimension
+    if ~isfield(d.LU, 'maxL'),       d.LU.maxL = ones(3,n); end% maximum layer in three dimension
+    if ~isfield(d.LU, 'HightL'),     d.LU.HightL = 10*ones(1,n); end% maximum layer in three dimension
     
 %% Initialize Parameter
 nAlg = 1;

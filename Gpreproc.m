@@ -15,8 +15,8 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息
     if isfield(LU, 'ID'),  LU.ID = idExchange(LU.ID); end
     if isfield(LU, 'PID'),  LU.PID = idExchange(LU.PID); end
-    if isfield(LU, 'PID'),  LU.SID = idExchange(LU.SID); end
-%     if isfield(LU, 'PID'),  LU.UID = idExchange(LU.UID); end
+    if isfield(LU, 'SID'),  LU.SID = idExchange(LU.SID); end
+%     if isfield(LU, 'UID'),  LU.UID = idExchange(LU.UID); end
     
     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
     %     Veh.LWH = Veh.LWH - Veh.buff;  %Veh的buff无用，输入直接给可用内径长宽高
@@ -52,6 +52,13 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
         order = order';
     end
     Veh.order = order;
+    
+    % 5 计算LU在当前车型下的最大长宽高层数 TODO 考虑margin
+    for i=1:length(LU.ID)
+        LU.maxL(1,i) =  floor(Veh.LWH(1,1)/LU.LWH(1,i));
+        LU.maxL(2,i) =  floor(Veh.LWH(2,1)/LU.LWH(2,i));
+        LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));
+    end
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 
