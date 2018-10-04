@@ -31,17 +31,31 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
     Strip.Itemvolume = ones(size(Strip.Weight))*-1; %每个strip包含的Item装载体积
     Strip.loadingrate = ones(size(Strip.Weight))*-1; % 每个strip的装载比率
     Strip.loadingrateLimit = ones(size(Strip.Weight))*-1;     % 每个strip的有限装载比率
-    
-    
 
-%% 0.0 计算LU_Strip, Strip内的PID,LID,SID
+
+%% 0.0 计算LU.LU_Strip, LU.CoordLUStrip, Strip内的PID,LID,SID
 % 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
 nbLU = size(LU.LWH,2);
-LU.LU_Strip = [zeros(1,nbLU);zeros(1,nbLU)];
+LU.LU_Strip = zeros(2,nbLU);
+LU.CoordLUStrip = zeros(3,nbLU);
+
+% 更新LU_Strip
 for iLU=1:nbLU
-    theItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item
-    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,theItem);
+    % 更新LU_Strip第一行
+    iItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item, Item属于第几个Strip,则Lu属于第几个Strip
+    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,iItem);
+    % 更新LU_Strip第二行
+    fiItem = find(Item.Item_Strip(1,:) == Item.Item_Strip(1,iItem) & Item.Item_Strip(2,:) < Item.Item_Strip(2,iItem));
+    nbLUfiItem = sum(ismember(LU.LU_Item(1,:),fiItem));
+    LU.LU_Strip(2,iLU) = nbLUfiItem+LU.LU_Item(2,iLU); % 进入Strip顺序: 同一Strip内先前进入个数nbLUfiItem + 本iLU在Item的顺序
+    % 更新LU.CoordLUStrip
+    LU.CoordLUStrip(1,iLU) = Item.CoordItemStrip(1,iItem);
+    LU.CoordLUStrip(2,iLU) = Item.CoordItemStrip(2,iItem);
+        % fLU: 与iLU同属iItem 且 顺序晚于本iLU; 可能为空, 不影响.
+    fLU = LU.LU_Item(1,:) == iItem & LU.LU_Item(2,:) < LU.LU_Item(2,iLU);
+    LU.CoordLUStrip(3,iLU) = sum(LU.LWH(3,fLU));
 end
+
 
 LU.DOC=[LU.DOC; LU.LU_Strip];
 nStrip = size(Strip.LW,2);

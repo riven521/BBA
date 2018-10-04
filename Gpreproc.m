@@ -46,7 +46,8 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
         
     % 4 Veh从体积大->小   默认顺序
-    [~,order] = sortrows(Veh.volume', [1],{'descend'});    
+    Veh.Volume = prod(Veh.LWH);
+    [~,order] = sortrows(Veh.Volume', [1],{'descend'});    
     Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
     if ~isrow(order),
         order = order';

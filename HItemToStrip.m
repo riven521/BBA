@@ -100,8 +100,8 @@ end
     
 % figure(randi(1000));
 % plot2DStrip();  %可能有问题: 一次性画图
-figure(randi(1000));
-plot3DStrip();
+% figure(randi(1000));
+% plot3DStrip(LU,sItem,Veh,'Item');
 
 % Item相关：更新的按顺序返回（无更新的不需返回）
 % LU内部更新,sLU依据order变化回来(主要为了sLU中新增的几个变量,要按顺序转回来)
@@ -267,26 +267,6 @@ end
             fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %sItem.Rotaed
             fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
             fprintf('\n');
-        end
-    end
-    
-    % sItem进行三维作图
-    function plot3DStrip()
-        nIDType = unique(LU.ID);
-        nColors = hsv(length(nIDType)); %不同类型Item的LU赋予不同颜色
-        
-        yxz = sItem.LWH;
-        coord = sItem.CoordItemStrip;   coord(3,:) = 0;
-        
-        for i=1:numel(sItem.Weight)
-            j=sItem.LID(i);
-            LUColor = 0.8*nColors(nIDType==j{1}, : );
-            plotcube(yxz(:,i)',coord(:,i)',0.7,LUColor);
-            
-            % Set the lable and the font size
-            axis equal;         grid on;        view(60,40);
-            xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-            xlim([0 Veh.LWH(1,1)]);         zlim([0 Veh.LWH(3,1)]);
         end
     end
 

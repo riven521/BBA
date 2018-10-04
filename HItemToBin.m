@@ -13,26 +13,22 @@ nLU= size(LU.LWH,2); %具体使用的LU的数量
 Item.Item_Bin=zeros(2,nItem);
 Item.CoordItemBin=zeros(2,nItem);
 LU.LU_Bin=zeros(2,nLU);
-LU.CoordLUBin=zeros(2,nLU);
-
-% LU.LU_Strip=zeros(2,nLU); %% NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
-
+LU.CoordLUBin=zeros(2,nLU); % LU.LU_Strip=zeros(2,nLU); %% NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
 
 iiStrip = 0;
 % 循环每个bin 5555555555 非常重要的函数 55555555555555
 for iBin=1:max(Strip.Strip_Bin(1,:))
     tmpItemSeq=1;  %每个bin内顺序从1开始
     tmpLUSeq=1;
-
     tmpStrip = []; %计算CoordItemBin长(高)度使用 %       tmpLWStrip = Strip.LW(:,Strip.Strip_Bin(1,:)==iBin); %此bin内剩余宽度和长(高)度
     nbStrip=numel(find(Strip.Strip_Bin(1,:)==iBin));    %nbStrip：该iBin内strip数量    
     % 循环bin内每个strip
     for iStrip=1:nbStrip %从安放的第一个Strip开始逐步放置
         iiStrip = iiStrip+1;
         tmpLUSeqinStrip=1;
-        [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip      
-        
-        
+        [~,thisStrip] = find(Strip.Strip_Bin(1,:)==iBin & Strip.Strip_Bin(2,:)==iStrip ); %此bin内第iStrip个strip        
+
+        %%
         % 平铺要求 1:单个strip至少有多个 2: 不能是混合的 3: Item的层数要均匀,相差不能>=2
 %         if Strip.isSingleItem(thisStrip) ~= 1 && Strip.isMixed(thisStrip) ~= 1
 % %             flagItem = Item.Item_Strip(1,:) == thisStrip;
@@ -70,14 +66,14 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
         
         % 平铺要求 1:单个strip只有多个, 后面的可以往前平铺
         
-        
+ %%       
         if ~isscalar(thisStrip), 
             error('意外错误'); 
         end
         nbItem=numel(find(Item.Item_Strip(1,:)==thisStrip));
         % 循环strip每个item,  从第一个顺序开始逐步获取ITEM在BIN内的坐标, 依据ITEM_STRIP的顺序
         for iItem=1:nbItem %同一strip内 循环取值iItem
-            [~,thisItem] = find(Item.Item_Strip(1,:)==thisStrip & Item.Item_Strip(2,:)==iItem );%此Strip内第iItem个item
+            [~,thisItem] = find(Item.Item_Strip(1,:)==thisStrip & Item.Item_Strip(2,:)==iItem );    %此Strip内第iItem个item
             if ~isscalar(thisItem), error('意外错误');  end
             
             % 更新itemBeBinMatrix 555
@@ -90,24 +86,20 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
             Item.CoordItemBin(2,thisItem) = sum(Strip.LW(2,tmpStrip)); % 555 错误原因2：thisStrip顺序不确定 % 555 LWStripSort错误原因:iStrip每个bin重新取样;LWStripSort是所有的Strip %             Item.CoordItemBin(2,thisItem) = sum(tmpLWStrip(2,1:iStrip-1)); 
             Item.CoordItemBin(3,thisItem) = 0; %Item均从0开始
             
-            
             % 增加对LU的更新
-            tmpLU = []; %计算CoordLUBin高度使用 % tmpLWLU = LU.LWH(:,LU.LU_Item(1,:)==thisItem); %计算
-            nbLU=numel(find(LU.LU_Item(1,:)==thisItem));            
-            
+            tmpLU = [];             %计算CoordLUBin高度使用 % tmpLWLU = LU.LWH(:,LU.LU_Item(1,:)==thisItem); 
+            nbLU=numel(find(LU.LU_Item(1,:)==thisItem));                  
             % 循环item每个LU, 从第一个顺序开始逐步获取LU在BIN内的坐标
-            for iLU=1:nbLU
-                
+            for iLU=1:nbLU                
                 [~,thisLU] = find(LU.LU_Item(1,:)==thisItem & LU.LU_Item(2,:)==iLU);
                 if ~isscalar(thisLU), error('意外错误');  end
                 
-                % 更新LU_Strip % NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
-                %                 LU.LU_Strip(1,thisLU)=iiStrip;
-                %                 LU.LU_Strip(2,thisLU)=tmpLUSeqinStrip;
+                                            % 更新LU_Strip % NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
+                                            %                 LU.LU_Strip(1,thisLU)=iiStrip;
+                                            %                 LU.LU_Strip(2,thisLU)=tmpLUSeqinStrip;
 
                 tmpLUSeqinStrip=tmpLUSeqinStrip+1;
-                % 更新LURotaed 555
-%                 LURotaed(1,thisLU)=Item.Rotaed(1,thisItem);
+                                            % 更新LURotaed 555  % LURotaed(1,thisLU)=Item.Rotaed(1,thisItem);
                 % 更新LU_Bin 555
                 LU.LU_Bin(1,thisLU)=iBin;
                 LU.LU_Bin(2,thisLU)=tmpLUSeq;

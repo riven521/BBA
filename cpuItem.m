@@ -12,7 +12,6 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 
     Item.isHeightFull = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
-    Item.Layer = ones(sz)*-1;    %Item的放入的最大层数
     Item.isNonMixed = ones(sz)*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
 
     %% SECTION 0 计算ITEM的PID,LID,SID
@@ -43,14 +42,8 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         if diagItem >= hMargin,  Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
         if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
     end
-    
-    %% SECTION 2 计算ITEM的Layer
-    % ****************** Iten内堆垛的层数计算 ************ 开放
-    for iItem=1:length(Item.Layer)
-        Item.Layer(iItem) = sum(LU.LU_Item(1, :) == iItem);   
-    end
-    
-    %% SECTION 3 计算ITEM的isWeightFine并进行修复
+       
+    %% SECTION 2 计算ITEM的isWeightFine并进行修复
     % ****************** 上轻下重的判断+修复 ************ 开放
     % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
     Item = isWeightUpDown(Item,LU);
@@ -64,7 +57,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     Item = isWeightUpDown(Item,LU);
     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
-    %% SECTION 4 计算ITEM的isNonMixed是否为不需要混拼计算
+    %% SECTION 3 计算ITEM的isNonMixed是否为不需要混拼计算
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
     ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式

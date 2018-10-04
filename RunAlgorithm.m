@@ -2,7 +2,7 @@ function [d] = RunAlgorithm(d,p)
         
         %% 预处理:检验Input输入数据
         d = GcheckInput(d); %可以不做 
-        
+        printstruct(d,'sortfields',1,'PRINTCONTENTS',0)
                 %         pgon = getPolyshape(d.LU.LWH);    maxX = sum(d.LU.LWH(1,:))+10;    maxY = max(max(d.LU.LWH'))+10;  maxV = max(maxX,maxY);
                 %                    plot(pgon);        axis equal;   axis ([0 maxX 0 maxY]);   
                 %                    plot3Dshape(d.LU.LWH);
@@ -12,17 +12,19 @@ function [d] = RunAlgorithm(d,p)
         
 
         %% 启发式: LU到Item的算法    
-        [d.LU,d.Item,d.ItemID] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
-        
-        [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);
+        [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh); %Item将按ID序号排序（但下一操作将变化顺序）
 
+        [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);
+        printstruct(d,'sortfields',1,'PRINTCONTENTS',0)
                         %  pgon = getPolyshape(d.Item.LWH);    % figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
 %         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式Item到Strip的算法
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
-        
+
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
+        
+%         figure(randi(1000));        plot3DStrip(d.LU,d.Item,d.Veh,'LU');
 
                 %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
 %         d = modifyStripWithOneItem(d);
@@ -47,7 +49,7 @@ function [d] = RunAlgorithm(d,p)
 
         %% 启发式：Strip到Bin的算法
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);
-       
+
         % 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
         [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
 
@@ -56,14 +58,22 @@ function [d] = RunAlgorithm(d,p)
         
         %% ********** 增加Strip的甩尾优化 ***********
         [d.Strip] = HStripSW(d.Strip);
+        d.Strip.Strip_Bin
+%         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
             %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
                 
         %% Item到bin的信息获取:
        % 甩尾必须在计算LU在Bin内的系数前进行
+        printstruct(d.Item,'sortfields',1,'PRINTCONTENTS',0)  
+        
+        % 计算LU在Bin内坐标and顺序
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);      printstruct(d.Item);
         
-        [d.Bin,d.Strip,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
         
+        [d.Bin,d.LU] = cpuBin(d.Bin,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
+        
+%         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
+%         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  
         %% ********** 平铺优化 **********
 % %         if any(d.Strip.isWidthFull)
 % %             fw = d.Strip.isWidthFull == 0;
@@ -106,51 +116,51 @@ function [d] = RunAlgorithm(d,p)
         
         %% 打印输出
 %     printOut(d.Bin,d.Strip,d.Item,d.LU,d.Veh); %可用,暂时注释
-        function printOut(Bin,Strip,Item,LU,Veh)
-            nBin = size(Bin.LW,2);
-            for iBin = 1: nBin
-                [~,ibin] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
-                idxSeq = Item.Item_Bin(2,ibin); %本iBin内item放入顺序Seq
-                fprintf('bin 的宽+长+高为: ' );
-                fprintf(' %d  ',Veh.LWH);
-                fprintf('\n');
-                fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
-                fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
-                fprintf('\n');
-
-                fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);
-                fprintf('%d ',ibin);fprintf('\n');
-                fprintf('{%d} ',idxSeq);fprintf('\n');
-                fprintf(' (%d %d %d) ', Item.LWH(1:3,ibin));fprintf('\n');
-                fprintf(' [%d]     ', Item.Rotaed(:,ibin));fprintf('\n');
-                fprintf(' {%d %d %d} ', Item.CoordItemBin(:,ibin));fprintf('\n');
-                fprintf('\n');
-
-                [~,idxLU] = find(LU.LU_Bin(1,:)==iBin); %本iBin下的item索引号
-                fprintf('bin %d 包含 original LU 索引号{顺序}[item序号](长宽)[旋转标志]{坐标}为  \n  ',iBin);
-                idxLUSeq = LU.LU_Bin(2,idxLU); %本iBin内item放入顺序Seq
-                idxLUItem = LU.LU_Item(1,idxLU);
-                fprintf('%d ',idxLU);fprintf('\n');
-                fprintf('{%d} ',idxLUSeq);fprintf('\n');
-                fprintf('[%d] ',idxLUItem);fprintf('\n');
-                fprintf(' (%d %d %d) ', LU.LWH(1:3,idxLU));fprintf('\n');
-                fprintf(' [%d]     ', LU.Rotaed(:,idxLU));fprintf('\n');
-                fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU));fprintf('\n');
-                fprintf('\n');
-
-                % 按安放顺序展示
-                % %     [~,x]=sort(LU.LU_Bin(2,idxLU));
-                % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
-                % %     idxLUItem = idxLUItem(x);
-                % %     fprintf('%d ',idxLU);fprintf('\n');
-                % %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
-                % %     fprintf('[%d] ',idxLUItem);fprintf('\n');
-                % %     fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU(x)));fprintf('\n');
-                % %     fprintf(' [%d]     ', LU.LURotaFlag(:,idxLU(x)));fprintf('\n');
-                % %     fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU(x)));fprintf('\n');
-                % %     fprintf('\n');
-            end
-        end
+% %         function printOut(Bin,Strip,Item,LU,Veh)
+% %             nBin = size(Bin.LW,2);
+% %             for iBin = 1: nBin
+% %                 [~,ibin] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
+% %                 idxSeq = Item.Item_Bin(2,ibin); %本iBin内item放入顺序Seq
+% %                 fprintf('bin 的宽+长+高为: ' );
+% %                 fprintf(' %d  ',Veh.LWH);
+% %                 fprintf('\n');
+% %                 fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
+% %                 fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
+% %                 fprintf('\n');
+% % 
+% %                 fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);
+% %                 fprintf('%d ',ibin);fprintf('\n');
+% %                 fprintf('{%d} ',idxSeq);fprintf('\n');
+% %                 fprintf(' (%d %d %d) ', Item.LWH(1:3,ibin));fprintf('\n');
+% %                 fprintf(' [%d]     ', Item.Rotaed(:,ibin));fprintf('\n');
+% %                 fprintf(' {%d %d %d} ', Item.CoordItemBin(:,ibin));fprintf('\n');
+% %                 fprintf('\n');
+% % 
+% %                 [~,idxLU] = find(LU.LU_Bin(1,:)==iBin); %本iBin下的item索引号
+% %                 fprintf('bin %d 包含 original LU 索引号{顺序}[item序号](长宽)[旋转标志]{坐标}为  \n  ',iBin);
+% %                 idxLUSeq = LU.LU_Bin(2,idxLU); %本iBin内item放入顺序Seq
+% %                 idxLUItem = LU.LU_Item(1,idxLU);
+% %                 fprintf('%d ',idxLU);fprintf('\n');
+% %                 fprintf('{%d} ',idxLUSeq);fprintf('\n');
+% %                 fprintf('[%d] ',idxLUItem);fprintf('\n');
+% %                 fprintf(' (%d %d %d) ', LU.LWH(1:3,idxLU));fprintf('\n');
+% %                 fprintf(' [%d]     ', LU.Rotaed(:,idxLU));fprintf('\n');
+% %                 fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU));fprintf('\n');
+% %                 fprintf('\n');
+% % 
+% %                 % 按安放顺序展示
+% %                 % %     [~,x]=sort(LU.LU_Bin(2,idxLU));
+% %                 % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
+% %                 % %     idxLUItem = idxLUItem(x);
+% %                 % %     fprintf('%d ',idxLU);fprintf('\n');
+% %                 % %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
+% %                 % %     fprintf('[%d] ',idxLUItem);fprintf('\n');
+% %                 % %     fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU(x)));fprintf('\n');
+% %                 % %     fprintf(' [%d]     ', LU.LURotaFlag(:,idxLU(x)));fprintf('\n');
+% %                 % %     fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU(x)));fprintf('\n');
+% %                 % %     fprintf('\n');
+% %             end
+% %         end
  
 end
 

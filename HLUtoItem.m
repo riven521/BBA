@@ -1,4 +1,4 @@
-function [LU,Item,ItemID] = HLUtoItem(LU,Veh)
+function [LU,Item] = HLUtoItem(LU,Veh)
 % 重要函数:LU堆垛后形成Item %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  LU: ID LWH Weight （LU: 保持原有顺序）
 % Output --- LU: order LU_Item （LU: 保持原有顺序）(ORDER是进入Item算法的LU顺序)
@@ -42,7 +42,7 @@ hVeh  = Veh.LWH(3,1);  % tmpUniqueBin = unique(Veh.LWH(1:3,:)','rows')'; % hVeh 
     Item.isRota = ones(sz)*-1;    %Item的可旋转类型(初始为-1)
     Item.Rotaed = ones(sz)*-1;
     
-    Item.HeightL = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
+    Item.HLayer = zeros(sz);    %Item的是否高度满层(初始为-1)
 
 Item.LWH = zeros(3,nLU); % Item.LWH(1,:) = wStrip;   %dim1-宽度剩余  % Item.LWH(3,:) = hVeh; % 
 Item.Weight = zeros(1,nLU); %Item的重量
@@ -80,7 +80,7 @@ end
             if ~isscalar(unique(sLU.ID(flagLUinItem))),    error('Item内LUID不同,超预期错误');     end            
             isSameID2 = unique(sLU.ID(flagLUinItem)) ==  sLU.ID(iLU);  %改用V2版本:判断iLU与Item内LU是否属于同一个ID
             % 2 计算isflagLayer
-            isflagLayer =  Item.HeightL(iItem) <  sLU.HightL(iLU);  % 非空Item内的高度Layer < 此LU规定的最高高度Layer
+            isflagLayer =  Item.HLayer(iItem) <  sLU.maxHLayer(iLU);  % 非空Item内的高度Layer < 此LU规定的最高高度Layer
         end
         
             % 老版本V1
@@ -121,7 +121,7 @@ end
         Item.Rotaed(1,thisItem) = sLU.Rotaed(1,iLU);  %更新ID旋转标记
         
         flagLUinItem = sLU.LU_Item(1,:) == thisItem;
-        Item.HeightL(thisItem) = sum(flagLUinItem); %更新Item已安置层数
+        Item.HLayer(thisItem) = sum(flagLUinItem); %更新Item已安置层数
         
 %         Item.LID(1,thisItem) = sLU.ID(1,iLU); %更新ID类型        
 %         Item.SID(1,thisItem) = sLU.SID(1,iLU);   % Item.UID(1,thisItem) = sLU.UID(1,iLU);
@@ -145,11 +145,6 @@ if isSameCol(Item)
 else
     error('不能使用structfun');
 end
-
-
-% 额外变量 ItemID
-% ItemID = getITEMIDArray(Item);
-ItemID = [];
 
 %% 测试script TO BE FIX
 % 输出主要结果:获得每个item包含的 原始 LU序号

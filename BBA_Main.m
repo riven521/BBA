@@ -47,9 +47,9 @@ if nargin ~= 0
             'LUMARGIN',varargin{4},...
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6},...
-            'LUID2',varargin{7});
+            'LULID',varargin{7});
 else
-    n=12; m=2;
+    n=55; m=2;
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
     
 
@@ -63,8 +63,9 @@ end
 
 %% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó
     n = numel(d.LU.Weight);
-    if ~isfield(d.LU, 'maxL'),       d.LU.maxL = ones(3,n); end% maximum layer in three dimension
-    if ~isfield(d.LU, 'HightL'),     d.LU.HightL = 10*ones(1,n); end% maximum layer in three dimension
+%     if ~isfield(d.LU, 'maxL'),       d.LU.maxL = ones(3,n); end% maximum layer in three dimension
+    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = 10*ones(1,n); end% maximum layer in three dimension
+
     
 %% Initialize Parameter
 nAlg = 1;
@@ -101,9 +102,11 @@ for iAlg = 1:nAlg
     d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
     % 1.5 ĞŞ¶©dÄÚµÄLUºÍVehµÄLWHÊı¾İ % ·µ»ØÖ®Ç°¼ÆËã²»º¬marginµÄLUºÍItemµÄLWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-    dA(iAlg)=d;      printstruct(d);
+    dA(iAlg)=d;      
+         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
+    printstruct(d.Veh);
 
-    % 2 »ñÈ¡d1ºÍflaggetSmallVeh : ÔËĞĞ×îºóÒ»³µÊı¾İËã·¨
+    % 2 »ñÈ¡d1ºÍflaggetSmallVeh : ÔËĞĞ×îºóÒ»³µÊı¾İËã·¨,²»¸Ä±äd
     allidxVehType = length(unique(d.Veh.ID)); %´ËËãÀı³µĞÍÊıÁ¿(Î´ÅÅ³ıÏàÍ¬³µĞÍ)
     flaggetSmallVeh = 0;
     d1 = getdinLastVeh(d);   
@@ -126,6 +129,7 @@ for iAlg = 1:nAlg
         allidxVehType= allidxVehType-1;
         d1.Veh = [];
     end
+    
 end
 
 %% Simulate - CHOOSE BEST ONE
@@ -146,7 +150,7 @@ bestOne = 1;
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %ÈçÓĞ¶à¸ö,·µ»ØµÚÒ»¸ö×îÓÅ½â
 
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
-if flaggetSmallVeh %ÈçÓĞµ±Ìæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
+if flaggetSmallVeh %ÈçÓĞµ±³µĞÍÌæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% ½øĞĞ·µ»Ø´¦Àí
     %ÓÉÓÚorder¸Ä±äÁË,´Ë´¦½ö¶Ô×îºóÒ»¸öbinµÄË÷Òı½øĞĞĞŞ¸Ä
     lastVehIdx = max(output_LU_Seq(2,:));
@@ -226,7 +230,7 @@ output_LU_LWH = daMax.LU.LWH; %output_LU_LWH£ºDOUBLE LUµÄ³¤¿í¸ß£¨Ğı×ªºó£ºÊµ¼ÊÖµ£
 % ²ÎÊı3 - ×îĞ¡Á£¶Èµ¥ÔªLUÕ¹Ê¾µÄ¾ÛºÏ£¨°´PID/ITEM/SID)
 LU_Item=daMax.LU.LU_Item;
 % LID=daMax.LU.ID;
-LID=daMax.LU.ID2;  %LU¶Ñ¶âÓÃLUID, µ«·µ»ØË³ĞòÓÃLUID2
+LID=daMax.LU.LID;  %LU¶Ñ¶âÓÃLUID, µ«·µ»ØË³ĞòÓÃLID
 PID=daMax.LU.PID;
 SID=daMax.LU.SID;
 hLU=daMax.LU.LWH(3,:);

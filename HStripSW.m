@@ -16,8 +16,8 @@ if any(~Strip.isWidthFull | ~Strip.isHeightFull)
 % 2 如果有满足甩尾的Strip, 要如何排序? loadingrate小的最后进入
    if ~isempty(b)       
        %法1 Sort b by LoadingRate,Height etc.
-       tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
-       [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
+%        tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
+%        [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
        %法2 Sort b by 1 剩余宽度大的后放; 2 剩余高度多的后放入
        tmpM = [Strip.LW(1,b); Strip.maxHeight(b)];
        [~,order] = sortrows(tmpM',[1,2],{'ascend','ascend'});

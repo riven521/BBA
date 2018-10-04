@@ -203,6 +203,13 @@ V1003-1:
 2 新增:增加Lu的HeightL属性,其堆垛高度不能超过给定值
 
 V1003-2:
+1 LU.maxL: 在当前车型下最大长宽高层次计算 Gpreproc函数
+
+V1003-1:
+1 清理d数据中无用的变量和属性, 规范化命名
+2 cpuStrip内增加LU.LU_Strip, LU.CoordLUStrip的计算;
+3 增加对Strip的Item或LU作图 plot3DStrip
+
 1 增加平铺功能 ???
 
 
