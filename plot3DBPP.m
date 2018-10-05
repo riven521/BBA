@@ -4,7 +4,7 @@ function [] = plot3DBPP(d,par)
 fields = fieldnames(par);
 aField = [];
 for idx = 1:length(fields), aField = [aField par.(fields{idx})];   end
-
+   
 % 1: 按照LID区分颜色
 % 2: 按照Item内Lu isHeightFull区分颜色
 % 3: 按照Strip内Lu isWidthFull区分颜色
@@ -68,8 +68,19 @@ end
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 nBin = max(d.LU.LU_Bin(1,:)); %bin的个数;
 
+figure('name',num2str([nBin, aField]));
+subplot(2,ceil((nBin+1)/2),1);
+plot3DStrip(d.LU,d.Item,d.Veh,'LU');
+
 for ibin=1:nBin
-    figure('name',num2str([ibin, aField]));
+% 网上找的几个画图的函数
+%     fig
+%     figure('name',num2str([ibin, aField]));
+%     position_figure(2, nBin/3, ibin)
+%     figurepos(3, nBin/3, ibin, num2str([ibin, aField]))
+
+    subplot(2,ceil((nBin+1)/2),ibin+1);
+    
     f = d.LU.LU_Bin(1,:)==ibin;
     yxz = d.LU.LWH(:,f);
     coord = d.LU.CoordLUBin(:,f);
@@ -96,10 +107,12 @@ for ibin=1:nBin
         plotcube(yxz(:,idx)',coord(:,idx)',0.7,LUColor);
         
         % Set the lable and the font size
-        axis equal;         grid on;        view(60,40);
+        axis equal;         grid on;        view(111,33); %view(60,40);
         xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         xlim([0 d.Veh.LWH(1,1)]);         ylim([0 d.Veh.LWH(2,1)]);       zlim([0 d.Veh.LWH(3,1)]);        
     end
 end
+
+
 
 end

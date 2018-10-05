@@ -56,7 +56,7 @@ for idx = 1:length(fields)
     % 判断1: 必须是数值型
     if ~ismatrix(aField) || ~isnumeric(aField), error('托盘数据存在错误(非数值型矩阵)'); end
     % 判断2: 列数如不是nLU,必须转换    (区分两种情况,对于可能是矩阵类型的LWH和buff和margin分开判断)
-    if isvector(aField) && ~strcmp('LWH',fields{idx}) && ~strcmp('margin',fields{idx}) %&& ~strcmp('buff',fields{idx} ) %如果托盘是向量且不是后面两个值
+    if isvector(aField) && ~strcmp('LWH',fields{idx}) && ~strcmp('margin',fields{idx})%&& ~strcmp('buff',fields{idx} ) %如果托盘是向量且不是后面两个值
         if ~isrow(aField)
             LU.(fields{idx}) = aField';     end
                                             %         if length(aField) ~= nLU %如有对vector才可以用length判断

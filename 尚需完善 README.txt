@@ -205,17 +205,26 @@ V1003-1:
 V1003-2:
 1 LU.maxL: 在当前车型下最大长宽高层次计算 Gpreproc函数
 
-V1003-1:
+V1004-1:
 1 清理d数据中无用的变量和属性, 规范化命名
 2 cpuStrip内增加LU.LU_Strip, LU.CoordLUStrip的计算;
 3 增加对Strip的Item或LU作图 plot3DStrip
+4 对d的数据梳理了一遍
 
-1 增加平铺功能 ???
+V1004-2:
+1 采用返回给BBA的数据画图(3维) DONE
+2 cpuBin内增加Bin是否需要平铺的判断条件 isPing
 
+V1005-1(里程碑):
+1 增加平铺功能 DONE (BUG MAYBE) main函数增加类似车型的平铺函数
+2 cpuStrip修订Strip.isHeightFull判断条件,(过低的Strip也视为非Full)
+3 cpuBin修订:修改Bin.isTileNeed函数 -> 增加即使not full但Item的层数仅为1次case 并不需要Tile
+4 return bba 数据包含平铺
 
 
 TODO:
-1 增加平铺功能
+4 修订数量多的在车头(基于LU数量而非Item数量)
+1 增加平铺功能 DONE
 2 甩尾后展示顺序功能
 3 最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） DONE
 4 实现指定位置摆放

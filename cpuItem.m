@@ -10,7 +10,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     sz = size(Item.isRota);
     hVeh  = Veh.LWH(3,1);  
 
-    Item.isHeightFull = ones(sz)*-1;    %Item的是否高度满层(初始为-1)
+    Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
     Item.isNonMixed = ones(sz)*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
 
@@ -39,7 +39,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         % hMargin: ITEM距离车顶的间隙
         hMargin = hVeh - Item.LWH(3,iItem);
         
-        if diagItem >= hMargin,  Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
+%         if diagItem >= hMargin,  Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
         if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
     end
        

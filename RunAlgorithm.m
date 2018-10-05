@@ -23,8 +23,9 @@ function [d] = RunAlgorithm(d,p)
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
 
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
-        
-%         figure(randi(1000));        plot3DStrip(d.LU,d.Item,d.Veh,'LU');
+
+
+%          figure(randi(1000));          plot3DStrip(d.LU,d.Item,d.Veh,'LU');
 
                 %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
 %         d = modifyStripWithOneItem(d);
@@ -57,7 +58,9 @@ function [d] = RunAlgorithm(d,p)
         % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         
         %% ********** 增加Strip的甩尾优化 ***********
+%         if p.whichsq == 1    end
         [d.Strip] = HStripSW(d.Strip);
+     
         d.Strip.Strip_Bin
 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
             %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
@@ -70,7 +73,7 @@ function [d] = RunAlgorithm(d,p)
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);      printstruct(d.Item);
         
         
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
+        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
         
 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  

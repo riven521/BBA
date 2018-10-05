@@ -21,7 +21,11 @@ function [d] = getRandDa(n,m)
         Veh.LWH(1,i) = randi([2400,2400]); %宽度 randi([2200,2400]);
         Veh.LWH(2,i) = randi([12750,12750]); %长/Height度  randi([5000,6000]);
         Veh.LWH(3,i) = randi([2400,2400]); %高度  randi([2200,2400]); 
-         
+        
+%         Veh.LWH(1,2) = 1800; %宽度 randi([2200,2400]);
+%         Veh.LWH(2,2) = 7050; %长/Height度  randi([5000,6000]);
+%         Veh.LWH(3,2) = 1800;%高度  randi([2200,2400]); 
+
 %         nYID = randi([1,maxSeg]);
 %         nXID = 1;
 %         for j=1:nYID

@@ -1,5 +1,6 @@
 %% GET STRIP 相关属性
 % 5 Strip.nbItem % 整数：冗余值, 具体ITEM的堆垛个数 车头摆放依据 -1：混合strip
+% TODO 增加Strip.nbLU
 
 %% 函数
 function   [Strip] = cpuStripnbItem(Strip,Item,Veh)

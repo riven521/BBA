@@ -134,15 +134,16 @@ end
 function Strip = isFullStrip(Strip,Item)
     % 1 循环判断Strip是否包含Item为full的,如包含,则Strip为full
     uniStrip = unique(Item.Item_Strip(1,:));
-    for i=1:length(Strip.isHeightFull)
-%          if all(Item.isHeightFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
-         if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
-             Strip.isHeightFull(i) = 1;
-         else
-             Strip.isHeightFull(i) = 0;
-         end
-    end
+%     for i=1:length(Strip.isHeightFull)
+%         %          if all(Item.isHeightFull(Item.Item_Strip(1,:) == i)) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+%          if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+%              Strip.isHeightFull(i) = 1;
+%          else
+%              Strip.isHeightFull(i) = 0;
+%          end
+%     end
     
+
     % 2 循环判断Strip内部Item之间的最大差值, 是否<= 最小的对角线或一共绝对值, 如是,均为Full; 
     for i=1:length(Strip.isHeightFull)
         fItem = Item.Item_Strip(1,:) == uniStrip(i);        
@@ -157,20 +158,37 @@ function Strip = isFullStrip(Strip,Item)
         % 对比3: 绝对值
         absHeight = 300;
         
-        % 对比2: 最大差值, 是否<= 1/3最高Item
+        % 对比2: 最大差值, 是否<= 1/3最高Item (Item高度平行, 即使很低,  也认为是满层)
         if ~isempty(maxHeightDiff)
-            if maxHeightDiff <= oneThirdsHeightItem 
-                if Strip.isHeightFull(i) ==0
+            if maxHeightDiff <= oneThirdsHeightItem                 
                      Strip.isHeightFull(i) = 1;
-                end
+                     % 3 增加即使maxHeightDiff很小, 若整体高度低, 也视为非HeightFull
+                     if ~all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull不是均为1,则本STRIP非full
+                         Strip.isHeightFull(i) = 0;        
+                     end
             else
-                if Strip.isHeightFull(i) ==1
-                     Strip.isHeightFull(i) = 0;
-                end            
+                     Strip.isHeightFull(i) = 0;       
+                     % 3 增加即使maxHeightDiff很大, 若整体高度高, 也视为HeightFull
+                     if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+                         Strip.isHeightFull(i) = 1;
+                     end
+            end
+        else
+            if all(Item.isHeightFull(Item.Item_Strip(1,:) == uniStrip(i))) %如果本STRIP对应ITEM的isFull均为1,则本STRIP也为full
+                Strip.isHeightFull(i) = 1;
+            else
+                Strip.isHeightFull(i) = 0;
             end
         end
-        
-    end   
+    end
+    
+    % 防错语句
+    if any(Item.isHeightFull==-1), error('存在Item.isHeightFull未分配!'); end
+    
+                 
+    
+
+ 
 end
 
 %% 函数2: 判断STRIP是否包含非WidthFull的Item

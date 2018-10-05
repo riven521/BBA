@@ -22,7 +22,7 @@
 %% Outputs
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
 %   output_LU_LWH            (3,n)    每个LU的宽长高（旋转后的：实际值）
-%   output_LU_Seq             (6,n)    行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序 。。。
+%   output_LU_Seq             (7,n)    行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序 。。。
 %
 
 %%
@@ -49,7 +49,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=55; m=2;
+    n=35; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
 
@@ -96,24 +96,124 @@ fprintf(1,'\nRunning the simulation...\n');
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
     %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
-
+     pA(iAlg).whichsq=1;
     % 1 获取d: 运行主数据算法
     d = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
     d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+    
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
     dA(iAlg)=d;      
-         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
+    printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
     printstruct(d.Veh);
+    
+%     plotSolution(d,pA(iAlg)); %尽量不用
+    
+    %% 1.6 平铺
+    
+    flagTiled = zeros(1,length(d.Bin.Weight));
+    do2Array(1:length(d.Bin.Weight)) = d;
+    bidx = find(d.Bin.isTileNeed);
+    
+    % 循环: 每个bin分别平铺
+    for i=1:numel(bidx)
+        ibin = bidx(i);
 
-    % 2 获取d1和flaggetSmallVeh : 运行最后一车数据算法,不改变d
+        % 1 最后一个车辆内的长宽高变化
+        d2.Veh = d.Veh;
+        d2.Veh = rmfield(d2.Veh,{'Volume','order'});        
+        % 2 最后若干/一个strip内的LU
+        luidx = d.LU.LU_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
+
+        d2.LU = structfun(@(x) x(:,luidx),d.LU,'UniformOutput',false);
+        d2.LU.LWH([1,2], d2.LU.Rotaed ) = flipud(d2.LU.LWH([1,2], d2.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
+        d2.LU = rmfield(d2.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
+            'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType'});
+        d2.Par = d.Par;
+
+                        % V1 可能导致LU_Strip(1,:) 数据错误
+                                do2.Veh = d.Veh;
+                                do2.LU = structfun(@(x) x(:,luidx),d.LU,'UniformOutput',false);
+                                do2.Bin = structfun(@(x) x(:,ibin),d.Bin,'UniformOutput',false);
+                                stripidx = d.Strip.Strip_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
+                                do2.Strip = structfun(@(x) x(:,stripidx),d.Strip,'UniformOutput',false);    
+                                itemidx = d.Item.Item_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
+                                do2.Item = structfun(@(x) x(:,itemidx),d.Item,'UniformOutput',false);        
+        
+        while do2.Bin.isTileNeed(1) == 1 %直到此do2内的Bin永远只有1个
+
+        % 循环从本ibin内最后一个strip开始平铺
+        nbStrip = numel(do2.Strip.Weight);
+        if unique(do2.Strip.Strip_Bin(2, :)) ~= nbStrip,        error('超预期错误');     end
+        
+        istrip= nbStrip;
+        fi = find(do2.Strip.Strip_Bin(2,:) >= istrip ); % 同bin的strip序号 and 顺序>=istrip
+        u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
+        luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
+        if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+        d2.LU.maxHLayer(luidxPP)
+
+%         while (all(do2.Strip.isHeightFull(fi) == 1) && all(do2.Strip.isWidthFull(fi) == 1))
+% %                  || all(d2.LU.maxHLayer(luidxPP)==1)% 目前仅能对最后一个strip调整, 或增加最后一个Strip内的Lu的maxHLayer全部为1
+%              
+%             istrip = istrip-1;
+%             fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); 
+%             luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
+%             if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+%             if istrip == 1,  error('此bin不存在tileneed,超预期错误');   end
+%             d2.LU.maxHLayer(luidxPP)
+%         end
+        
+        
+        % 部分LU(luidxPP),修改其maxHLayer
+%         u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
+%         luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 *********************
+%         if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+        d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
+        while all(d2.LU.maxHLayer(luidxPP)<1)  
+           istrip = istrip-1;
+           if istrip==0,break;end
+            fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); 
+            luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
+                                    if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+                                    if istrip == 0,  error('此bin不存在tileneed,超预期错误');   end
+            d2.LU.maxHLayer(luidxPP)
+            d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
+        end
+        d2.LU.maxHLayer(d2.LU.maxHLayer<=1) = 1;
+
+        % 3 reRun
+        p = pA(iAlg); p.whichsq=1;
+
+%         plotSolution(do2,pA(iAlg));
+        do2 = RunAlgorithm(d2,p);   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        do2.Bin.isTileNeed
+        do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+%           plotSolution(do2,pA(iAlg));
+
+        [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);
+
+        if max(do2.LU.LU_Bin(1,:)) == 1
+            do2.LU.LU_VehType = ones(size(do2.LU.ID))*d.Veh.order(1); 
+            flagTiled(ibin)=1;
+            do2Array(ibin) = do2;
+            % do2 数据不进入d 仅在return2bba中修改
+        else
+            break;  %1个车辆放不下
+        end
+        end % END OF WHILE
+    end% END OF FOR
+
+     %% 2 获取d1和flaggetSmallVeh : 运行最后一车数据算法,不改变d
     allidxVehType = length(unique(d.Veh.ID)); %此算例车型数量(未排除相同车型)
     flaggetSmallVeh = 0;
     d1 = getdinLastVeh(d);   
-    d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); %对调Lu.LWH的长宽 -< 之前是宽长
+                    %  对调Lu.LWH的长宽 -< 之前是宽长 (已放入getdinLastVeh中)
+                    %     d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); 
     while(allidxVehType>1)
         % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
+        %disp(d1.Veh.LWH)
         d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
 %         plotSolution(d1,pA(iAlg));
         % 2.2 判断该车型是否可用
@@ -150,6 +250,7 @@ bestOne = 1;
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
 
 % ****************** 针对车型选择 获取修订的 output ******************
+if 1
 if flaggetSmallVeh %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% 进行返回处理
     %由于order改变了,此处仅对最后一个bin的索引进行修改
@@ -160,18 +261,34 @@ if flaggetSmallVeh %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH2;
     output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
 end
+end
 % ****************** 针对车型选择 获取修订的 output ******************
 
-if 1 %nargin == 0,
-    dd = daBest(bestOne);
-    dd.Strip.Strip_Bin
-    dd.Strip.isShuaiWei
+% ****************** 针对平铺选择 获取修订的 output ******************
+if 1
+for ibin=1:length(do2Array)
+if flagTiled(ibin) %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
+    [output_CoordLUBin3,output_LU_LWH3,output_LU_Seq3]= getReturnBBA(do2Array(ibin)); %% 进行返回处理
+    %由于order改变了,此处仅对最后一个bin的索引进行修改
+    flaglastLUIdx = output_LU_Seq(2,:)==ibin;
     
-    plotSolution(daBest(bestOne),paBest(bestOne));
-%     if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end
+    output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin3;
+    output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH3;
+    output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq3([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
+end
+end
+end
+% ****************** 针对车型选择 获取修订的 output ******************
+
+
+if 1 %nargin == 0,
+    plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne).Veh);
+    plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
+%        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
 end
 
 fprintf(1,'Simulation done.\n');
+
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % d = rmfield(d, {'Veh', 'LU'});%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
 end %END MAIN
@@ -190,56 +307,51 @@ function lastd = getdinLastVeh(tmpd)
     if isSameCol(tmpd.LU)
         % 获取仅最后一个Bin的输入数据
         lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %仅取最后一辆车内的LU
-        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin'}); 
+        lastd.LU.LWH([1,2], lastd.LU.Rotaed ) = flipud(lastd.LU.LWH([1,2], lastd.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
+        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin','maxL','CoordLUStrip'}); 
         lastd.Par = tmpd.Par;
     else
         error('不能使用structfun');
     end
 end
 
-% 返回参数1，2，3：可以把最小单元LU，逐个顺序展示出来; 为了合并为ITEM或其它展示，有了参数4；
-% 参数4和参数1功能类似, 可以合并
+% 返回参数1，2，3
 function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daMax)
-% 返回输出结果(原始顺序) 输出3个参数
+%% 1 返回输出结果(原始顺序) 输出3个参数
 
 % 参数1 - LU在Bin内的坐标
-% 增加间隙-增加CoordLUBinWithBuff变量
 % V2:  LU margin方式
 output_CoordLUBin = daMax.LU.CoordLUBin;
-% x = [daMax.LU.LU_Bin;daMax.LU.LU_Strip;daMax.LU.CoordLUBin]
-% y=x(:,x(1,:)==3)'
 
-% V1:  LU buff 间隙方式
-% daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
-% output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
+    % V1:  LU buff 间隙方式
+    % daMax.LU.CoordLUBinWithBuff = daMax.LU.CoordLUBin + daMax.LU.buff./2;
+    % output_CoordLUBin=daMax.LU.CoordLUBinWithBuff; %output_CoordLUBin：DOUBLE类型: Lu的xyz值 TTTTTTTTTT
 
 % 参数2 - LU的长宽高(旋转后)
 % LWH已经为减小长宽对应margin后的实际数据变量
 % 以下是V3 - LU margin方式
 output_LU_LWH = daMax.LU.LWH; %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
 
-% 以下是V2
-%  增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
-%  daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
-%  output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
-% 以下是V1
-%         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
-%         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
-
+        % 以下是V2
+        %  增加间隙-修订LWH为减小长宽对应Buffer后的实际数据变量
+        %  daMax.LU.LWHOriRota = daMax.LU.LWH - daMax.LU.buff;
+        %  output_LU_LWH=daMax.LU.LWHOriRota;  %output_LU_LWH：DOUBLE LU的长宽高（旋转后：实际值）
+        % 以下是V1
+        %         daMax.LU.LWHRota = daMax.LU.LWHRota - daMax.LU.BUFF;
+        %         Res3_LWHRota=daMax.LU.LWHRota;  %Res3_LWHRota：DOUBLE LU的长宽高（旋转后）
 
 % 参数3 - 最小粒度单元LU展示的聚合（按PID/ITEM/SID)
 LU_Item=daMax.LU.LU_Item;
-% LID=daMax.LU.ID;
-LID=daMax.LU.LID;  %LU堆垛用LUID, 但返回顺序用LID
+LID=daMax.LU.LID;  %LU堆垛用LUID, 但返回顺序用LID % LID=daMax.LU.ID;
 PID=daMax.LU.PID;
 SID=daMax.LU.SID;
 hLU=daMax.LU.LWH(3,:);
 LU_Bin = daMax.LU.LU_Bin;   %唯一两行的
 LU_VehType=daMax.LU.LU_VehType;
 
-output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin;LU_VehType];
+output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin;LU_VehType]; % 2 1 1 1 1 2 1
 
-% 三个参数的排序后展示及顺序
+%% 2 参数三的排序及展示顺序 (暂未考虑LU_VehType)
 % 排序优先顺序 tmpSeq:
 % 如果需要按LUID先堆垛展示,后零部件展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 LU_ITEM，同一PID
 % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8
@@ -247,23 +359,21 @@ output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin;LU_VehType];
 % 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
 % 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8
 tmpSeq =[7,8,5,3,4,1,2,6];
-
 [~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend'});
 
-% 结果展示顺序 tmpShow:
-% 1 BIN 2 BINSEQ 3 SID A ; 4 LID A; 5 ITEM A; 6 ITEMSEQ A; 7 PID A ; 8 LUHEIGHT D
-%          tmpShow =[7,8,5,3,1,2,4,6];
+% 参数三的行结果展示顺序:
+%  1 LU_VehType 2 LU_Bin(1) 3 LU_Bin(2) 4 SID 5 LID 6 LU_Item(1) 7 PID
 tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号 参数3的行号
+%    tmpShow =[7,8,5,3,1,2,4,6];
+
 
 % FINAL return's results;
+output_LU_LWH =output_LU_LWH(:,order);
+output_LU_Seq =output_LU_Seq(tmpShow,order);
 output_CoordLUBin =output_CoordLUBin(:,order);
 
 % % x = [daMax.LU.LU_Bin(:,order);daMax.LU.LU_Strip(:,order);daMax.LU.CoordLUBin(:,order);output_CoordLUBin]
 % % y=x(:,x(1,:)==3)'
-
-output_LU_LWH =output_LU_LWH(:,order);
-output_LU_Seq =output_LU_Seq(tmpShow,order);
-
 end
 
         
@@ -271,6 +381,7 @@ function plotSolution(d,par)
 %% 画图
 % V3 margin 提前到RunAlgorithm运行后就执行:
 % plot2DBPP(d,par);
+
 plot3DBPP(d,par);
 
         % V1 buff version
