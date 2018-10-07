@@ -20,6 +20,8 @@ function [d] = RunAlgorithm(d,p)
         %% 计算下届
 %         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式Item到Strip的算法
+        global ISisNonMixed
+        ISisNonMixed = 1
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
 
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
@@ -51,17 +53,22 @@ function [d] = RunAlgorithm(d,p)
         %% 启发式：Strip到Bin的算法
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);
 
+        global ISreStripToBin
+        if ISreStripToBin==1
         % 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
         [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
-
+        end
+        
         % 量大车头方案1: 每个Bin内strip比较量
         % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         
         %% ********** 增加Strip的甩尾优化 ***********
 %         if p.whichsq == 1    end
-        [d.Strip] = HStripSW(d.Strip);
-     
-        d.Strip.Strip_Bin
+        global ISshuaiwei
+        if ISshuaiwei==1
+                [d.Strip] = HStripSW(d.Strip);
+        end
+
 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
             %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
                 

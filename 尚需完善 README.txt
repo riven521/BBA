@@ -221,8 +221,19 @@ V1005-1(里程碑):
 3 cpuBin修订:修改Bin.isTileNeed函数 -> 增加即使not full但Item的层数仅为1次case 并不需要Tile
 4 return bba 数据包含平铺
 
+V1006-1
+1 增加global全局变量 - 不同约束策略的考虑
+2 每种策略 给出对应算例 及截图
+3 
+
+if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
+
+QA:
+Q1: I2S: order, 对同ID的LU,以高度递减排序(同STRIP混合可以), 异Strip混合有问题. 容易形成最后不满维尾垛结合其它满垛的问题.
+A : 
 
 TODO:
+1 1/4车头的平铺问题(修订Item.isHeightFull修订)
 4 修订数量多的在车头(基于LU数量而非Item数量)
 1 增加平铺功能 DONE
 2 甩尾后展示顺序功能

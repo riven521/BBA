@@ -100,9 +100,13 @@ end
     
 % figure(randi(1000));
 % plot2DStrip();  %可能有问题: 一次性画图
-% figure(randi(1000));
-% plot3DStrip(LU,sItem,Veh,'Item');
 
+% figure(randi(1000));
+%  plot3DStrip(LU,sItem,Veh,'Item');
+%     printstruct(Item)
+%            Item.isHeightFull
+%                Item.isHeightFull
+               
 % Item相关：更新的按顺序返回（无更新的不需返回）
 % LU内部更新,sLU依据order变化回来(主要为了sLU中新增的几个变量,要按顺序转回来)
 % 获取Rotaed : 每个item是否Rotation的标志
@@ -333,7 +337,9 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % LIDorder = ones(1,length(SIDorder));
 % *********** 考虑isNonMixed
 tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SID; Item.LID; Item.LWH];  % tmpItem = [ Item.LWH];
-        % [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
+% tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed; Item.isHeightFull];
+
+% [~,order] = sortrows(tmpItem',[1, 4, 2, 5],{'ascend','descend','descend','descend'}); 
 % 增加isNonMixed
     % [~,order] = sortrows(tmpItem',[1,6,  4, 3, 2, 5],{'ascend','descend','descend','descend','descend','descend'});  
     % 增加判定Item先长度,后高度排序. % 会出现nbcol2错误:
@@ -341,7 +347,13 @@ tmpItem = [SIDorder; LIDorder; Item.LWH; Item.isNonMixed];  % tmpItem = [Item.SI
     % [~,order] = sortrows(tmpItem',[1,6, 4, 5, 3, 2],{'ascend','descend','descend','descend','descend','descend'});  
 % 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
 % [~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','ascend'});
-[~,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','descend'});
+global ISisNonMixed
+ISisNonMixed
+if ISisNonMixed==1
+    [x,order] = sortrows(tmpItem',[1,6, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend','ascend'});
+else
+    [~,order] = sortrows(tmpItem',[1, 4, 3, 2, 5 ],{'ascend','descend','descend','descend','descend'});
+end
 
 % [~,order] = sortrows(tmpItem',[1,6, 2, 4, 3, 5 ],{'ascend','descend','descend','descend','descend','descend'});  
 

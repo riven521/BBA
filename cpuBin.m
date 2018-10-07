@@ -36,41 +36,48 @@ end
 % Itemloadingrate - 每个bin内Item的体积和/每个bin可用总体积
 Bin = computeLoadingRate2DBin(Bin,Item,Veh); 
 
-%% 2: 判断Bin是否需要平铺    TODO 考虑是否铺的下
+%% 2: Bin.isTileOneNeed 判断Bin是否全部需要平铺到1层
 % 1 总长度小于车长的1/4
 % % f = Bin.LW(2,:) >= 0.75*Veh.LWH(2,1); %所有车的剩余长度 >= 3/4 车长
 % % Bin.isTileNeed(f) = 1;
-% 2 包含宽度或高度不满的Strip
-nbBin=length(Bin.Weight)
+
+%% 3: Bin.isTileNeed 判断Bin是否需要平铺
+% V2: 考虑宽度/高度约束, 且考虑已经单层的Strip, 可运行后向增加strip
+nbBin=length(Bin.Weight);
 for ibin=1:nbBin
-    % 找处ibin中的每个strip    
-    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0 
+    % 2.1 找处ibin中的宽度不满的strip    (宽度不满: 横向间隙 > 单个Item的宽度)
+    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0 ;
     if any(fS)
-        % 找出fS中的Lu,        
-        fiS = find(fS)
+        % itemidx:fS中的item
+        fiS = find(fS);
         itemidx = ismember(Item.Item_Strip(1,:), fiS); %itemidx:fiS个Strip对应的Item逻辑值 luidx = ismember(LU.LU_Strip(1,:), fiS);
 %         Item.HLayer(itemidx)
 %         Item.HLayer(itemidx)>1
-        if any(Item.HLayer(itemidx)>1) %如果Item不是1层平铺, isTileNeed
+        %如果所有Strip对应的Item有>1层的,则平铺.  即ibin: isTileNeed
+        if any(Item.HLayer(itemidx)>1)
             Bin.isTileNeed(ibin) = 1;
         end        
     end
     
-    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0 
+     % 2.2 找处ibin中的高度不满的strip     (高度不满: 竖向间隙 > 单个Item的宽度)
+    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0 ;
     if any(fS)
-        % 找出fS中的Lu,
-        fiS = find(fS)
+        % itemidx:fS中的item
+        fiS = find(fS);
         itemidx = ismember(Item.Item_Strip(1,:), fiS); % luidx = ismember(LU.LU_Strip(1,:), fiS);
-        if any(Item.HLayer(itemidx)>1)  %如果Item不是1层平铺, isTileNeed
+         %如果所有Strip对应的Item有>1层的,则平铺.  即ibin: isTileNeed
+        if any(Item.HLayer(itemidx)>1)
             Bin.isTileNeed(ibin) = 1;
         end
     end    
 end
+
+% V1: 仅考虑宽度/高度约束, 不考虑已经单层
 % iBin = Strip.Strip_Bin(1,~Strip.isWidthFull);
 % Bin.isTileNeed(iBin) = 1;
 % iBin = Strip.Strip_Bin(1,~Strip.isHeightFull);
 % Bin.isTileNeed(iBin) = 1;
-Bin.isTileNeed
+% Bin.isTileNeed
 end
 
 %% 局部函数 %%

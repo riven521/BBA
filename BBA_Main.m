@@ -34,6 +34,22 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all
 clc
+global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed
+global ISplotBBA ISplotSolu ISplotEachPP % plotStrip
+ISplotBBA = 1
+ISplotSolu = 1
+ISplotEachPP = 1
+
+ISdiagItem = 0
+
+ISreStripToBin = 1
+
+ISshuaiwei = 1    % 555 : 宽度和高度不满, 甩尾
+ISpingpu = 1      % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+
+ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有
+
+ISlastVehType = 1
 
 if nargin ~= 0
     d = DataInitialize( ...
@@ -49,7 +65,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=35; m=2;
+    n=16; m=2;
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
 
@@ -106,7 +122,7 @@ for iAlg = 1:nAlg
     dA(iAlg)=d;      
     printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
     printstruct(d.Veh);
-    
+
 %     plotSolution(d,pA(iAlg)); %尽量不用
     
     %% 1.6 平铺
@@ -140,7 +156,7 @@ for iAlg = 1:nAlg
                                 itemidx = d.Item.Item_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
                                 do2.Item = structfun(@(x) x(:,itemidx),d.Item,'UniformOutput',false);        
         
-        while do2.Bin.isTileNeed(1) == 1 %直到此do2内的Bin永远只有1个
+        while do2.Bin.isTileNeed(1) == 1 %do2内的Bin永远只有1个
 
         % 循环从本ibin内最后一个strip开始平铺
         nbStrip = numel(do2.Strip.Weight);
@@ -169,11 +185,29 @@ for iAlg = 1:nAlg
 %         u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
 %         luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 *********************
 %         if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+%         do2.LU.LU_Item(1,luidxPP)
+
+
+%                     d2.LU.tmpHLayer = zeros(size(d2.LU.maxHLayer))
+%                     d2.LU.tmpHLayer(luidxPP) = do2.Item.HLayer(do2.LU.LU_Item(1,luidxPP))
+%                     dlu=[ d2.LU.maxL(3,luidxPP);
+%                      d2.LU.maxHLayer(luidxPP);
+%                      d2.LU.tmpHLayer(luidxPP)];
+%                      min(dlu)
+%         d2.LU.maxHLayer(luidxPP) = min(dlu) - 1;
+
+
         d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
+        
+        
+        
+        
+        
+        % GET 更新 d2.LU.maxHLayer(luidxPP)
         while all(d2.LU.maxHLayer(luidxPP)<1)  
            istrip = istrip-1;
            if istrip==0,break;end
-            fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); 
+            fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); %fi = find( do2.Strip.Strip_Bin(2,:) == istrip ); 
             luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
                                     if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
                                     if istrip == 0,  error('此bin不存在tileneed,超预期错误');   end
@@ -186,10 +220,12 @@ for iAlg = 1:nAlg
         p = pA(iAlg); p.whichsq=1;
 
 %         plotSolution(do2,pA(iAlg));
-        do2 = RunAlgorithm(d2,p);   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        do2 = RunAlgorithmTile(d2,p);   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
         do2.Bin.isTileNeed
         do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-%           plotSolution(do2,pA(iAlg));
+        if ISplotEachPP == 1
+           plotSolution(do2,pA(iAlg));
+        end
 
         [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);
 
@@ -214,7 +250,7 @@ for iAlg = 1:nAlg
         % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
         %disp(d1.Veh.LWH)
-        d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        d1 = RunAlgorithmLastVeh(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
 %         plotSolution(d1,pA(iAlg));
         % 2.2 判断该车型是否可用
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
@@ -250,7 +286,8 @@ bestOne = 1;
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
 
 % ****************** 针对车型选择 获取修订的 output ******************
-if 1
+global ISlastVehType
+if ISlastVehType==1
 if flaggetSmallVeh %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% 进行返回处理
     %由于order改变了,此处仅对最后一个bin的索引进行修改
@@ -265,7 +302,8 @@ end
 % ****************** 针对车型选择 获取修订的 output ******************
 
 % ****************** 针对平铺选择 获取修订的 output ******************
-if 1
+global ISpingpu
+if ISpingpu==1
 for ibin=1:length(do2Array)
 if flagTiled(ibin) %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     [output_CoordLUBin3,output_LU_LWH3,output_LU_Seq3]= getReturnBBA(do2Array(ibin)); %% 进行返回处理
@@ -280,10 +318,13 @@ end
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
-
-if 1 %nargin == 0,
+if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne).Veh);
+end
+
+if  ISplotSolu 
     plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
+    plotSolution(do2,pA(iAlg));
 %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
 end
 
@@ -381,7 +422,6 @@ function plotSolution(d,par)
 %% 画图
 % V3 margin 提前到RunAlgorithm运行后就执行:
 % plot2DBPP(d,par);
-
 plot3DBPP(d,par);
 
         % V1 buff version

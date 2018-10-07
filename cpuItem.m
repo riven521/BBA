@@ -39,10 +39,19 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         % hMargin: ITEM距离车顶的间隙
         hMargin = hVeh - Item.LWH(3,iItem);
         
-%         if diagItem >= hMargin,  Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
-        if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
+        global ISdiagItem
+            % V1: 相互冲突
+                %         if ISdiagItem==1 && diagItem >= hMargin,  
+                %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
+                %         if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
+            % V2: 任一满足, 均为满层
+        if ISdiagItem==1
+            if maxHeightinLUofThisItem >= hMargin || diagItem >= hMargin, Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
+        else
+            if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
+        end
     end
-       
+
     %% SECTION 2 计算ITEM的isWeightFine并进行修复
     % ****************** 上轻下重的判断+修复 ************ 开放
     % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
