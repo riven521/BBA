@@ -139,7 +139,7 @@ function order = getStriporder(Strip)
 %对SID排序: SID按给定顺序排序,序号小的在前面; 
 % 重点在于同一STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而单纯型非混合的；
 % 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
-Strip.SID
+        % Strip.SID
 SIDorder = getOrderofSID(Strip.SID); %SID一定是从1-n的过程
 if ~issorted(SIDorder), error('SID未按由小到大排序，请检查'); end
 if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
@@ -156,6 +156,7 @@ for i=min(SIDorder):max(SIDorder)
     if numel(unique(si)) ~= numel(si),     error('同一SID下, 有重复的LID');   end
 end
 
+% 基于Priority函数计算后的排序
 tmpSort = [SIDorder; IDorder];
 [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
 if ~isrow(order), order=order'; end

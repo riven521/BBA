@@ -16,20 +16,27 @@ function [d] = RunAlgorithm(d,p)
 
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);
         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)
+        d.LU
                         %  pgon = getPolyshape(d.Item.LWH);    % figure; plot(pgon);  axis equal;  axis ([0 maxX 0 maxY]);
         %% 计算下届
 %         lb = computerLB(d.Item,d.Veh);   fprintf('LB = %d \n', lb); %以某个bin类型为准
         %% 启发式Item到Strip的算法
-        global ISisNonMixed
-        ISisNonMixed = 1
+        %         global ISisNonMixed      ISisNonMixed = 1
+        
+        % 1 Item排序: %1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
+        % 2 按Item给定顺序插入新或旧的Strip
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
 
+        % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
-
-%          figure(randi(1000));          plot3DStrip(d.LU,d.Item,d.Veh,'LU');
-
-                %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
+        global ISplotStrip
+        if ISplotStrip==1
+            % 基于LU.CoordLUStrip
+            figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+        end
+        
+        %% 对Strip中仅有一个且高>宽的Item进行选择并更新相应数据
 %         d = modifyStripWithOneItem(d);
 %         function d = modifyStripWithOneItem(d)
 %             stripheight = d.Strip.LW(2,:);
@@ -51,37 +58,72 @@ function [d] = RunAlgorithm(d,p)
 %         end
 
         %% 启发式：Strip到Bin的算法
-        [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);
-
+        [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);        
+        
+        % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+        
+        if ISplotStrip==1
+           % 基于LU.CoordLUBin
+           plot3DBPP(d,p);         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+        end        
+        
         global ISreStripToBin
         if ISreStripToBin==1
         % 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
         [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         end
         
+        % 如果有错误,就保留; 
+        ti = d.Item;  tl = d.LU;
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+        if isequal(ti,d.Item)~=1, error('eeeee'); end
+        if isequal(tl,d.LU)~=1, error('eeeee'); end
+        
+        if ISplotStrip==1
+           % 基于LU.CoordLUBin
+           plot3DBPP(d,p);         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+        end
+        
         % 量大车头方案1: 每个Bin内strip比较量
         % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         
         %% ********** 增加Strip的甩尾优化 ***********
-%         if p.whichsq == 1    end
         global ISshuaiwei
         if ISshuaiwei==1
                 [d.Strip] = HStripSW(d.Strip);
         end
-
-%         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
-            %    [d.Bin,d.Strip,d.LU] = HStripSW(d.Bin,d.Strip,d.LU,d.Veh);
-                
+        
+        % 如果有错误,就保留; 
+        ti = d.Item;  tl = d.LU;
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+        if isequal(ti,d.Item)~=1, error('eeeee'); end
+        if isequal(tl,d.LU)~=1, error('eeeee'); end
+        
+         if ISplotStrip==1
+           % 基于LU.CoordLUBin
+           plot3DBPP(d,p);         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+        end
+        
         %% Item到bin的信息获取:
        % 甩尾必须在计算LU在Bin内的系数前进行
         printstruct(d.Item,'sortfields',1,'PRINTCONTENTS',0)  
         
-        % 计算LU在Bin内坐标and顺序
-        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);      printstruct(d.Item);
-        
-        
+        % 计算isTileNeed
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性
         
+        % 如果有错误,就保留; 
+        ti = d.Item;  tl = d.LU;
+        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);
+        if isequal(ti,d.Item)~=1, error('eeeee'); end
+        if isequal(tl,d.LU)~=1, error('eeeee'); end
+        
+        if ISplotStrip==1
+           % 基于LU.CoordLUBin
+           plot3DBPP(d,p);         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+        end
+       
+
 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  
         %% ********** 平铺优化 **********

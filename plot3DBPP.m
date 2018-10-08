@@ -1,5 +1,6 @@
 function [] = plot3DBPP(d,par)
 % 作图函数:三维BPP
+global ISplotPause;
 
 fields = fieldnames(par);
 aField = [];
@@ -70,8 +71,7 @@ nBin = max(d.LU.LU_Bin(1,:)); %bin的个数;
 
 figure('name',num2str([nBin, aField]));
 subplot(2,ceil((nBin+1)/2),1);
-plot3DStrip(d.LU,d.Item,d.Veh,'LU');
-
+plot3DStrip(d.LU,d.Item,d.Veh,'Item');
 for ibin=1:nBin
 % 网上找的几个画图的函数
 %     fig
@@ -105,7 +105,9 @@ for ibin=1:nBin
         idx =find(seq==i); % LU进入Bin内的画图顺序
         LUColor = 0.8*nColors(nIDType==lid(idx), : );
         plotcube(yxz(:,idx)',coord(:,idx)',0.7,LUColor);
-        
+        if ISplotPause>=0
+            pause(ISplotPause);
+        end
         % Set the lable and the font size
         axis equal;         grid on;        view(111,33); %view(60,40);
         xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);

@@ -1,4 +1,5 @@
 %% GET STRIP 相关属性
+% LU.LU_Strip, LU.CoordLUStrip
 % 1 Strip.isMixed % 1：混合层； 0：单纯层
 % 2 Strip.isHeightFull % 1：全部都是满层； 0：包含非满层 依据Item.isHeightFull 判断 
 % 3 Strip.isWidthFull % % 1：全部都是宽度满层； 0：宽度非满层 依据 Strip宽度剩余 是否 可容纳 最小的Item宽度判断 
@@ -31,7 +32,6 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
     Strip.Itemvolume = ones(size(Strip.Weight))*-1; %每个strip包含的Item装载体积
     Strip.loadingrate = ones(size(Strip.Weight))*-1; % 每个strip的装载比率
     Strip.loadingrateLimit = ones(size(Strip.Weight))*-1;     % 每个strip的有限装载比率
-
 
 %% 0.0 计算LU.LU_Strip, LU.CoordLUStrip, Strip内的PID,LID,SID
 % 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增

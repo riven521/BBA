@@ -1,4 +1,4 @@
-%% GET BIN 相关属性
+%% GET BIN 相关属性 isTileNeed
 
 %% 函数
 function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)

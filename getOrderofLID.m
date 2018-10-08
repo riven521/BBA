@@ -28,11 +28,12 @@ for i=1:length(uniOrd)
     tFull = SHeightfullfull(:,idxSID);
     tLR = SLoadingrate(:,idxSID);        % max(tL)  %  min(tL)  % mean(tL)
     
+    % 555 priority: 标量值, 永远递增,最小值=1,最大值为LU个数
     priority = 1;
-    SIDorder = zeros(1,size(tID,2));
+    SIDpriority = zeros(1,size(tID,2)); % SIDpriority: 数组, 每个SID下的priority值
     szRow = cellfun(@(x)size(x,1), tID);
     if isscalar(szRow) %如果该STRIP的只有1STRIP，且为单纯型STRIP，赋值为1
-        SIDorder = 1;
+        SIDpriority = 1;
     else
         [tID, ~] = padcat(tID{:});   if iscolumn(tID), tID = tID'; end
         
@@ -52,22 +53,23 @@ for i=1:length(uniOrd)
         %         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];        [~,order] = sortrows(tmpM',[2,3],{'ascend','descend'});
         
         if ~isrow(order), order=order'; end
-        
+
         % 2 基于1的摆放顺序, 给定最终STRIP顺序到torder
-        while any(SIDorder==0)
+        while any(SIDpriority==0) %当有SID下面的priority未给全时, 不能跳出循环
             % SIDorder中非0且order中最大的那个作为首选STRIP
             % 2.1 找出无相邻前提下,第一个o及对应的order(o)
-            [~,o]=find(SIDorder(order) == 0,1,'first');
-            SIDorder(order(o)) = priority;  
+            [~,o]=find(SIDpriority(order) == 0,1,'first');
+            SIDpriority(order(o)) = priority;  
             priority=priority+1;
             
             % 2.2 找出给order(o)位置tLID对应的相邻Strip.
             tnbItem = celltID{:,order(o)};
             % NOTE 首次tLID不应该出现混合型STRIP, 但如按高度排序, 是可能出现的
-            [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tnbItem);
+            [SIDpriority,priority] = getAdjPriority(priority,order,SIDpriority,tID,tnbItem);
         end
     end
-    allPriority(idxSID) = SIDorder;
+    allPriority(idxSID) = SIDpriority;
+
 end
 
 % 防错语句：

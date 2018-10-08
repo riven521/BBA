@@ -221,12 +221,17 @@ V1005-1(里程碑):
 3 cpuBin修订:修改Bin.isTileNeed函数 -> 增加即使not full但Item的层数仅为1次case 并不需要Tile
 4 return bba 数据包含平铺
 
-V1006-1
+V1007-1
 1 增加global全局变量 - 不同约束策略的考虑
+2 cpuItem:Item高度满层定义为二选一
+
+
+V1007-2 
+1: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
+CPUSTRIP 五次注释 移到I2S中; CPUBIN和Item2Bin也可能有问题, 明天排查
+
 2 每种策略 给出对应算例 及截图
 3 
-
-if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
 
 QA:
 Q1: I2S: order, 对同ID的LU,以高度递减排序(同STRIP混合可以), 异Strip混合有问题. 容易形成最后不满维尾垛结合其它满垛的问题.

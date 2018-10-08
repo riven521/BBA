@@ -34,22 +34,26 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all
 clc
-global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed
-global ISplotBBA ISplotSolu ISplotEachPP % plotStrip
+global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISsItemAdjust
+global ISplotBBA ISplotSolu ISplotEachPP ISplotStrip ISplotPause % plotStrip
+ISsItemAdjust = 0  % 暂时不用
+
 ISplotBBA = 1
 ISplotSolu = 1
-ISplotEachPP = 1
+ISplotStrip = 1 % 每次生成Strip就显示结果
+ISplotEachPP = 0
+ISplotPause = 0
 
-ISdiagItem = 0
+ISdiagItem = 0  % 默认为 0 吧
 
-ISreStripToBin = 1
+ISreStripToBin = 0 
 
-ISshuaiwei = 1    % 555 : 宽度和高度不满, 甩尾
-ISpingpu = 1      % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISshuaiwei = 0    % 555 : 宽度和高度不满, 甩尾
+ISpingpu = 0      % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
 
 ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有
 
-ISlastVehType = 1
+ISlastVehType = 0
 
 if nargin ~= 0
     d = DataInitialize( ...
@@ -65,7 +69,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=16; m=2;
+    n=16; m=2;  % 16需要注意
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
 
@@ -85,7 +89,7 @@ end
     
 %% Initialize Parameter
 nAlg = 1;
-for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西
+for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西 因为一旦允许, 会大概率违背相邻约束
     for j=3:3 %0-3 排序: 0: Vert；1: Hori; 2:error  3:按缝隙最小排序   Gpreproc 此处替代HItemToStrip函数中的物品摆放
         for k=2:2 %0-2 默认0 不可旋转 1全部可旋转 2: 按人为设置是否允许Rotation 
             for l=1:1 % 已无用 :  % 0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
@@ -114,19 +118,18 @@ for iAlg = 1:nAlg
     %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
      pA(iAlg).whichsq=1;
     % 1 获取d: 运行主数据算法
-    d = RunAlgorithm(d,pA(iAlg));        %获取可行解结构体
+    d = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体
     d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
     
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
     dA(iAlg)=d;      
-    printstruct(d,'sortfields',1,'PRINTCONTENTS',0)   
-    printstruct(d.Veh);
+    % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
 
-%     plotSolution(d,pA(iAlg)); %尽量不用
+    % plotSolution(d,pA(iAlg)); %尽量不用
     
     %% 1.6 平铺
-    
+    if ISpingpu==1
     flagTiled = zeros(1,length(d.Bin.Weight));
     do2Array(1:length(d.Bin.Weight)) = d;
     bidx = find(d.Bin.isTileNeed);
@@ -239,8 +242,9 @@ for iAlg = 1:nAlg
         end
         end % END OF WHILE
     end% END OF FOR
-
+    end
      %% 2 获取d1和flaggetSmallVeh : 运行最后一车数据算法,不改变d
+     if ISlastVehType
     allidxVehType = length(unique(d.Veh.ID)); %此算例车型数量(未排除相同车型)
     flaggetSmallVeh = 0;
     d1 = getdinLastVeh(d);   
@@ -265,7 +269,7 @@ for iAlg = 1:nAlg
         allidxVehType= allidxVehType-1;
         d1.Veh = [];
     end
-    
+     end
 end
 
 %% Simulate - CHOOSE BEST ONE
@@ -286,7 +290,6 @@ bestOne = 1;
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
 
 % ****************** 针对车型选择 获取修订的 output ******************
-global ISlastVehType
 if ISlastVehType==1
 if flaggetSmallVeh %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA(d1); %% 进行返回处理
@@ -302,7 +305,6 @@ end
 % ****************** 针对车型选择 获取修订的 output ******************
 
 % ****************** 针对平铺选择 获取修订的 output ******************
-global ISpingpu
 if ISpingpu==1
 for ibin=1:length(do2Array)
 if flagTiled(ibin) %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
@@ -323,8 +325,8 @@ if ISplotBBA
 end
 
 if  ISplotSolu 
-    plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
-    plotSolution(do2,pA(iAlg));
+%     plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
+%     plotSolution(do2,pA(iAlg));
 %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
 end
 
