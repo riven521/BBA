@@ -225,10 +225,30 @@ V1007-1
 1 增加global全局变量 - 不同约束策略的考虑
 2 cpuItem:Item高度满层定义为二选一
 
+V1008-1
+1: 增加plot
 
-V1007-2 
+V1009-1
+2: 预处理Gpreproc种增加LU.nbLID计算
+3: 增加COMP_STRUCT函数
+4: cpuItem中增加Item.ISisMixTile:对Item.isNonMixed=0的单独对待并后期处理.
+5: 修改cpuStripnbItem, 增加Strip.nbLU的计算; 在S2B排序时, 将LU数量多的放最前面.
+6: cpustrip增加Strip.isHeightBalance高度均衡计算, 并修改Strip.isHeightFull计算模式
+6: cpustrip增加Strip.lowestHeight计算
+7: 修改甩尾排序方式
+
+
+NOTE:
+1: Item.Item_Strip(1,:) == iStrip 避免==右侧为i索引顺序. 因为Item_Strip的第一行可能并非从1开始,也非连续
+
+TODO:
+1: LU是否满托的计算
+2: 混合Strip的非混合(且满层?)的优先orderItem
+3: 
 1: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
 CPUSTRIP 五次注释 移到I2S中; CPUBIN和Item2Bin也可能有问题, 明天排查
+
+
 
 2 每种策略 给出对应算例 及截图
 3 

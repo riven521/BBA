@@ -3,9 +3,10 @@
 % 2: Item.Layer 计算每个Item内堆垛的层数
 % 3: Item.isWeightFine 每个Item内是否满足上轻下重
 % 4: Item.isNonMixed  计算每个Item是否为不需要混拼的可能
-
+% 5: Item.nbItem 计算每个Item包含同LU/ID的数量
 %% 函数
 function   [Item,LU] = cpuItem(Item,LU,Veh)
+    global ISdiagItem
     %% 初始化
     sz = size(Item.isRota);
     hVeh  = Veh.LWH(3,1);  
@@ -13,6 +14,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1)
     Item.isNonMixed = ones(sz)*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
+    Item.isMixedTile = zeros(sz);    %Item混合,找出奇数个混合Item的尾托赋值为1
 
     %% SECTION 0 计算ITEM的PID,LID,SID
     % 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
@@ -26,8 +28,6 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
     end
 
-
-
     %% SECTION 1 计算ITEM的isHeightFull
     % (对角线>=顶层间隙, 视为满层; Item内最大LU高度 >= 顶层间隙, 视为满层)
     for iItem=1:length(Item.isHeightFull)
@@ -38,8 +38,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
         % hMargin: ITEM距离车顶的间隙
         hMargin = hVeh - Item.LWH(3,iItem);
-        
-        global ISdiagItem
+%         hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
             % V1: 相互冲突
                 %         if ISdiagItem==1 && diagItem >= hMargin,  
                 %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
@@ -58,18 +57,19 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     Item = isWeightUpDown(Item,LU);
     % repairItemWeight: 如果存在上轻下重的case, 进行修复
     if ~all(Item.isWeightFine)
-        [~,b] = find(Item.isWeightFine == 0);
-        for iItem=1:length(b)
-            LU = repairItemWeight(LU,b(iItem));
+        [~,order] = find(Item.isWeightFine == 0);
+        for iItem=1:length(order)
+            LU = repairItemWeight(LU,order(iItem));
         end
     end
     Item = isWeightUpDown(Item,LU);
     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
-    %% SECTION 3 计算ITEM的isNonMixed是否为不需要混拼计算
+    %% SECTION 3 计算ITEM的isNonMixed/isMixedTile是否为不需要混拼/混拼排序找甩尾计算
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
     ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+    % 循环: LID个数
     for iItem=1:length(unique(ItemLID))
         % Item i 对于的LU flag标记
         flagItem = ItemLID(:) == iItem;
@@ -77,12 +77,27 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         VehWidth = Veh.LWH(1,1);  % 车辆宽度    
         maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放宽度层数
         nb = sum(flagItem);
-        if mod(nb,maxWidthLayer) == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
+        nbmod = mod(nb,maxWidthLayer);
+        if nb ==0 || nbmod>nb, error('cpuItem种计算isNonMixed错误'); end
+        if nbmod == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
             Item.isNonMixed(flagItem) = 1;
         else
             Item.isNonMixed(flagItem)= 0;
+            % 计算Item的isMixedTile
+            tmpSort=[Item.isHeightFull;Item.HLayer;Item.LWH(3,:)];
+            [~, order]=sortrows(tmpSort(:,flagItem)', [1,2,3],{'ascend','ascend','ascend'});
+            flagItemIdx = find(flagItem);
+            flagmodIdx = flagItemIdx(order(1:nbmod));
+            Item.isMixedTile(flagmodIdx)=1;
         end
     end
+    
+    %% SECTION 4 计算ITEM的nbItem
+    tmpItemLID = cell2mat(Item.LID);
+    for i=1:length(Item.Weight)
+        Item.nbItem(i) = sum(tmpItemLID == tmpItemLID(i));
+    end
+
 end
 
 %% 局部函数 %%

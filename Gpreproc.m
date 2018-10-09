@@ -61,6 +61,11 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
         LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));
     end
     
+    % 6 计算LU同样ID/可堆垛ID下的个数
+    for i=1:length(LU.ID)
+        LU.nbLID(i) = sum(LU.ID == LU.ID(i));
+    end    
+    
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 
 %      printInput();

@@ -345,13 +345,17 @@ if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应
 LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
 
 % V2: ********** 考虑isNonMixed
-global ISisNonMixed
+global ISisNonMixed ISisMixTile
 % 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpItem = [SIDorder; Item.isNonMixed; Item.LWH(2,:); Item.LWH(1,:); LIDorder; Item.LWH(3,:); ];
+tmpItem = [SIDorder; Item.isNonMixed; Item.isMixedTile; Item.LWH(2,:); Item.LWH(1,:); LIDorder; Item.LWH(3,:); ];
 if ISisNonMixed==1    
-    [x,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6 ],{'ascend','descend','descend','descend','descend','descend'});
+    if ISisMixTile==1
+        [~,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','descend','descend','descend'});
+    else
+        [~,order] = sortrows(tmpItem',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend','descend'});
+    end
 else
-    [~,order] = sortrows(tmpItem',[1, 3, 4, 5, 6 ],{'ascend','descend','descend','descend','descend'});
+    [~,order] = sortrows(tmpItem',[1, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend'});
 end
 
 %%

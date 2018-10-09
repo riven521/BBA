@@ -13,6 +13,9 @@ lVeh  = Veh.LWH(2,1);
 
 %% Strip排序 555 (如何确保相同托盘类型的相邻摆放 DONE)
     % 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
+    Strip
+    Strip.nbLU
+    LU.nbLID
     [Strip.striporder] = getStriporder(Strip);  % Strip两排序方式 高度/长度递减
     % 获取按order排序后的Strip: sStrip    
     if isSameCol(Strip)
@@ -146,7 +149,7 @@ if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
 
 %对LID排序: 相邻摆放的重要原则 555555555555555555555555 
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
-IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,...
+IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem,Strip.nbLU,Strip.isHeightFull,...
                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
 
 % 555 纠错语句：同一SID下,不允许有重复的LID

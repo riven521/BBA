@@ -16,11 +16,19 @@ if any(~Strip.isWidthFull | ~Strip.isHeightFull)
 % 2 如果有满足甩尾的Strip, 要如何排序? loadingrate小的最后进入
    if ~isempty(b)       
        %法1 Sort b by LoadingRate,Height etc.
-%        tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
-%        [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
+        tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
+        [~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
        %法2 Sort b by 1 剩余宽度大的后放; 2 剩余高度多的后放入
        tmpM = [Strip.LW(1,b); Strip.maxHeight(b)];
        [~,order] = sortrows(tmpM',[1,2],{'ascend','ascend'});
+
+        %法3 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
+       tmpM = [Strip.isSingleItem(b);Strip.isMixed(b);Strip.isHeightBalance(b); Strip.lowestHeight(b); Strip.maxHeight(b);Strip.meanHeight(b)];
+       [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});      
+       
+       %法4 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
+       tmpM = [Strip.isMixed(b);Strip.meanHeight(b)];
+       [~,order] = sortrows(tmpM',[1,2],{'ascend','descend'});   
        
        b = b(order);
        Strip.isShuaiWei(b) = 1;

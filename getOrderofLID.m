@@ -5,7 +5,8 @@
 % IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,...
 %                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
                                     
-function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SnbItem,SHeightfullfull, SisMixed, SLID,SLW,SLoadingRateLimit,SLoadingrate)
+function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SnbItem,SnbLU, ...
+    SHeightfullfull, SisMixed, SLID,SLW,SLoadingRateLimit,SLoadingrate)
 % ID is cell type % ID = [2 3 NaN; 2 1 3; 1 3 NaN; 2 1 NaN]';
 if ~iscell(SLID),error('输入非cell');end
 
@@ -24,6 +25,8 @@ for i=1:length(uniOrd)
     
     % FINALLY USED 优先车头摆放的顺序
     tnbItem = SnbItem(:,idxSID);
+    tnbLU = SnbLU(:,idxSID);
+    
     tMixed = SisMixed(:,idxSID);
     tFull = SHeightfullfull(:,idxSID);
     tLR = SLoadingrate(:,idxSID);        % max(tL)  %  min(tL)  % mean(tL)
@@ -45,9 +48,14 @@ for i=1:length(uniOrd)
 
         % 1 单纯 > 满层 > 数量 > LoadingRate
         %         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[2,3,1,5],{'ascend','descend','descend','descend'}); 
-        % 2 数量 > 单纯 > 满层 > LoadingRate
-        tmpM = [tnbItem; tMixed; tFull; tLL; tLR; tLW ];  
-        [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
+        % 2 数量 > 单纯 > 满层 > LoadingRate        
+        tmpM = [tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
+        [~,order] = sortrows(tmpM',[1,2,3,4],{'descend','ascend','descend','descend'}); 
+        tmpM = [tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
+        [~,order] = sortrows(tmpM',[1,2,3,4,5],{'descend', 'descend','ascend','descend','descend'}); 
+        tmpM = [tPured;tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
+%         [~,order] = sortrows(tmpM',[1,2,3,4,5,6],{'descend', 'descend','descend','ascend','descend','descend'}); 
+        
         % 3 全纯 > 数量 > 单纯 > 满层 > LoadingRate
         %         tmpM = [tPured; tLID; tMixed; tFull; tLL;tL;tLW;];  [~,order] = sortrows(tmpM',[1,2,3,4,6],{'descend','descend','ascend','descend','descend'}); 
         %         tmpM = [tLID; tMixed; tFull; tLL;tL;tLW;];        [~,order] = sortrows(tmpM',[2,3],{'ascend','descend'});
