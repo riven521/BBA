@@ -26,7 +26,7 @@ if any(~Strip.isWidthFull | ~Strip.isHeightFull)
        tmpM = [Strip.isSingleItem(b);Strip.isMixed(b);Strip.isHeightBalance(b); Strip.lowestHeight(b); Strip.maxHeight(b);Strip.meanHeight(b)];
        [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});      
        
-       %法4 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
+       %法4 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
        tmpM = [Strip.isMixed(b);Strip.meanHeight(b)];
        [~,order] = sortrows(tmpM',[1,2],{'ascend','descend'});   
        

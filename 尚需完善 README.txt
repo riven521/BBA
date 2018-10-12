@@ -229,13 +229,27 @@ V1008-1
 1: 增加plot
 
 V1009-1
+1: Main函数增加全部平铺要求(在车辆允许情况下),否则按甩尾平铺处理
 2: 预处理Gpreproc种增加LU.nbLID计算
 3: 增加COMP_STRUCT函数
 4: cpuItem中增加Item.ISisMixTile:对Item.isNonMixed=0的单独对待并后期处理.
 5: 修改cpuStripnbItem, 增加Strip.nbLU的计算; 在S2B排序时, 将LU数量多的放最前面.
 6: cpustrip增加Strip.isHeightBalance高度均衡计算, 并修改Strip.isHeightFull计算模式
 6: cpustrip增加Strip.lowestHeight计算
-7: 修改甩尾排序方式
+7: 修改甩尾排序方式(HStripSW)
+8: 增加11个问题算例及目前效果
+
+V1012-1
+1: 
+2:
+
+************甩尾顺序综合属性选择***********
+LASTVEHICLE 测验
+各种ORDER 
+各种strip属性记录
+各种其它难点
+PPT书写
+FIGURE返回测试
 
 
 NOTE:
@@ -244,14 +258,9 @@ NOTE:
 TODO:
 1: LU是否满托的计算
 2: 混合Strip的非混合(且满层?)的优先orderItem
-3: 
-1: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
+3: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
 CPUSTRIP 五次注释 移到I2S中; CPUBIN和Item2Bin也可能有问题, 明天排查
 
-
-
-2 每种策略 给出对应算例 及截图
-3 
 
 QA:
 Q1: I2S: order, 对同ID的LU,以高度递减排序(同STRIP混合可以), 异Strip混合有问题. 容易形成最后不满维尾垛结合其它满垛的问题.

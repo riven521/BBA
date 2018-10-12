@@ -39,7 +39,7 @@ Bin = computeLoadingRate2DBin(Bin,Item,Veh);
 %% 2: Bin.isTileOneNeed 判断Bin是否全部需要平铺到1层
 % 1 总长度小于车长的1/4
 % % f = Bin.LW(2,:) >= 0.75*Veh.LWH(2,1); %所有车的剩余长度 >= 3/4 车长
-% % Bin.isTileNeed(f) = 1;
+
 
 %% 3: Bin.isTileNeed 判断Bin是否需要平铺
 % V2: 考虑宽度/高度约束, 且考虑已经单层的Strip, 可运行后向增加strip

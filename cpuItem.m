@@ -36,9 +36,10 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         % maxHeightinLUofThisItem: Item内Lu的最高的高度
         flagLU = LU.LU_Item(1,:) == iItem;
         maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
-        % hMargin: ITEM距离车顶的间隙
+        % hMargin: ITEM距离车顶的间隙 ************* 1 
         hMargin = hVeh - Item.LWH(3,iItem);
-%         hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
+        % hMargin: ITEM距离所有Item的最高值的间隙 ************* 2
+        hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
             % V1: 相互冲突
                 %         if ISdiagItem==1 && diagItem >= hMargin,  
                 %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end

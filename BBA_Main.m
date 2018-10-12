@@ -44,18 +44,18 @@ ISplotStrip = 0 % 每次生成Strip就显示结果
 ISplotEachPP = 0
 ISplotPause = 0
 
-ISdiagItem = 0  % 默认为 0 吧
+ISdiagItem = 1  % 默认为 0 吧
 
 ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1
 
-ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
+ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1    
 ISshuaiwei = 1   % 555 : 宽度和高度不满, 甩尾
-ISpingpu = 1      % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpu = 1     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
 ISpingpuAll = 1 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
-ISlastVehType = 0 % 555: 最后一车的调整, 与其它无关, 暂不考虑
+ISlastVehType = 1 % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
 if nargin ~= 0
     d = DataInitialize( ...
@@ -285,7 +285,8 @@ for iAlg = 1:nAlg
         % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
         %disp(d1.Veh.LWH)
-        d1 = RunAlgorithmLastVeh(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        %d1 = RunAlgorithmLastVeh(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
 %         plotSolution(d1,pA(iAlg));
         % 2.2 判断该车型是否可用
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
