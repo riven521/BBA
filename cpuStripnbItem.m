@@ -39,20 +39,28 @@ Strip.nbLU = ones(size(Strip.Weight))*-1;       %单STRIP内部LU类型个数, 混合型默
 % % % % end
 
 
-
 % V1: 原始结果, 可以是部分Strip, 结果似乎正确.
 uniStripIdx = unique(Item.Item_Strip(1,:));
 
 LIDinItemsArray = cell2mat(Item.LID); %所有ITEM对应的LID值 向量形式
 
+unique(LIDinItemsArray)
+for i=1:length(unique(LIDinItemsArray))
+    fprintf('LID %1.0f 有 %1.0f 个 \n', i,sum(LIDinItemsArray(:) == i));    
+end
+
 for iStrip=1:length(Strip.Weight)
     if ~Strip.isMixed(1,iStrip) %如是单纯型        
-        LU.ID
+        LU.ID;
         cellLID = Item.LID(Item.Item_Strip(1,:) == uniStripIdx(iStrip)); % cellLID: 本Strip内的ITEM对应的LID值
         LIDinThisItemArray = cellfun(@(x)x(1), cellLID);
-        if isscalar(unique(LIDinThisItemArray))
-            Strip.nbLU(1,iStrip) = LU.nbLID(LU.ID(unique(LIDinThisItemArray)))
-            Strip.nbItem(1,iStrip) = sum(LIDinItemsArray == unique(LIDinThisItemArray));         
+        LIDinThisItemArray = unique(LIDinThisItemArray)
+        if isscalar(LIDinThisItemArray)
+           
+            %             Strip.nbLU(1,iStrip) = LU.nbLID(LU.ID(LIDinThisItemArray))
+            a = unique(LU.nbLID(  LU.ID(:) == LIDinThisItemArray))
+            Strip.nbLU(1,iStrip) = a
+            Strip.nbItem(1,iStrip) = sum(LIDinItemsArray == LIDinThisItemArray);
             if Strip.nbItem(1,iStrip) > Strip.nbLU(1,iStrip)
                 error('strip.nbItem(1,iItem)< Strip.nbLU((1,iItem)'); 
             end
@@ -62,4 +70,5 @@ for iStrip=1:length(Strip.Weight)
         end
     end
 end
+1
 end

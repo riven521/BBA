@@ -240,8 +240,19 @@ V1009-1
 8: 增加11个问题算例及目前效果
 
 V1012-1
-1: 
-2:
+1: Copy-of 增加若干李浩算例
+2: 高度增加对角线和所有堆垛最高值
+
+V1012-2
+1: 整合量大车头函数
+2: 高度增加对角线和所有堆垛最高值
+
+
+V1014-1
+1: 增加ISisNonMixedLU = 1 ISisMixTileLU = 0 对LU堆垛进行排序
+2: Gpreproc中增加LU.isNonMixed/isMixedTile的计算
+3: 修改getLUorder, 增加LU.isNonMixed/isMixedTile排序
+
 
 ************甩尾顺序综合属性选择***********
 LASTVEHICLE 测验

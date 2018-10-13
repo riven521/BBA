@@ -55,16 +55,50 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     Veh.order = order;
     
     % 5 计算LU在当前车型下的最大长宽高层数 TODO 考虑margin
-    for i=1:length(LU.ID)
+    for i=1:length(LU.Weight)
         LU.maxL(1,i) =  floor(Veh.LWH(1,1)/LU.LWH(1,i));
         LU.maxL(2,i) =  floor(Veh.LWH(2,1)/LU.LWH(2,i));
-        LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));
+        LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));   %具体每个托盘LU的高度的最大层数
+    end
+
+    % 6 计算LU同样ID/可堆垛ID下的个数
+    for i=1:length(LU.Weight)
+        LU.nbLID(i) = sum(LU.ID == LU.ID(i));
     end
     
-    % 6 计算LU同样ID/可堆垛ID下的个数
-    for i=1:length(LU.ID)
-        LU.nbLID(i) = sum(LU.ID == LU.ID(i));
-    end    
+    % 7 计算LU下面的isNonMixed/isMixedTile是否为不需要混拼/混拼排序
+     LU.isNonMixed = ones(1,length(LU.Weight))*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
+     LU.isMixedTile = zeros(1,length(LU.Weight));    %Item混合,找出奇数个混合Item的尾托赋值为1
+    % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
+    % 循环: LID个数
+    for iLu=1:length(unique(LU.LID))
+        % Item i 对于的LU flag标记
+        VehHeight = Veh.LWH(3,1);  % 车辆宽度
+        
+        flagLU = LU.LID(:) == iLu;
+        LUHeight = unique(LU.LWH(3,flagLU));     % 同样LULID时的 LU高度
+            if length(unique(LUHeight)) > 2, error('同样LULID时的LU高度值>2,非预期错误'); end
+        if length(unique(LUHeight)) == 2, LUHeight = max(LUHeight); end % 用LU最大值作为堆垛判断值
+        
+        maxHeightLayer= floor(VehHeight/LUHeight); %LU高度层数
+        
+        nb = sum(flagLU);
+        nbmod = mod(nb,maxHeightLayer);
+            if nb ==0 || nbmod>nb, error('Gpreproc中计算isNonMixed错误'); end
+            
+        if nbmod == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
+            LU.isNonMixed(flagLU) = 1;
+        else
+            LU.isNonMixed(flagLU)= 0;            
+            % 计算LU的isMixedTile
+            tmpSort=[LU.SID; LU.LWH(3,:); LU.PID; ]; %LU.Weight LU.maxL;            
+            [~, order]=sortrows(tmpSort(:,flagLU)', [1,2,3],{'ascend','ascend','ascend'});
+            flagLUIdx = find(flagLU);
+            flagmodIdx = flagLUIdx(order(1:nbmod));
+            LU.isMixedTile(flagmodIdx)=1;
+        end
+    end
+
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 

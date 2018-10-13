@@ -36,26 +36,30 @@ close all
 clc
 global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPP ISplotStrip ISplotPause % plotStrip
+global ISisNonMixedLU ISisMixTileLU
 ISsItemAdjust = 0  % 暂时不用
 
 ISplotBBA = 1
 ISplotSolu = 1
 ISplotStrip = 0 % 每次生成Strip就显示结果
 ISplotEachPP = 0
-ISplotPause = 0
+ISplotPause = 0.5
 
-ISdiagItem = 1  % 默认为 0 吧
+ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
 ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1
 
-% ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
-ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1    
-ISshuaiwei = 1   % 555 : 宽度和高度不满, 甩尾
-ISpingpu = 1     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
+ISisMixTileLU = 0 % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
 
-ISlastVehType = 1 % 555: 最后一车的调整, 与其它无关, 暂不考虑
+% ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
+ISreStripToBin = 0  % 车头优先LU数量排序参数 默认为1    
+ISshuaiwei = 0   % 555 : 宽度和高度不满, 甩尾
+ISpingpu = 0     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll = 0 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+
+ISlastVehType = 0 % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
 if nargin ~= 0
     d = DataInitialize( ...

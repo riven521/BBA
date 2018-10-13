@@ -11,6 +11,8 @@ function [LU,Item] = HLUtoItem(LU,Veh)
 % Item.Weight          (1,n): ITEM的重量
 % tmpItem_LU         (1,n): 行1 ITEM的LU数量
 
+global ISisNonMixedLU ISisMixTileLU
+
 %% LU排序
 % 获取LU的顺序(重点是高度递减排序)
 
@@ -189,19 +191,47 @@ function printscript(LU,Item)
 %             if diff(currLUHight) >0  
 %                 currLUHight
 %             end
-%         end       
-
-        
+%         end
 
     end
 end
 
 
 function [tepLUorder] = getLUorder(LU)
-tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH; LU.Weight];
-% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
-% 供应商; 长度； ID；PID；高度；重量；
+% V1: ********** 不考虑isNonMixed
+% tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH; LU.Weight];
+tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH(1,:); LU.LWH(2,:); LU.LWH(3,:); LU.Weight];
 [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6, 7],{'ascend','descend','ascend','ascend','descend','descend'}); 
+
+% 1 SID; 2 长度；3 ID；4 PID；5 高度；6 重量；
+tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight];
+[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','ascend','ascend','descend','descend'}); 
+
+% V2: ********** 考虑isNonMixed
+global ISisNonMixedLU ISisMixTileLU
+% 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
+tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; ];
+if ISisNonMixedLU==1    
+    if ISisMixTileLU==1
+        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
+    else
+        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','ascend','ascend','descend'}); 
+    end
+else
+    [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend'}); 
+end
+
+
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend'}); 
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','ascend','ascend','descend','descend'}); 
+
+% tmpLUMatrix = [LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight]
+
+1
+
+% [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
+
+
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 7, 6],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % tmpLUMatrix = [LU.ID; LU.LWH; LU.SID; LU.PID];

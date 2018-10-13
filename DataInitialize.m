@@ -68,9 +68,9 @@ else
     % 不必按顺序, 也不必全部都输入
     for k = 1 : 2 : length(varargin)
         switch varargin{k}
-            case 'LUID'
+            case 'LUID' %LU堆垛判断
                 d.LU.ID                        = varargin{k+1};
-            case 'LULID'
+            case 'LULID' %LU类型判断, 展示用
                 d.LU.LID                      = varargin{k+1};
             case 'LULWH'
                 d.LU.LWH                    = varargin{k+1};
