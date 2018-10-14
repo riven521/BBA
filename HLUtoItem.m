@@ -208,9 +208,9 @@ tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weigh
 [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % V2: ********** 考虑isNonMixed
-global ISisNonMixedLU ISisMixTileLU
-% 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; ];
+global ISisNonMixedLU ISisMixTileLU % TODO 考虑不满托盘,同样LULID下
+tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; ...
+                           LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; ];
 if ISisNonMixedLU==1    
     if ISisMixTileLU==1
         [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
@@ -227,7 +227,6 @@ end
 
 % tmpLUMatrix = [LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight]
 
-1
 
 % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 6],{'ascend','ascend','ascend','descend'}); 
 

@@ -253,6 +253,12 @@ V1014-1
 2: Gpreproc中增加LU.isNonMixed/isMixedTile的计算
 3: 修改getLUorder, 增加LU.isNonMixed/isMixedTile排序
 
+V1014-2
+1: BBA-MAIN 返回BBA的输出值 增加中断后的LID新排序  output_LU_Seq增加第八行, 输出顺序.
+2: 修改函数1: 量大车头方案2HreStripToBin(Bin,Strip,Item,LU,Veh,p) 确保正确
+3: 修改cpuStripnbItem(Strip,Item,LU): 保证strip计算正确性. 但目前还无法确保对所有f都正确.
+
+
 
 ************甩尾顺序综合属性选择***********
 LASTVEHICLE 测验

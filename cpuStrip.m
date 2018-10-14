@@ -138,7 +138,7 @@ end
 
 %% 7
 %Strip.nbItem: 混合:-; 单纯: 对应Strip内部该Item的nbLID类型个数,数值越大,即该LU类型越多
-[Strip] = cpuStripnbItem(Strip,Item,LU);
+[Strip.nbItem, Strip.nbLU] = cpuStripnbItem(Strip,Item,LU);
 
 end
 

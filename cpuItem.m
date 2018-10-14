@@ -99,9 +99,12 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     
     %% SECTION 4 ¼ÆËãITEMµÄnbItem
     tmpItemLID = cell2mat(Item.LID);
-    for i=1:length(Item.Weight)
-        Item.nbItem(i) = sum(tmpItemLID == tmpItemLID(i));
-    end
+    % V1
+    %     for i=1:length(Item.Weight)
+    %         Item.nbItem(i) = sum(tmpItemLID == tmpItemLID(i));
+    %     end
+    % V2
+    Item.nbItem = sum(tmpItemLID == tmpItemLID');
 
 end
 

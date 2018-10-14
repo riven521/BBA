@@ -8,7 +8,7 @@ if any(cell2mat(struct2cell(fLU))) || any(cell2mat(struct2cell(fVeh)))
 
 nVeh = length(Veh.ID);
 nLU = length(LU.ID);
-% *************** Veh向量判断 ***************
+%% *************** Veh向量判断 ***************
 % 判断Veh向量是否行向量; 矩阵列是否一致; 不一致进行旋转
 fields  = fieldnames(Veh);
 % 对Veh矩阵中每个字段分别判断, 每个字段的列数必须是车辆数nVeh
@@ -48,7 +48,7 @@ for idx = 1:length(fields)
         error('Veh数据存在列数不等于车辆数情况,输入错误2');
     end
 end 
-% *************** LU向量判断 ***************
+%% *************** LU向量判断 ***************
 % 判断LU向量是否行向量; 矩阵列是否一致; 不一致进行旋转
 fields  = fieldnames(LU);
 for idx = 1:length(fields)

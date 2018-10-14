@@ -62,24 +62,29 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     end
 
     % 6 计算LU同样ID/可堆垛ID下的个数
+    % V1"
     for i=1:length(LU.Weight)
         LU.nbLID(i) = sum(LU.ID == LU.ID(i));
     end
+    % V2: 直接计算
+    LU.nbLID = sum(LU.ID==LU.ID');
+
     
     % 7 计算LU下面的isNonMixed/isMixedTile是否为不需要混拼/混拼排序
      LU.isNonMixed = ones(1,length(LU.Weight))*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
      LU.isMixedTile = zeros(1,length(LU.Weight));    %Item混合,找出奇数个混合Item的尾托赋值为1
     % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
     % 循环: LID个数
-    for iLu=1:length(unique(LU.LID))
+    uniLID = unique(LU.LID)
+    for iLu=1:length(uniLID)
         % Item i 对于的LU flag标记
         VehHeight = Veh.LWH(3,1);  % 车辆宽度
         
-        flagLU = LU.LID(:) == iLu;
+        flagLU = LU.LID(:) == uniLID(iLu);
         LUHeight = unique(LU.LWH(3,flagLU));     % 同样LULID时的 LU高度
             if length(unique(LUHeight)) > 2, error('同样LULID时的LU高度值>2,非预期错误'); end
         if length(unique(LUHeight)) == 2, LUHeight = max(LUHeight); end % 用LU最大值作为堆垛判断值
-        
+
         maxHeightLayer= floor(VehHeight/LUHeight); %LU高度层数
         
         nb = sum(flagLU);

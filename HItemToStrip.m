@@ -346,7 +346,7 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 
 % V2: ********** 考虑isNonMixed
 global ISisNonMixed ISisMixTile
-% 目前顺序 : 1: SID ; 2: isNonMixed; 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
+% 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
 tmpItem = [SIDorder; Item.isNonMixed; Item.isMixedTile; Item.LWH(2,:); Item.LWH(1,:); LIDorder; Item.LWH(3,:); ];
 if ISisNonMixed==1    
     if ISisMixTile==1

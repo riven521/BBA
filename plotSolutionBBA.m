@@ -1,13 +1,16 @@
 function [] = plotSolutionBBA(c,lwh,m,Veh)
+% plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne).Veh);
 % 作图函数:三维BPP
-
+global ISplotPause
 % 1: 按照LID区分颜色
  nIDType = unique(m(5,:));
-
+ 
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 nBin = max(m(2,:)); %bin的个数;
 
 figure('name',num2str([nBin]));
+j = 1;
+tmp = m(8,1);
 for ibin=1:nBin
 
     subplot(2,ceil((nBin)/2),ibin);
@@ -20,10 +23,19 @@ for ibin=1:nBin
 
     % LU在Bin内的顺序
     seq = m(3,f);
-    
+
     for i=1:numel(seq)
         idx =find(seq==i); % LU进入Bin内的画图顺序
         LUColor = 0.8*nColors(nIDType==lid(idx), : );
+       
+        % 当托盘不相连出现时, 中断
+        if j~=1 && tmp ~=m(8,j) 
+                 if ISplotPause>=0 ,      pause(ISplotPause);   end
+        end        
+        tmp = m(8,j);
+        j=j+1;
+        
+        % plot
         plotcube(yxz(:,idx)',coord(:,idx)',0.7,LUColor);
         
         % Set the lable and the font size

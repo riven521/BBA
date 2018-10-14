@@ -34,7 +34,15 @@ function [d] = RunAlgorithm(d,p)
         if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
         
         % ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
-        if ISreStripToBin==1,   [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
+                        ti = d.Strip;  tl = d.Bin;
+ 
+        
+        if ISreStripToBin==1,   
+            [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
+                
+        [match, er1, er2] = comp_struct(ti,d.Strip,1);
+        [match, er1, er2] = comp_struct(tl,d.Bin,1);
+        list_struct(er1)
         
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
@@ -183,47 +191,92 @@ end
 %% 局部函数 %%
 
 %% 函数1: 量大车头方案2: V1: s1 :全部为基于Strip排除已安排Bin后的剩余Strip;;cpuStripnbItem为部分Strip进入
+% % function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
+% %         % DONE: 量大车头方案2: 
+% %         % 目的: 量大的LU被车辆拆分为量小但仍摆放车头;
+% %         % 方法: 每个Bin都对排除前任Strip后的剩余Strip重新排序并分别执行HStripToBin算法.
+% %         nbBin = max(Strip.Strip_Bin(1,:));
+% %         if nbBin>1
+% %             ibin=2;
+% %             while 1
+% %                 % 1 获取f and fidx: 排除首个bin后的剩余Strip逻辑值 and 索引值
+% %                 Strip.Strip_Bin(1, Strip.Strip_Bin(1,:) >= ibin ) = -1; % 所有非首bin的bin序号赋值-1
+% %                 % 找出未正确排序后的Strip
+% %                 f = Strip.Strip_Bin(1,:) == -1; 
+% %                 fidx = find(f);
+% %                 if ~any(f), break; end
+% %                 
+% %                 % 2 获取s1 : 基于f 获取的剩余Strip结构体
+% %                 s1 = rmfield(Strip,{'striporder','Strip_Bin'});
+% %                 s1 = structfun(@(x) x(:,f),s1,'UniformOutput',false);
+% %                 
+% %                 % 3 获取i1 : 基于剩余Strip获取的剩余Item结构体
+% %                 i1  = Item;
+% %                 f2 = zeros(1,length(i1.Weight));
+% %                 iIdxs= find(f);
+% %                 for j=1:length(iIdxs)
+% %                     f2 = f2+(i1.Item_Strip(1,:) == iIdxs(j));
+% %                 end                
+% %                 i1 = structfun(@(x) x(:,logical(f2)), i1, 'UniformOutput',false);
+% %                 
+% %                 % 4 获取新s2和b2 : 基于s1和i1, 重新计算Strip.nbItem and 重新执行启发式S2B
+% %                 [s1] = cpuStripnbItem(s1,i1,LU);
+% %                 %[s1,~] = cpuStrip(s1,i1,LU,Veh);  % 此函数包含上面的子函数, 是否有必要计算全部, 还是只计算上面子函数 TODO
+% %                 
+% %                 [s2,b2]= HStripToBin(s1,Veh,LU,p);
+% %                 
+% %                 % 5 获取fs: 剩余Strip摆放后的首个bin内的 so 右侧==1
+% %                 % 替换原始Strip_Bin的值
+% %                 fs = s2.Strip_Bin(1,:)==1;
+% %                 Strip.Strip_Bin(1,fidx(fs)) = ibin;
+% %                 Strip.Strip_Bin(2,fidx(fs)) = s2.Strip_Bin(2,fs);
+% %   
+% %                 % 6 赋值语句
+% %                 Bin.Weight(ibin) = b2.Weight(1);
+% %                 Bin.LW(:,ibin) = b2.LW(1);
+% %                 ibin = ibin+1;                
+% %             end
+% %         end
+% % end
+
+%% 函数1: 量大车头方案2: V3: 
+    % s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
 function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
         % DONE: 量大车头方案2: 
-        % 目的: 量大的LU被车辆拆分为量小但仍摆放车头;
-        % 方法: 每个Bin都对排除前任Strip后的剩余Strip重新排序并分别执行HStripToBin算法.
+        % 目的: 解决量大的LU被车辆拆分为量小但仍摆放车头;
+        % 方法: 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法.
         nbBin = max(Strip.Strip_Bin(1,:));
         if nbBin>1
             ibin=2;
             while 1
                 % 1 获取f and fidx: 排除首个bin后的剩余Strip逻辑值 and 索引值
-                Strip.Strip_Bin(1, Strip.Strip_Bin(1,:) >= ibin ) = -1; % 所有非首bin的bin序号赋值-1
-                % 找出未正确排序后的Strip
-                f = Strip.Strip_Bin(1,:) == -1; 
-                fidx = find(f);
-                if ~any(f), break; end
+                Strip.Strip_Bin(1, Strip.Strip_Bin(1,:) >= ibin ) = -1; % 所有非首bin的bin序号赋值-1, 第一个bin永远不会动
+                % 找出需要重新排序计算的strip,lu,item等的flag
+                fStrip = Strip.Strip_Bin(1,:) == -1; 
+                fidx=find(fStrip);    if ~any(fStrip), break; end
                 
-                % 2 获取s1 : 基于f 获取的剩余Strip结构体
-                s1 = rmfield(Strip,{'striporder','Strip_Bin'});
-                s1 = structfun(@(x) x(:,f),s1,'UniformOutput',false);
+                fItem = Item.Item_Bin(1,:) >= ibin ;
+                fLu = LU.LU_Bin(1,:) >= ibin ;
                 
-                % 3 获取i1 : 基于剩余Strip获取的剩余Item结构体
-                i1  = Item;
-                f2 = zeros(1,length(i1.Weight));
-                iIdxs= find(f);
-                for j=1:length(iIdxs)
-                    f2 = f2+(i1.Item_Strip(1,:) == iIdxs(j));
-                end                
-                i1 = structfun(@(x) x(:,logical(f2)), i1, 'UniformOutput',false);
+                % 2 获取s1,i1,l1; 分别增加位于剩余bin内的标记
+                s1 = Strip;  s1.f = fStrip;%rmfield(Strip,{'striporder','Strip_Bin'});                              
+                i1  = Item;  i1.f = fItem;
+                l1 = LU;     l1.f = fLu;
                 
-                % 4 获取新s2和b2 : 基于s1和i1, 重新计算Strip.nbItem and 重新执行启发式S2B
-                [s1] = cpuStripnbItem(s1,i1,LU);
-                %[s1,~] = cpuStrip(s1,i1,LU,Veh);  % 此函数包含上面的子函数, 是否有必要计算全部, 还是只计算上面子函数 TODO
+                % 3 进入cpuStripnbItem给了全部,增加了flag标记
+                [s1.nbItem,s1.nbLU] = cpuStripnbItem(s1,i1,l1);
                 
+                % 4 获取新s2和b2 and 重新执行启发式S2B (进入HStripToBin只能给剩余部分的 x(:,f) )
+                s1 = structfun(@(x) x(:,fStrip),s1,'UniformOutput',false);          
                 [s2,b2]= HStripToBin(s1,Veh,LU,p);
                 
                 % 5 获取fs: 剩余Strip摆放后的首个bin内的 so 右侧==1
                 % 替换原始Strip_Bin的值
-                fs = s2.Strip_Bin(1,:)==1;
+                fs = s2.Strip_Bin(1,:)==1; %找出第i1个bin的逻辑值                
                 Strip.Strip_Bin(1,fidx(fs)) = ibin;
                 Strip.Strip_Bin(2,fidx(fs)) = s2.Strip_Bin(2,fs);
-  
-                % 6 赋值语句
+
+                % 6 Bin更新赋值语句
                 Bin.Weight(ibin) = b2.Weight(1);
                 Bin.LW(:,ibin) = b2.LW(1);
                 ibin = ibin+1;                
@@ -231,11 +284,12 @@ function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
         end
 end
 
-%% 函数1: 量大车头方案2: V2: s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
+
+% % %% 函数1: 量大车头方案2: V2: s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
 % % function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
 % %         % DONE: 量大车头方案2: 
-% %         % 目的: 量大的LU被车辆拆分为量小但仍摆放车头;
-% %         % 方法: 每个Bin都对排除前任Strip后的剩余Strip重新排序并分别执行HStripToBin算法.
+% %         % 目的: 解决量大的LU被车辆拆分为量小但仍摆放车头;
+% %         % 方法: 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法.
 % %         nbBin = max(Strip.Strip_Bin(1,:));
 % %         if nbBin>1
 % %             ibin=2;
@@ -281,45 +335,45 @@ end
 %% 函数2: 量大车头方案1: 
         % 目的: 量大的LU被车辆拆分为量小但仍摆放车头;
         % 方法: 每个Bin都分别但各Bin内Strip执行HStripToBin算法.
-function [Strip,Bin] = HreStripToEachBin(Bin,Strip,Item,LU,Veh,p)
-       % 针对后续车辆重新排序并安排到新Bin内
-        nbBin = max(Strip.Strip_Bin(1,:));
-        if nbBin>100
-            for ibin=2:nbBin
-                f = Strip.Strip_Bin(1,:) == ibin;
-                
-                s1 = rmfield(Strip,{'striporder','Strip_Bin'});
-                s1 = structfun(@(x) x(:,f),s1,'UniformOutput',false);
-                i1  = Item;  
-                
-                iIdxs= find(f);
-                f2 = zeros(1,length(i1.Weight));
-                for j=1:length(iIdxs)
-                    f2 = f2+(i1.Item_Strip(1,:) == iIdxs(j));
-                end
-                
-                i1 = structfun(@(x) x(:,logical(f2)), i1, 'UniformOutput',false);
-                
-                % 1 重新计算Strip.nbItem and 重新执行启发式S2B
-                [s1] = cpuStripnbItem(s1,i1,Veh);
-                
-                [s2,b2]= HStripToBin(s1,Veh,LU,p);
-                
-                % 2 替换回原始Strip_Bin的ibin的进入顺序
-                Strip.Strip_Bin(2,f) = s2.Strip_Bin(2,:);
-                
-                % 3 防错语句
-                if any(s2.Strip_Bin(1,:)~=1), error('重新分配后bin放不下'); end
-                if size(b2.Weight,2) ~=1, error('重量不相同'); end
-                if size(b2.LW,2) ~=1, error('长宽不相同'); end
-                if Bin.Weight(ibin) ~= b2.Weight, error('重量不相同'); end
-                if Bin.LW(:,ibin) ~= b2.LW, error('长宽不相同'); end                
-                Bin.Weight(ibin) = b2.Weight;
-                Bin.LW(:,ibin) = b2.LW;
-                
-            end
-        end
-end
+% % function [Strip,Bin] = HreStripToEachBin(Bin,Strip,Item,LU,Veh,p)
+% %        % 针对后续车辆重新排序并安排到新Bin内
+% %         nbBin = max(Strip.Strip_Bin(1,:));
+% %         if nbBin>100
+% %             for ibin=2:nbBin
+% %                 f = Strip.Strip_Bin(1,:) == ibin;
+% %                 
+% %                 s1 = rmfield(Strip,{'striporder','Strip_Bin'});
+% %                 s1 = structfun(@(x) x(:,f),s1,'UniformOutput',false);
+% %                 i1  = Item;  
+% %                 
+% %                 iIdxs= find(f);
+% %                 f2 = zeros(1,length(i1.Weight));
+% %                 for j=1:length(iIdxs)
+% %                     f2 = f2+(i1.Item_Strip(1,:) == iIdxs(j));
+% %                 end
+% %                 
+% %                 i1 = structfun(@(x) x(:,logical(f2)), i1, 'UniformOutput',false);
+% %                 
+% %                 % 1 重新计算Strip.nbItem and 重新执行启发式S2B
+% %                 [s1] = cpuStripnbItem(s1,i1,Veh);
+% %                 
+% %                 [s2,b2]= HStripToBin(s1,Veh,LU,p);
+% %                 
+% %                 % 2 替换回原始Strip_Bin的ibin的进入顺序
+% %                 Strip.Strip_Bin(2,f) = s2.Strip_Bin(2,:);
+% %                 
+% %                 % 3 防错语句
+% %                 if any(s2.Strip_Bin(1,:)~=1), error('重新分配后bin放不下'); end
+% %                 if size(b2.Weight,2) ~=1, error('重量不相同'); end
+% %                 if size(b2.LW,2) ~=1, error('长宽不相同'); end
+% %                 if Bin.Weight(ibin) ~= b2.Weight, error('重量不相同'); end
+% %                 if Bin.LW(:,ibin) ~= b2.LW, error('长宽不相同'); end                
+% %                 Bin.Weight(ibin) = b2.Weight;
+% %                 Bin.LW(:,ibin) = b2.LW;
+% %                 
+% %             end
+% %         end
+% % end
         
 %% 计算下届
 % % % % %     function [ lb ] = computerLB(Item,Veh)

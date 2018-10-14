@@ -53,7 +53,7 @@ for i=1:length(uniOrd)
         [~,order] = sortrows(tmpM',[1,2,3,4],{'descend','ascend','descend','descend'}); 
         tmpM = [tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
         [~,order] = sortrows(tmpM',[1,2,3,4,5],{'descend', 'descend','ascend','descend','descend'}); 
-        tmpM = [tPured;tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
+%         tmpM = [tPured;tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
 %         [~,order] = sortrows(tmpM',[1,2,3,4,5,6],{'descend', 'descend','descend','ascend','descend','descend'}); 
         
         % 3 全纯 > 数量 > 单纯 > 满层 > LoadingRate

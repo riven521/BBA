@@ -40,24 +40,25 @@ global ISisNonMixedLU ISisMixTileLU
 ISsItemAdjust = 0  % 暂时不用
 
 ISplotBBA = 1
-ISplotSolu = 1
+ISplotSolu = 0
 ISplotStrip = 0 % 每次生成Strip就显示结果
 ISplotEachPP = 0
-ISplotPause = 0.5
+ISplotPause = 0.03
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
 ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
-ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1
+ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象
 
 ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
-ISisMixTileLU = 0 % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
+ISisMixTileLU = 1 % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
 
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
-ISreStripToBin = 0  % 车头优先LU数量排序参数 默认为1    
-ISshuaiwei = 0   % 555 : 宽度和高度不满, 甩尾
-ISpingpu = 0     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 0 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+
+ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1    
+ISshuaiwei = 1   % 555 : 宽度和高度不满, 甩尾
+ISpingpu = 1     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll = 1 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
 ISlastVehType = 0 % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
@@ -350,7 +351,8 @@ if flagTiled(ibin) %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
     
     output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin3;
     output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH3;
-    output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq3([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
+    %[1,3,4,5,7,8]
+    output_LU_Seq([1,3,4,5,7,8],flaglastLUIdx) = output_LU_Seq3([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
 end
 end
 end
@@ -431,27 +433,52 @@ LU_Bin = daMax.LU.LU_Bin;   %唯一两行的
 LU_VehType=daMax.LU.LU_VehType;
 
 output_LU_Seq = [LU_Item; LID; PID; SID; hLU; LU_Bin;LU_VehType]; % 2 1 1 1 1 2 1
+% 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
+% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8 9 LU_VehType
+output_LU_Seq = [LU_Bin(1,:); LU_Bin(2,:); SID; LID; PID; LU_Item(1,:); LU_Item(2,:); hLU; LU_VehType];
 
 %% 2 参数三的排序及展示顺序 (暂未考虑LU_VehType)
 % 排序优先顺序 tmpSeq:
 % 如果需要按LUID先堆垛展示,后零部件展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 LU_ITEM，同一PID
-% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8
+% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 ITEM 6 ITEMSEQ 7 PID 8 LUHEIGHT 6==8 
 %         tmpSeq =[7,8,5,3,1,2,4,6];
 % 如果需要按LUID先零部件后按堆垛展示, 取同一BIN内, 同一SID, 同一LUID ->> 同一 PID, 同一LU_ITEM
-% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8
+% 1 BIN 2 BINSEQ 3 SID 4 LID -> 5 PID 6 ITEM 7 ITEMSEQ 8 LUHEIGHT 7==8 9 LU_VehType
 tmpSeq =[7,8,5,3,4,1,2,6];
 [~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend'});
 
-% 参数三的行结果展示顺序:
-%  1 LU_VehType 2 LU_Bin(1) 3 LU_Bin(2) 4 SID 5 LID 6 LU_Item(1) 7 PID
-tmpShow =[9,7,8,5,3,1,4]; %增加9:托盘所出车型号 参数3的行号
-%    tmpShow =[7,8,5,3,1,2,4,6];
+% V2 列排序
+tmpSeq =[1:9];
+[~,order] = sortrows(output_LU_Seq',tmpSeq,{'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend','ascend'});
 
+
+% 参数三的行结果展示哪些行及其顺序:
+%  V1 1 LU_VehType 2 LU_Bin(1) 3 LU_Bin(2) 4 SID 5 LID 6 LU_Item(1) 7 PID
+tmpShow =[9,7,8,5,3,1,4];  %增加9:托盘所出车型号 参数3的行号     % tmpShow =[7,8,5,3,1,2,4,6];
+% V2  % 输出7行: 行1: LU_VehType 行2 LU_Bin(1) 行3 LU_Bin(2) 行4 SID 行5 LID 行6
+%  LU_Item(1) 行7 PID 行8 输出顺序(最重要)
+tmpShow =[9,1,2,3,4,6,5];  
 
 % FINAL return's results;
 output_LU_LWH =output_LU_LWH(:,order);
 output_LU_Seq =output_LU_Seq(tmpShow,order);
 output_CoordLUBin =output_CoordLUBin(:,order);
+
+        % output_LU_Seq增加第8行: REAL托盘展示顺序(含甩尾等)
+        TwoRows=output_LU_Seq([2,4,5],:) %TwoRows: SID/ LID, TODO 后期增加其它需要判断步骤的依据
+        LUShowSeq=zeros(1,size(TwoRows,2));
+        LUShowSeq(1)=1;
+        if length(LUShowSeq)>1
+            for i =2:length(LUShowSeq)
+                if TwoRows(1,i)==TwoRows(1,i-1) && TwoRows(2,i)==TwoRows(2,i-1) && TwoRows(3,i)==TwoRows(3,i-1)
+                    LUShowSeq(i) = LUShowSeq(i-1) ;
+                else
+                    LUShowSeq(i) = LUShowSeq(i-1)+1;
+                end
+            end
+        end
+        TwoRows=[TwoRows;LUShowSeq]
+output_LU_Seq = [output_LU_Seq;LUShowSeq];
 
 % % x = [daMax.LU.LU_Bin(:,order);daMax.LU.LU_Strip(:,order);daMax.LU.CoordLUBin(:,order);output_CoordLUBin]
 % % y=x(:,x(1,:)==3)'
