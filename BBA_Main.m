@@ -35,30 +35,31 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 close all
 clc
 global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
-global ISplotBBA ISplotSolu ISplotEachPP ISplotStrip ISplotPause % plotStrip
+global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause % plotStrip
 global ISisNonMixedLU ISisMixTileLU
 ISsItemAdjust = 0  % 暂时不用
 
 ISplotBBA = 1
-ISplotSolu = 0
-ISplotStrip = 0 % 每次生成Strip就显示结果
-ISplotEachPP = 0
-ISplotPause = 0.03
+        % ISplotSolu = 0
+ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
+ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
+ISplotPause = -0.03
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
+
+% 下面还不完整, 可能要调
+ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
+ISisMixTileLU = 1      % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
 
 ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象
 
-ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
-ISisMixTileLU = 1 % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
-
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
 
-ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1    
-ISshuaiwei = 1   % 555 : 宽度和高度不满, 甩尾
-ISpingpu = 1     % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1 %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1
+ISshuaiwei = 1        % 555 : 宽度和高度不满, 甩尾
+ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll = 1      %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
 ISlastVehType = 0 % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
@@ -89,7 +90,7 @@ end
 % printstruct(d);
 t = [d.LU.ID;d.LU.LWH]
 sortrows(t',[1,4],{'ascend','descend'})
-1
+
 
 %% 没有属性的临时增加
     n = numel(d.LU.Weight);
@@ -229,7 +230,7 @@ for iAlg = 1:nAlg
             %    do2 = RunAlgorithmTile(d2,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
             do2 = RunAlgorithm(d2,pA(iAlg)); 
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-            if ISplotEachPP == 1
+            if ISplotEachPingPu == 1
                plotSolution(do2,pA(iAlg));
             end
 
@@ -358,6 +359,7 @@ end
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
+
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne).Veh);
 end
@@ -370,7 +372,14 @@ if  ISplotSolu
 %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
 end
 
+% 剔除展示顺序
+output_LU_Seq = output_LU_Seq(1:7,:);
+
+output_LU_Seq
+
 fprintf(1,'Simulation done.\n');
+
+
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % d = rmfield(d, {'Veh', 'LU'});%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
@@ -465,20 +474,21 @@ output_LU_Seq =output_LU_Seq(tmpShow,order);
 output_CoordLUBin =output_CoordLUBin(:,order);
 
         % output_LU_Seq增加第8行: REAL托盘展示顺序(含甩尾等)
-        TwoRows=output_LU_Seq([2,4,5],:) %TwoRows: SID/ LID, TODO 后期增加其它需要判断步骤的依据
-        LUShowSeq=zeros(1,size(TwoRows,2));
+        ThreeRows=output_LU_Seq([2,4,5],:) %TwoRows: SID/ LID, TODO 后期增加其它需要判断步骤的依据
+        LUShowSeq=zeros(1,size(ThreeRows,2));
         LUShowSeq(1)=1;
         if length(LUShowSeq)>1
             for i =2:length(LUShowSeq)
-                if TwoRows(1,i)==TwoRows(1,i-1) && TwoRows(2,i)==TwoRows(2,i-1) && TwoRows(3,i)==TwoRows(3,i-1)
+                if ThreeRows(1,i)==ThreeRows(1,i-1) && ThreeRows(2,i)==ThreeRows(2,i-1) && ThreeRows(3,i)==ThreeRows(3,i-1)
                     LUShowSeq(i) = LUShowSeq(i-1) ;
                 else
                     LUShowSeq(i) = LUShowSeq(i-1)+1;
                 end
             end
         end
-        TwoRows=[TwoRows;LUShowSeq]
+        %         ThreeRows=[ThreeRows;LUShowSeq]
 output_LU_Seq = [output_LU_Seq;LUShowSeq];
+
 
 % % x = [daMax.LU.LU_Bin(:,order);daMax.LU.LU_Strip(:,order);daMax.LU.CoordLUBin(:,order);output_CoordLUBin]
 % % y=x(:,x(1,:)==3)'

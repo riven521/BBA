@@ -5,7 +5,7 @@
 % IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem, Strip.isHeightFull,...
 %                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
                                     
-function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SnbItem,SnbLU, ...
+function allPriority = getOrderofLID(SIDord,Ssingle, Spured,SnbItem,SnbLU,SnbLULID, ...
     SHeightfullfull, SisMixed, SLID,SLW,SLoadingRateLimit,SLoadingrate)
 % ID is cell type % ID = [2 3 NaN; 2 1 3; 1 3 NaN; 2 1 NaN]';
 if ~iscell(SLID),error('输入非cell');end
@@ -26,6 +26,8 @@ for i=1:length(uniOrd)
     % FINALLY USED 优先车头摆放的顺序
     tnbItem = SnbItem(:,idxSID);
     tnbLU = SnbLU(:,idxSID);
+    tnbLULID = SnbLULID(:,idxSID);
+    
     
     tMixed = SisMixed(:,idxSID);
     tFull = SHeightfullfull(:,idxSID);
@@ -53,6 +55,9 @@ for i=1:length(uniOrd)
         [~,order] = sortrows(tmpM',[1,2,3,4],{'descend','ascend','descend','descend'}); 
         tmpM = [tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
         [~,order] = sortrows(tmpM',[1,2,3,4,5],{'descend', 'descend','ascend','descend','descend'}); 
+        tmpM = [tnbLU; tnbLULID; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
+        [~,order] = sortrows(tmpM',[1,2,3,4,5,6],{'descend', 'descend', 'descend','ascend','descend','descend'});         
+        
 %         tmpM = [tPured;tnbLU; tnbItem; tMixed; tFull; tLR; ];  % tLL; tLW; tID; tPured; tSingle
 %         [~,order] = sortrows(tmpM',[1,2,3,4,5,6],{'descend', 'descend','descend','ascend','descend','descend'}); 
         

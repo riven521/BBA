@@ -27,33 +27,36 @@ function [d] = RunAlgorithm(d,p)
 
         %% 启发式：Strip到Bin的算法        
         % ********* 1 Strip排序: % 1: SID 2: priorityofLID
-        [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,d.LU,p);
+        [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
         
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
         
-        % ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1
+        % ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
+        % 特别是对第三辆车及以后
                         ti = d.Strip;  tl = d.Bin;
- 
-        
+%                         plot3DBPP(d,p);
         if ISreStripToBin==1,   
-            [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
-                
+            [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
+                [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
+        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+        end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
+
         [match, er1, er2] = comp_struct(ti,d.Strip,1);
         [match, er1, er2] = comp_struct(tl,d.Bin,1);
         list_struct(er1)
         
-        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
-        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
-        
+       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
+            
+%        plot3DBPP(d,p);
         % ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin
-        if ISshuaiwei==1,      [d.Strip] = HStripSW(d.Strip);      end
-        
-        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
+        if ISshuaiwei==1,      [d.Strip] = HStripSW(d.Strip);    
+                [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
-        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
+        end
+        
+       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
         
                 %         printstruct(d.Item,'sortfields',1,'PRINTCONTENTS',0)  
                 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
@@ -255,31 +258,45 @@ function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
                 fStrip = Strip.Strip_Bin(1,:) == -1; 
                 fidx=find(fStrip);    if ~any(fStrip), break; end
                 
-                fItem = Item.Item_Bin(1,:) >= ibin ;
-                fLu = LU.LU_Bin(1,:) >= ibin ;
-                
+                % V1 错误原因是LU.LU_Bin会发生变化, 但此处考虑不到
+                %                 fItem = Item.Item_Bin(1,:) >= ibin ; %
+                %                 fLu = LU.LU_Bin(1,:) >= ibin ;    
+
+                % V2 修改引入对LU.LU_Bin变化的优化
+                Item.Item_Bin(1, Item.Item_Bin(1,:) >= ibin |  Item.Item_Bin(1,:) == 0) = -1;
+                fItem = Item.Item_Bin(1,:) == -1;
+                                
+                LU.LU_Bin(1, LU.LU_Bin(1,:) >= ibin |  LU.LU_Bin(1,:) == 0) = -1; 
+                fLu = LU.LU_Bin(1,:) == -1;
+
                 % 2 获取s1,i1,l1; 分别增加位于剩余bin内的标记
-                s1 = Strip;  s1.f = fStrip;%rmfield(Strip,{'striporder','Strip_Bin'});                              
+                s1 = rmfield(Strip,{'striporder','Strip_Bin','nbLU','nbItem'});   s1.f = fStrip; %Strip
                 i1  = Item;  i1.f = fItem;
-                l1 = LU;     l1.f = fLu;
-                
+                l1 = LU;      l1.f = fLu;
+
                 % 3 进入cpuStripnbItem给了全部,增加了flag标记
-                [s1.nbItem,s1.nbLU] = cpuStripnbItem(s1,i1,l1);
+                [s1.nbItem,s1.nbLU, s1.nbLULID] = cpuStripnbItem(s1,i1,l1);                
                 
                 % 4 获取新s2和b2 and 重新执行启发式S2B (进入HStripToBin只能给剩余部分的 x(:,f) )
-                s1 = structfun(@(x) x(:,fStrip),s1,'UniformOutput',false);          
-                [s2,b2]= HStripToBin(s1,Veh,LU,p);
-                
+                s1 = structfun(@(x) x(:,fStrip),s1,'UniformOutput',false);    % 排除已经确定入bin的剩余Strip
+                [s2,b2]= HStripToBin(s1,Veh,p);
+        
                 % 5 获取fs: 剩余Strip摆放后的首个bin内的 so 右侧==1
                 % 替换原始Strip_Bin的值
                 fs = s2.Strip_Bin(1,:)==1; %找出第i1个bin的逻辑值                
                 Strip.Strip_Bin(1,fidx(fs)) = ibin;
                 Strip.Strip_Bin(2,fidx(fs)) = s2.Strip_Bin(2,fs);
-
+                
                 % 6 Bin更新赋值语句
                 Bin.Weight(ibin) = b2.Weight(1);
                 Bin.LW(:,ibin) = b2.LW(1);
-                ibin = ibin+1;                
+
+                % 7 主要增加对LU_Bin的计算,
+                [LU,Item] = HItemToBin(LU,Item,Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
+                [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                
+                % 8 ibin自增
+                ibin = ibin+1;
             end
         end
 end

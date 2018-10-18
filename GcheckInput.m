@@ -43,6 +43,8 @@ function deepCheck(LU,Veh)
     for iLU = 1:length(uniID)
         tmp = LU.LWH(1:2,LU.ID==uniID(iLU))';   %获取宽和长,不要高 
         if isempty(tmp),      error('不应该出现的错误');       end
+        unique(tmp,'rows')
+        x=[LU.LWH;LU.ID]
         if numel(unique(tmp,'rows')) > 2,  error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    end        
         tmp = LU.isRota(:,LU.ID==uniID(iLU));
         if isempty(tmp),      error('不应该出现的错误');       end

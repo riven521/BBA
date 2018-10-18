@@ -39,11 +39,11 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         % hMargin: ITEM距离车顶的间隙 ************* 1 
         hMargin = hVeh - Item.LWH(3,iItem);
         % hMargin: ITEM距离所有Item的最高值的间隙 ************* 2
-%         hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
-                if abs(maxHeightinLUofThisItem - hMargin ) <=60
-                hMargin
-                maxHeightinLUofThisItem
-                end
+%     hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
+        %                 if abs(maxHeightinLUofThisItem - hMargin ) <=60
+        %                 hMargin
+        %                 maxHeightinLUofThisItem
+        %                 end
             % V1: 相互冲突
                 %         if ISdiagItem==1 && diagItem >= hMargin,  
                 %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end

@@ -258,11 +258,17 @@ V1014-2
 2: 修改函数1: 量大车头方案2HreStripToBin(Bin,Strip,Item,LU,Veh,p) 确保正确
 3: 修改cpuStripnbItem(Strip,Item,LU): 保证strip计算正确性. 但目前还无法确保对所有f都正确.
 
+V1018-1
+1: 修改函数1: 量大车头方案2HreStripToBin(Bin,Strip,Item,LU,Veh,p) 修改确保正确的bug 对
+2: 增加nbLULID在LU和Strip结构体
+
+
+TODO:
+给不完全版, 慢慢改.PPT书写.
 
 
 ************甩尾顺序综合属性选择***********
 LASTVEHICLE 测验
-各种ORDER 
 各种strip属性记录
 各种其它难点
 PPT书写
@@ -273,7 +279,7 @@ NOTE:
 1: Item.Item_Strip(1,:) == iStrip 避免==右侧为i索引顺序. 因为Item_Strip的第一行可能并非从1开始,也非连续
 
 TODO:
-1: LU是否满托的计算
+1: LU是否满托的计算 DONE
 2: 混合Strip的非混合(且满层?)的优先orderItem
 3: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
 CPUSTRIP 五次注释 移到I2S中; CPUBIN和Item2Bin也可能有问题, 明天排查

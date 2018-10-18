@@ -3,7 +3,7 @@ function [] = plotSolutionBBA(c,lwh,m,Veh)
 % 作图函数:三维BPP
 global ISplotPause
 % 1: 按照LID区分颜色
- nIDType = unique(m(5,:));
+nIDType = unique(m(5,:));
  
 nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 nBin = max(m(2,:)); %bin的个数;
