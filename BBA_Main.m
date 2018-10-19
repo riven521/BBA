@@ -44,7 +44,7 @@ ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
 ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
-ISplotPause = 0.3
+ISplotPause = -0.3
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
@@ -135,7 +135,7 @@ for iAlg = 1:nAlg
     
     % 1.5 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-    dA(iAlg)=d;      
+    dA(iAlg)=d;
     % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
 
    % plotSolution(d,pA(iAlg)); %尽量不用
@@ -145,13 +145,13 @@ for iAlg = 1:nAlg
     flagTiled = zeros(1,length(d.Bin.Weight));
     do2Array(1:length(d.Bin.Weight)) = d;
     
-    bidx = find(d.Bin.isTileNeed);
+                bidx = find(d.Bin.isTileNeed);
     bidx = 1:length(d.Bin.Weight); % NOTE: 修改只考虑甩尾平铺到全部Bin纳入考虑, 对非甩尾平铺的进行平铺判断
     % 循环: 每个bin分别平铺
     for i=1:numel(bidx)
         ibin = bidx(i);
 
-        % $1 GET d2 本ibin内数据
+        % $1 GET d2 本ibin内待算法计算的数据
         % 1 最后一个车辆内的长宽高变化
         d2.Veh = d.Veh;
         d2.Veh = rmfield(d2.Veh,{'Volume','order'});        
@@ -173,25 +173,26 @@ for iAlg = 1:nAlg
                 itemidx = d.Item.Item_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
                 do2.Item = structfun(@(x) x(:,itemidx),d.Item,'UniformOutput',false);        
         
-        % $3 如果允许全部平铺, 观察本ibin内是否可以全部平铺,如可以,就取消甩尾平铺; 否则,进入甩尾平铺
+        % $3 如果允许全部平铺(可能是非甩尾平铺), 观察本ibin内是否可以全部平铺,如可以,就取消甩尾平铺; 否则,进入甩尾平铺
         if ISpingpuAll==1
             do3 = do2;
             d3 = d2;
             d3.LU.maxHLayer(:) = 1; %d2内全部LU的层数设定为1
             
             % $5 reRunAlgorithm
-            printstruct(do3.Strip)
             do3 = RunAlgorithm(d3,pA(iAlg)); 
+            
             do3.LU.LU_VehType = ones(size(d3.LU.ID)) * do3.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
             [do3.LU,do3.Item] = updateItemMargin(do3.LU,do3.Item);
-
+                        %             plot3DBPP(do3,pA(iAlg))
+                        
             % $6 后处理
             if max(do3.LU.LU_Bin(1,:)) == 1
                 %do3.LU.LU_VehType = ones(size(do3.LU.ID))*d.Veh.order(1); 
                 flagTiled(ibin)=1;
                 do2Array(ibin) = do3;
-                continue;                
+                continue;
                 %  do2 数据不进入d 仅在return2bba中修改
              else
 %                 break;  %1个车辆放不下
@@ -248,35 +249,7 @@ for iAlg = 1:nAlg
             end % END OF WHILE
     end% END OF FOR
     end
-    
-    %% 注释
-    
-%         while (all(do2.Strip.isHeightFull(fi) == 1) && all(do2.Strip.isWidthFull(fi) == 1))
-% %                  || all(d2.LU.maxHLayer(luidxPP)==1)% 目前仅能对最后一个strip调整, 或增加最后一个Strip内的Lu的maxHLayer全部为1
-%              
-%             istrip = istrip-1;
-%             fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); 
-%             luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
-%             if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
-%             if istrip == 1,  error('此bin不存在tileneed,超预期错误');   end
-%             d2.LU.maxHLayer(luidxPP)
-%         end
-        
-        
-        % 部分LU(luidxPP),修改其maxHLayer
-%         u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
-%         luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 *********************
-%         if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
-%         do2.LU.LU_Item(1,luidxPP)
-
-
-%                     d2.LU.tmpHLayer = zeros(size(d2.LU.maxHLayer))
-%                     d2.LU.tmpHLayer(luidxPP) = do2.Item.HLayer(do2.LU.LU_Item(1,luidxPP))
-%                     dlu=[ d2.LU.maxL(3,luidxPP);
-%                      d2.LU.maxHLayer(luidxPP);
-%                      d2.LU.tmpHLayer(luidxPP)];
-%                      min(dlu)
-%         d2.LU.maxHLayer(luidxPP) = min(dlu) - 1;
+   
 
      %% 2 获取d1和flaggetSmallVeh : 运行最后一车数据算法,不改变d
      if ISlastVehType
@@ -391,13 +364,13 @@ if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne));     %daBest(bestOne)仅代表初始解, 意义不大
 end
 
-% if  ISplotSolu 
-% %      plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
-% %      if max(do2.LU.LU_Bin(1,:)) == 1
-% %      plotSolution(do2,pA(iAlg));
-% %      end
-% %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
-% end
+    % if  ISplotSolu 
+    % %      plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
+    % %      if max(do2.LU.LU_Bin(1,:)) == 1
+    % %      plotSolution(do2,pA(iAlg));
+    % %      end
+    % %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
+    % end
 
 % 剔除展示顺序
 output_LU_Seq = output_LU_Seq(1:7,:);
@@ -572,6 +545,37 @@ end
 
 
 %% ********************** 下面是ts算法的代码 暂时不用 ****************
+
+%%
+
+    %% 注释
+    
+%         while (all(do2.Strip.isHeightFull(fi) == 1) && all(do2.Strip.isWidthFull(fi) == 1))
+% %                  || all(d2.LU.maxHLayer(luidxPP)==1)% 目前仅能对最后一个strip调整, 或增加最后一个Strip内的Lu的maxHLayer全部为1
+%              
+%             istrip = istrip-1;
+%             fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); 
+%             luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
+%             if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+%             if istrip == 1,  error('此bin不存在tileneed,超预期错误');   end
+%             d2.LU.maxHLayer(luidxPP)
+%         end
+        
+        
+        % 部分LU(luidxPP),修改其maxHLayer
+%         u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
+%         luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 *********************
+%         if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
+%         do2.LU.LU_Item(1,luidxPP)
+
+
+%                     d2.LU.tmpHLayer = zeros(size(d2.LU.maxHLayer))
+%                     d2.LU.tmpHLayer(luidxPP) = do2.Item.HLayer(do2.LU.LU_Item(1,luidxPP))
+%                     dlu=[ d2.LU.maxL(3,luidxPP);
+%                      d2.LU.maxHLayer(luidxPP);
+%                      d2.LU.tmpHLayer(luidxPP)];
+%                      min(dlu)
+%         d2.LU.maxHLayer(luidxPP) = min(dlu) - 1;
 
 % % % [ub,x,b] = HnextFit(Item,Veh);
 % % % [ub,x,b] = HnextFit_origin(Item,Veh);

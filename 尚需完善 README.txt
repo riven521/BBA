@@ -264,14 +264,18 @@ V1018-1
 3: 修改函数HStripToBin, 增加Strip.nbLULID对Strip排序
 4: 修改cpuStripnbItem, 增加对Strip.nbLULID计算
 
-V1018-2
+V1019-1
 1: 增加LU.isShuaiWei, 在HStripSW中计算, 目的在plot时可判断顺序
 2: 增加甩尾与否: plotSolutionBBA m8 展示甩尾
 3: 更新main函数平铺和最后一车对getReturnBBA后得到的结果的更新
 
+V1019-2
+1: 
+
 TODO:
 给不完全版, 慢慢改.PPT书写.
 崩溃
+平铺all strip排序有问题
 
 
 ************甩尾顺序综合属性选择***********
