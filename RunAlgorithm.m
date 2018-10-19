@@ -51,7 +51,7 @@ function [d] = RunAlgorithm(d,p)
             
 %        plot3DBPP(d,p);
         % ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin
-        if ISshuaiwei==1,      [d.Strip] = HStripSW(d.Strip);    
+        if ISshuaiwei==1,      [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end

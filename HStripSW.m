@@ -1,10 +1,11 @@
 %% 函数: Strip甩尾
-function   [Strip] = HStripSW(Strip)
+function   [Strip,LUisShuaiWei] = HStripSW(Strip,LU)
 %% 初始化
 
     Strip.isShuaiWei = zeros(size(Strip.Weight));
     Strip.seqShuaiWei = zeros(size(Strip.Weight)); % seqShuaiWei越大,表明越早甩尾; 越小, 越晚甩尾, 即越放置在车头.
-
+    LUisShuaiWei = zeros(size(LU.Weight));
+    
 %% 1: ********************** 甩尾 ********************************** 
 % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
 if any(~Strip.isWidthFull | ~Strip.isHeightFull)
@@ -13,7 +14,7 @@ if any(~Strip.isWidthFull | ~Strip.isHeightFull)
     [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);
     b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
 
-% 2 如果有满足甩尾的Strip, 要如何排序? loadingrate小的最后进入
+% 2 如果有满足甩尾的Strip, 要如何排序? 看order
    if ~isempty(b)       
        %法1 Sort b by LoadingRate,Height etc.
         tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
@@ -34,9 +35,11 @@ if any(~Strip.isWidthFull | ~Strip.isHeightFull)
        Strip.isShuaiWei(b) = 1;
        Strip.seqShuaiWei(b) = order;
        
-    %    Strip.seqSW(b) = 1:length(b);
-    %     Strip.loadingrateLimit(b)
-    %%% TODO 甩尾后的展示顺序操作  ************** %%%% 
+       tmpLIDcellarray = Strip.LID(b);  tmpLIDmatarray=vertcat(tmpLIDcellarray{:});
+       LUisShuaiWei(tmpLIDmatarray)=1;      
+       
+                    %    Strip.seqSW(b) = 1:length(b);
+                    %     Strip.loadingrateLimit(b)
    end   
    
 %%%  ***************** 是否甩尾的开关 *************
@@ -45,6 +48,7 @@ for i=1:length(b)
 end
 end
 
+%% 局部函数
 function Strip = repairStripPlace(Strip,stripidx)
     % 1 找到stripidx对应的BIN下的所有Strip索引号逻辑值
     flagStrip   =  Strip.Strip_Bin(1,:) == Strip.Strip_Bin(1,stripidx);    % 所有同属于stripidx的Bin内的strip逻辑判断

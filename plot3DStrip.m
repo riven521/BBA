@@ -15,7 +15,7 @@ if strcmp(Type,'Item')
         LUColor = 0.8*nColors(nIDType==j{1}, : );
         plotcube(yxz(:,i)',coord(:,i)',0.7,LUColor);
         if ISplotPause>=0
-            pause(ISplotPause);
+%             pause(ISplotPause);
         end
         % Set the lable and the font size
         axis equal;         grid on;        view(120,33);
@@ -32,7 +32,7 @@ elseif strcmp(Type,'LU')
         LUColor = 0.8*nColors(nIDType==j(1), : );
         plotcube(yxz(:,i)',coord(:,i)',0.7,LUColor);
         if ISplotPause>=0
-            pause(ISplotPause);
+%             pause(ISplotPause);
         end
         % Set the lable and the font size
         axis equal;         grid on;        view(120,33);  %view(60,40);

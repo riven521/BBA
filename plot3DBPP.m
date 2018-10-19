@@ -42,7 +42,7 @@ elseif colorType == 3
         d.LU.isWidthFull(f2) = 0;
     end
 elseif colorType == 23
-     d.LU.isHeightFull = ones(size(d.LU.ID))*1;
+    d.LU.isHeightFull = ones(size(d.LU.ID))*1;
     d.LU.isWidthFull = ones(size(d.LU.ID))*1;
     nIDType = unique(d.Item.isHeightFull);
     f = find(d.Item.isHeightFull == 0);    

@@ -261,10 +261,17 @@ V1014-2
 V1018-1
 1: 修改函数1: 量大车头方案2HreStripToBin(Bin,Strip,Item,LU,Veh,p) 修改确保正确的bug 对
 2: 增加nbLULID在LU和Strip结构体
+3: 修改函数HStripToBin, 增加Strip.nbLULID对Strip排序
+4: 修改cpuStripnbItem, 增加对Strip.nbLULID计算
 
+V1018-2
+1: 增加LU.isShuaiWei, 在HStripSW中计算, 目的在plot时可判断顺序
+2: 增加甩尾与否: plotSolutionBBA m8 展示甩尾
+3: 更新main函数平铺和最后一车对getReturnBBA后得到的结果的更新
 
 TODO:
 给不完全版, 慢慢改.PPT书写.
+崩溃
 
 
 ************甩尾顺序综合属性选择***********
