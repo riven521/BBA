@@ -44,7 +44,7 @@ ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
 ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
-ISplotPause = -0.3
+ISplotPause = 1.5
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
@@ -62,7 +62,7 @@ ISshuaiwei = 1       % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pi
 ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
 ISpingpuAll = 1      %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
-ISlastVehType = 0 % 555: 最后一车的调整, 与其它无关, 暂不考虑
+ISlastVehType = 1 % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
 if nargin ~= 0
     d = DataInitialize( ...
@@ -89,6 +89,25 @@ else
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
+% l = rmfield(d.LU,{'margin','LWH'})
+l=d.LU
+l= structfun(@(x) x',l,'UniformOutput',false)
+% = structfun(@(x) x(:,LUorder),da.LUArray,'UniformOutput',false)
+t = struct2table(l)
+s = table2struct(t,'ToScalar',true)
+s.ID
+% t = struct2table(l,'AsArray',true)
+
+%%
+S.Name = {'CLARK';'BROWN';'MARTIN'};
+S.Gender = {'M';'F';'M'};
+S.SystolicBP = [124;122;130];
+S.DiastolicBP = [93;80;92];
+T = struct2table(S)
+%%
+
+t.ID
+
 t = [d.LU.ID;d.LU.LWH]
 sortrows(t',[1,4],{'ascend','descend'})
 

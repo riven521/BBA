@@ -270,12 +270,14 @@ V1019-1
 3: 更新main函数平铺和最后一车对getReturnBBA后得到的结果的更新
 
 V1019-2
-1: 
+1: 修改Item的高度满层定义, 
 
 TODO:
-给不完全版, 慢慢改.PPT书写.
-崩溃
-平铺all strip排序有问题
+崩溃问题
+
+平铺all strip排序有问题 DONE 但未更新
+甩尾排序还有问题, 可能. 
+展示顺序还有问题, 即相邻Strip,前后相同LID,需要
 
 
 ************甩尾顺序综合属性选择***********
@@ -294,7 +296,6 @@ TODO:
 2: 混合Strip的非混合(且满层?)的优先orderItem
 3: HItemToStrip增加改变ITEM order的函数, Item没问题, 但LU作图有问题.
 CPUSTRIP 五次注释 移到I2S中; CPUBIN和Item2Bin也可能有问题, 明天排查
-
 
 QA:
 Q1: I2S: order, 对同ID的LU,以高度递减排序(同STRIP混合可以), 异Strip混合有问题. 容易形成最后不满维尾垛结合其它满垛的问题.
