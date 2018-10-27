@@ -8,9 +8,10 @@ for i=1:nBin
     flagItem = Item.Item_Bin(1,:) == i; %sum后为本bin内Itme的个数
     
 % 1 Update LU's LWH in Current Bin
+LU.LWH(1,flagLU) 
 LU.LWH(1,flagLU) = LU.LWH(1,flagLU) - ( LU.margin(1,flagLU) + LU.margin(2,flagLU)); %左右
 LU.LWH(2,flagLU) = LU.LWH(2,flagLU) - ( LU.margin(3,flagLU) + LU.margin(4,flagLU)); %上下
-
+LU.LWH(1,flagLU) 
 % 2 Update Item's LWH in Current Bin
 tmpLULWH = [LU.LWH(1:2, flagLU ); LU.LU_Item(1, flagLU ); LU.ID(1,flagLU)];
 % unique: 确保thisBin内的ID, 同一个Item, 同样长宽 的只要唯一值 

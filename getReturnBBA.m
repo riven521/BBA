@@ -1,6 +1,6 @@
 %% V2 % 返回参数 基于TABLE结构
 % 返回参数1，2，3
-function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(d)
+function [T1,T2,T3] = getReturnBBA(d)
 %% 1 返回输出结果(原始顺序) 输出3个参数
 % 参数1 - LU在Bin内的坐标    % V2:  LU margin方式 （坐标已经考虑了Margin）
 output_CoordLUBin = d.LU.CoordLUBin;
@@ -104,16 +104,16 @@ if ~isfield(d.LU, 'isShuaiWei'),    d.LU.isShuaiWei = zeros(length(d.LU.ID),1)';
 
 % TVEH = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
 TLU = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
-TLU = TLU(:,{'CoordLUBin','LWH','LID','SID','PID','Weight','LU_VehType','LU_Bin','LU_Item','isShuaiWei'});
+TLU = TLU(:,{'CoordLUBin','LWH','LID','SID','PID','Weight','LU_VehType','LU_Bin','LU_Item','isShuaiWei','Rotaed'});
 % splitvar 获取多维列变量->单变量
 TLU.L = TLU.LWH(:,1); TLU.W = TLU.LWH(:,2); TLU.H = TLU.LWH(:,3);  %增加长宽高单列
 TLU.BINID = TLU.LU_Bin(:,1);  TLU.BINSEQ = TLU.LU_Bin(:,2);
 TLU.ITEMID = TLU.LU_Item(:,1); TLU.ITEMSEQ = TLU.LU_Item(:,2);
 
-%% 1 Table排序 : TLUsorted
-TLUsorted = sortrows(TLU,{'BINID','BINSEQ','SID','LID','PID','ITEMID','ITEMSEQ','H','LU_VehType'},...
-                                         {'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend','ascend'});
 
+%% 1 Table排序 : TLUsorted %基本前两行排序就已经定了
+[TLUsorted,tblorder]= sortrows(TLU,{'BINID','BINSEQ','SID','LID','PID','ITEMID','ITEMSEQ','H','LU_VehType'},...
+                                         {'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend','ascend'});
 %% 2 计算托盘展示顺序ShowSEQ并赋值到TLUsorted
         % 计算LUShowSeq : 最后一行: REAL托盘展示顺序(含甩尾等)
         % 目前按照LU_Bin(1,:)分车, SID分供应商, LID分托盘种类 三个区分  TODO 后期增加其它需要判断步骤的依据 % [2 4 5]        
@@ -132,22 +132,39 @@ TLUsorted = sortrows(TLU,{'BINID','BINSEQ','SID','LID','PID','ITEMID','ITEMSEQ',
             end            
         end
 TLUsorted.ShowSEQ = LUShowSeq;
+TLUsorted.tblorder = tblorder;
 
 %% 3 精简为返回的数据表
 T1=TLUsorted(:,'CoordLUBin');
 T2=TLUsorted(:,'LWH');
-T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','SID','LID','ITEMID','PID','ShowSEQ','Weight',});
+T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','ITEMID','ShowSEQ','Rotaed','tblorder','Weight'}); %删除固定值,从TLUIN获取
+% T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','SID','LID','ITEMID','PID','ShowSEQ','Weight','tblorder'});
+
+%% 4 似乎无用 后期可删
 s1= table2array(T1)';
 s2= table2array(T2)';
 s3= table2array(T3,'ToScalar',true)';
-if ~isequal(output_CoordLUBin,s1) || ~isequal(output_LU_LWH,s2) || ~isequal(output_LU_Seq(1:7,:),s3(1:7,:))
-    error('V1 and V2不相同');
-end
+% if ~isequal(output_CoordLUBin,s1) || ~isequal(output_LU_LWH,s2) || ~isequal(output_LU_Seq(1:7,:),s3(1:7,:))
+%     error('V1 and V2不相同');
+% end
 output_CoordLUBin=s1;
 output_LU_LWH=s2;
 output_LU_Seq=s3;
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %% V1 % 返回参数1，2，3 基于结构体

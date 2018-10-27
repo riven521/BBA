@@ -74,10 +74,12 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
     ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+    uniItemLID = unique(ItemLID);
     % 循环: LID个数
-    for iItem=1:length(unique(ItemLID))
+    for iItem=1:length(uniItemLID)
         % Item i 对于的LU flag标记
-        flagItem = ItemLID(:) == iItem;
+        flagItem = ItemLID(:) == iItem;  % flagItem = ItemLID(:) == uniItemLID(iItem);  idExchange(LU.ID)必须有,否则改为后者，但影响巨大 
+        
         ItemWidth = unique(Item.LWH(1,flagItem));     % Item宽度    
         VehWidth = Veh.LWH(1,1);  % 车辆宽度    
         maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放宽度层数

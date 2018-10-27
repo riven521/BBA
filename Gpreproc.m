@@ -12,10 +12,10 @@
 %
 
 function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
-    % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息
-    if isfield(LU, 'ID'),  LU.ID = idExchange(LU.ID); end
-    if isfield(LU, 'PID'),  LU.PID = idExchange(LU.PID); end
-    if isfield(LU, 'SID'),  LU.SID = idExchange(LU.SID); end
+    % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息    
+    if isfield(LU, 'ID'),  [LU.ID,LU.OID] = idExchange(LU.ID); end 
+    if isfield(LU, 'PID'),  [LU.PID,LU.OPID] = idExchange(LU.PID); end
+    if isfield(LU, 'SID'),  [LU.SID,LU.OSID] = idExchange(LU.SID); end
 %     if isfield(LU, 'UID'),  LU.UID = idExchange(LU.UID); end
     
     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
@@ -120,13 +120,14 @@ end
 end
 
 
-function exID = idExchange(ID)
+function [exID,ID] = idExchange(ID)
         uniID = unique(ID);
         exID=ID; %中间变量
         for i=1:length(uniID)
             exID(ID(:)==uniID(i)) = i;
         end
 end
+
 
 
 %%  获取LUID类型相关数据(同类型ID的体积，重量，是否可旋转)

@@ -2,6 +2,7 @@ function [d] = RunAlgorithm(d,p)
         global ISshuaiwei ISplotStrip ISreStripToBin %重新执行HStripToBin方案
                 
         %% 预处理:检验Input输入数据
+
         d = GcheckInput(d);    %可以不做   printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
 
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序
@@ -59,6 +60,17 @@ function [d] = RunAlgorithm(d,p)
 
        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
         
+       
+       %% 后处理: PID/SID等返回 改为返回顺序，此类不动的值从原始记录中获取
+%        d.LU.SID = d.LU.OSID;
+%        d.LU.PID = d.LU.OPID;
+%         l=LU.ID;
+%         ll=LU.ID;
+%         [l2,~] = sort(l);
+%         [~,o2] = sort(ll);
+%         [~,idxCusO] = sort(o2);
+%         l3=l2(idxCusO);
+       
                 %         printstruct(d.Item,'sortfields',1,'PRINTCONTENTS',0)  
                 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
                 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  

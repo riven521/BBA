@@ -76,7 +76,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=25; m=2;  % 16需要注意
+    n=16; m=2;  % 16需要注意
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
     filename = strcat('GoodIns',num2str(n));
@@ -86,9 +86,9 @@ else
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
-% = structfun(@(x) x(:,LUorder),da.LUArray,'UniformOutput',false)
 TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
 TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+% TLUIN.Properties.VariableNames{'PID'} = 'OPID'; TLUIN.Properties.VariableNames{'SID'} = 'OSID';
 % s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
 
@@ -152,7 +152,7 @@ for iAlg = 1:nAlg
     
     %% 1.6 平铺
     if ISpingpu==1
-    flagTiled = zeros(1,length(d.Bin.Weight));
+    flagTiled = zeros(1,length(d.Bin.Weight));  %1代表整车平铺 2代表甩尾平铺
     do2Array(1:length(d.Bin.Weight)) = d;
     
                 bidx = find(d.Bin.isTileNeed);
@@ -188,8 +188,10 @@ for iAlg = 1:nAlg
             do3 = do2;
             d3 = d2;
             d3.LU.maxHLayer(:) = 1; %d2内全部LU的层数设定为1
-            
+%             d3.LU.PID = d3.LU.OPID;
+%             d3.LU.PID = d3.LU.OSID;
             % $5 reRunAlgorithm
+            TLUIN_PP1 = struct2table(structfun(@(x) x',d3.LU,'UniformOutput',false));
             do3 = RunAlgorithm(d3,pA(iAlg)); 
             
             do3.LU.LU_VehType = ones(size(d3.LU.ID)) * do3.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
@@ -200,9 +202,9 @@ for iAlg = 1:nAlg
             % $6 后处理
             if max(do3.LU.LU_Bin(1,:)) == 1
                 %do3.LU.LU_VehType = ones(size(do3.LU.ID))*d.Veh.order(1); 
-                flagTiled(ibin)=1;
+                flagTiled(ibin)=1; %1代表整车平铺
                 do2Array(ibin) = do3;
-                continue;
+                continue; %continue不会进入下面的甩尾平铺了
                 %  do2 数据不进入d 仅在return2bba中修改
              else
 %                 break;  %1个车辆放不下
@@ -240,6 +242,7 @@ for iAlg = 1:nAlg
 
             % $5 reRunAlgorithm
             %    plotSolution(do2,pA(iAlg));
+            TLUIN_PP2 = struct2table(structfun(@(x) x',d2.LU,'UniformOutput',false));
             do2 = RunAlgorithm(d2,pA(iAlg)); 
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
             if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
@@ -249,7 +252,7 @@ for iAlg = 1:nAlg
             % $6 后处理
             if max(do2.LU.LU_Bin(1,:)) == 1
                 do2.LU.LU_VehType = ones(size(do2.LU.ID))*d.Veh.order(1); 
-                flagTiled(ibin)=1;
+                flagTiled(ibin)=2; %2代表甩尾平铺
                 do2Array(ibin) = do2;
                 % do2 数据不进入d 仅在return2bba中修改
             else
@@ -273,8 +276,14 @@ for iAlg = 1:nAlg
         d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %从最后一种车型开始考虑
         %disp(d1.Veh.LWH)
         %d1 = RunAlgorithmLastVeh(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
+        TLUIN_LAST = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
         d1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
 %         plotSolution(d1,pA(iAlg));
+
+                            %             d1.LU.LU_VehType = ones(size(d1.LU.ID)) * d1.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+            d1.LU.LU_VehType = ones(size(d1.LU.ID))*d.Veh.order(allidxVehType);
+            [d1.LU,d1.Item] = updateItemMargin(d1.LU,d1.Item);
+
         % 2.2 判断该车型是否可用
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
         % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
@@ -306,28 +315,37 @@ if isempty(dA), error('本算例内所有解都存在托盘不相邻的情况 \n'); end
 if isempty(daBest), error('本算例内未找出最优解返回BBA \n'); end
 
 bestOne = 1;
-[output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
+daBest(bestOne).LU;
+[T_Coord,T_LWH,T_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
+T_Seq = finalCheck([T_Coord,T_LWH,T_Seq],TLUIN); %参数1：计算； 参数2：原始.
+
+%  [output_CoordLUBin,output_LU_LWH,output_LU_Seq]= getReturnBBA1(daBest(bestOne)); %% 进行返回处理
 
 % ****************** 针对车型选择 d1数据 获取修订的 output ******************
 if ISlastVehType==1
 if flaggetSmallVeh %如有当车型替换成功了,才执行getReturnBBA函数 以及作图
-    [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2] = getReturnBBA(d1); %% 进行返回处理
+     [TLAST_Coord,TLAST_LWH,TLAST_Seq] = getReturnBBA(d1); %% 进行返回处理
+    TLAST_Seq = finalCheck( [TLAST_Coord,TLAST_LWH,TLAST_Seq],TLUIN_LAST); %参数1：计算； 参数2：原始.
     
-% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
-% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
-     
     %由于order改变了,此处仅对最后一个bin的索引进行修改
-    lastVehIdx = max(output_LU_Seq(2,:));    
-    flaglastLUIdx = output_LU_Seq(2,:)==lastVehIdx;
+    lastVehIdx = max(T_Seq{:,'BINID'});
+    flaglastLUIdx = T_Seq{:,'BINID'}==lastVehIdx;
     
     % 重点是更新坐标和长宽高
-    output_CoordLUBin(:,flaglastLUIdx) = output_CoordLUBin2;
-    output_LU_LWH(:,flaglastLUIdx) = output_LU_LWH2;
+    T_Coord{flaglastLUIdx,:} = TLAST_Coord{:,:};
+    T_LWH{flaglastLUIdx,:} = TLAST_LWH{:,:};
+    % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+    T_Seq{flaglastLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+        TLAST_Seq{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
+    
+    
+%     output_CoordLUBin(:,flaglastLUIdx) = TLAST_Coord;
+%     output_LU_LWH(:,flaglastLUIdx) = TLAST_LWH;
 
     % 部分相关参数需要替换: 行1：托盘所在车型号 行3：托盘车内安置顺序 行8: 展示顺序
         %     output_LU_Seq([1,3,4,5,7],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7],:); %[1,3,4,5,7]表示仅修改这里的几行
-    output_LU_Seq([1,3,8],flaglastLUIdx) = output_LU_Seq2([1,3,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
-    output_LU_Seq([1,3,4,5,7,8],flaglastLUIdx) = output_LU_Seq2([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
+%     output_LU_Seq([1,3,8],flaglastLUIdx) = TLAST_Seq([1,3,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
+%     output_LU_Seq([1,3,4,5,7,8],flaglastLUIdx) = TLAST_Seq([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
     
         %     i = [4,5,7]; % 这些应该是不会变的
         %     if sum(output_LU_Seq(i,flaglastLUIdx) ~= output_LU_Seq2(i,:) ) >0, error('不会变的变了, 错误'); end
@@ -336,39 +354,52 @@ end
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
+% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
+% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
+    
 % ****************** 针对平铺选择 do2Array数据 获取修订的 output ******************
 if ISpingpu==1
 for ibin=1:length(do2Array) %do2Array 包含所有BIN
 if flagTiled(ibin) %如有当该ibin平铺成功了,才执行getReturnBBA函数 以及作图
     
-    [output_CoordLUBin3,output_LU_LWH3,output_LU_Seq3]= getReturnBBA(do2Array(ibin)); %% 进行返回处理
+    [TPP_Coord,TPP_LWH,TPP_Seq]= getReturnBBA(do2Array(ibin)); %% 进行返回处理
+    %     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA1(do2Array(ibin)); %% 进行返回处理
+    if flagTiled(ibin)==1
+        TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP1); %参数1：计算； 参数2：原始.
+    end
+    if flagTiled(ibin)==2
+        TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP2); %参数1：计算； 参数2：原始.
+    end    
     
-% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
-% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
-    
-    %由于order改变了,此处对ibin内索引进行修改
-    flagTileLUIdx = output_LU_Seq(2,:)==ibin;     %由于ibin平铺成功, 必须将该ibin下面的数据替换
+    % 找出平铺ibin内所有的托盘逻辑值
+    flagTileLUIdx = T_Seq{:,'BINID'} == ibin;
     
     % 重点是更新坐标和长宽高
-    output_CoordLUBin(:,flagTileLUIdx) = output_CoordLUBin3;
-    output_LU_LWH(:,flagTileLUIdx) = output_LU_LWH3;
+    T_Coord{flagTileLUIdx,:} = TPP_Coord{:,:};
+    T_LWH{flagTileLUIdx,:} = TPP_LWH{:,:};
+    % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+    T_Seq{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+        TPP_Seq{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
     
     % 部分相关参数需要替换: 行1：托盘所在车型号 行3：托盘车内安置顺序 行8: 展示顺序
-    %     output_LU_Seq([1,3,4,5,7,8],flagTileLUIdx) = output_LU_Seq3([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
-    output_LU_Seq([1,3,8],flagTileLUIdx) = output_LU_Seq3([1,3,8],:); 
-    output_LU_Seq([1,3,4,5,7,8],flagTileLUIdx) = output_LU_Seq3([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
-    
+%     output_LU_Seq([1,3,8],flagTileLUIdx) = output_LU_Seq2([1,3,8],:); 
+%     output_LU_Seq([1,3,4,5,7,8],flagTileLUIdx) = output_LU_Seq2([1,3,4,5,7,8],:); %[1,3,4,5,7,8]表示仅修改这里的几行
+        
         %     i = [4,5,7]; % 这些应该是不会变的
         %     if sum(output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ) >0,
         %          output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ;         output_LU_Seq(i,flagTileLUIdx);         output_LU_Seq3(i,:) ;
         %         warning('不会变的变了, 错误'); end
-
+        
 end
 end
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
-max(output_LU_Seq(7,:))
+% 返回BBA数组格式给JAR
+output_CoordLUBin=table2array(T_Coord)';
+output_LU_LWH= table2array(T_LWH)';
+output_LU_Seq=table2array(T_Seq,'ToScalar',true)';
+
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne)); 
 end
@@ -388,6 +419,7 @@ fprintf(1,'Simulation done.\n');
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
 % d = rmfield(d, {'Veh', 'LU'});
+% pcode 'H*.m'
 end %END MAIN
 
 

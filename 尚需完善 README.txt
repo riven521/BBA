@@ -274,7 +274,19 @@ V1019-2
 
 V1027-1
 1: getReturnBBA(daMax)增加数据的Table格式（结构体->表格）
+2： LU.ID = idExchange(LU.ID); 使得内部
+V1027-2
+1: getReturnBBA返回Table非矩阵
+2: 增加finalCheck补充检查，并依靠order从输入数据获取SID/PID/LID等不变值；LWH也可以获取，但海从输出结果获取了
+3: 车型选择增加updateItemMargin，修改margin
+4: 测试多次运行未发现崩溃现象（但有bug出现，还是要多测试才行）
 
+    l=LU.ID;
+    ll=LU.ID;
+    [l2,~] = sort(l);
+    [~,o2] = sort(ll);
+    [~,idxCusO] = sort(o2);
+    l3=l2(idxCusO);
 
 TODO:
 返回数据的简单CHECK
@@ -282,7 +294,7 @@ TODO:
 平铺all strip排序有问题 DONE 但未更新
 甩尾排序还有问题, 可能.
 展示顺序还有问题, 即相邻Strip,前后相同LID,需要
-循环多次运行 崩溃否？
+循环多次运行 崩溃否？ 否 DONE
 
 ************甩尾顺序综合属性选择***********
 LASTVEHICLE 测验
@@ -290,7 +302,6 @@ LASTVEHICLE 测验
 各种其它难点
 PPT书写
 FIGURE返回测试
-加密
 
 
 NOTE:
