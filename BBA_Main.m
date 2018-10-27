@@ -3,10 +3,7 @@
 %    [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ... 
 %    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin)
 %        
-%% Description
-%   BBA_Main.
-%
-%% Inputs (varargin)
+%% Inputs (varargin) LUID: 种类少 ; LULID: 种类多
 %   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
 %   LULWH                (3,n)   托盘宽长高
 %   VEHID                 (1,m)  车型编号
@@ -18,7 +15,7 @@
 %   LUMARGIN         (1,n)   托盘间margin(1-4左右上下)  可用托盘长宽高=每个托盘的实际长宽高+增加的margin
 %   LUWEIGHT           (1,n)  托盘重量
 %   BINWEIGHT         (1,m)  车型最大承载重量
-%
+%   LULID                  (1,n)   托盘类型编号
 %% Outputs
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
 %   output_LU_LWH            (3,n)    每个LU的宽长高（旋转后的：实际值）
@@ -32,37 +29,39 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 %% Initialize Data Structure
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
-close all
-clc
+% close all 
+% clc
 global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
 global ISisNonMixedLU ISisMixTileLU
-ISsItemAdjust = 0  % 暂时不用
+
+% ISsItemAdjust = 1  % 暂时不用 用途忘记了
+% ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
 ISplotBBA = 1
-ISplotShowType = 1 % 1 LID 2 isShuaiWei
+ISplotShowType = 2 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
 ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
-ISplotPause = 1.5
+ISplotPause = -0.3 % plot间隔时间
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
-% 下面还不完整, 可能要调
+% 下面还不完整, 可能要调 目前全部为1
 ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
 ISisMixTileLU = 1      % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
 
-ISisNonMixed = 1 % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
+ISisNonMixed = 1    % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象
 
-% ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1
+ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1 必须
 
-ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1
-ISshuaiwei = 1       % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 *******
-ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1      %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISshuaiwei = 1          % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 *******
 
-ISlastVehType = 1 % 555: 最后一车的调整, 与其它无关, 暂不考虑
+ISpingpu = 1            % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll =1         %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+
+ISlastVehType = 1% 555: 最后一车的调整, 与其它无关, 暂不考虑
 
 if nargin ~= 0
     d = DataInitialize( ...
@@ -78,10 +77,9 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=16; m=2;  % 16需要注意
+    n=25; m=2;  % 16需要注意
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
-
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,已对其按体积从大到小排序; 
     
@@ -105,12 +103,9 @@ S.SystolicBP = [124;122;130];
 S.DiastolicBP = [93;80;92];
 T = struct2table(S)
 %%
-
 t.ID
-
 t = [d.LU.ID;d.LU.LWH]
 sortrows(t',[1,4],{'ascend','descend'})
-
 
 %% 没有属性的临时增加
     n = numel(d.LU.Weight);
@@ -379,6 +374,7 @@ end
 end
 % ****************** 针对车型选择 获取修订的 output ******************
 
+max(output_LU_Seq(7,:))
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne));     %daBest(bestOne)仅代表初始解, 意义不大
 end

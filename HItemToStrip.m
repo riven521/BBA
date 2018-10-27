@@ -526,69 +526,69 @@ elseif p.whichStripH == 3 % nextfit
         % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以        
         flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
         
-        global ISsItemAdjust
-        if ISsItemAdjust==1
-        % 如果该iLevel非空,且放的下本次iITem, 进入
-        if  ~isempty(flaged) && Strip.LW(1,iLevel) < 2400 
-%         Strip.LW(1,iLevel)%         sItem.LWH(1,iItem)%         sItem.isHeightFull(iItem)%         sItem.HLayer(iItem)%         sItem.LWH(3,iItem) 
-        tmpLIDmat = cell2mat(sItem.LID);
-        
-        fIarray = sItem.Item_Strip(1,:) == iLevel; %已安排在iLvel内的Item
-        fIscalar =  fIarray & sItem.Item_Strip(2,:) == max(sItem.Item_Strip(2,fIarray)) %已安排在iLvel内考虑最近(序号最大)的一个        
-        
-        fLIDfIscalar = tmpLIDmat == sItem.LID{fIscalar} % 与fIscalar同LID的f值
-        fLIDiItem = tmpLIDmat == sItem.LID{iItem}        % 与iItem同LID的f值
-        
-        if sum(fIscalar)~=1, error('fff'); end
-        % 仅对与iLevel内最近序号的Item进行对比, 它们必须属于不同的LID值; 如相同Id值, 直接退出
-        if sItem.LID{fIscalar} ~= sItem.LID{iItem} 
-            % 既然转换LID, 则表明fIscalar后面没有相同与其相同ID了
-            if ismember(sItem.LID{fIscalar},tmpLIDmat(~fLIDfIscalar))    error('既然转换LID, 则表明fIscalar后面没有相同与其相同ID了');   end 
-            
-                            %     iItemsLID = ismember(tmpLIDmat(~fIarray),sItem.LID{iItem}); % 考虑iItem是否还有相同ID, 如果没有, 就啥也别说了, 安排iItem到此level
-            if sum(fLIDiItem) > 0,  % 如果本iItem对应LID仅有1个, 啥也别说了, 直接退出
-                    %     sItem.LWH(3,fIscalar) % sItem.LWH(3,iItem)                            
-                ItemHeightwithSameLIDofiItem = sItem.LWH(3,fLIDiItem)
-                
-                if ~issorted(ItemHeightwithSameLIDofiItem,'descend') || isempty(ItemHeightwithSameLIDofiItem)
-                    error('同一LID下的Item高度非递减排序或为空值, 超预期错误')
-                end
-                
-                %如果距离最小值更近, 则掉头摆放
-                if abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(1)) > abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(end)) 
-                   ord = 1:length(sItem.Weight);
-                   ord(:,fLIDiItem)= fliplr(ord(:,fLIDiItem)); % 调换与iItem相同LID的Items的顺序
-                   ord(:,fLIDiItem)
-                   sItem.LWH(3,iItem) 
-                   % 除了Item要变, 对应的LU也要变
-                   zzz = sItem.itemorder
-                   sItem = structfun(@(x) x(:,ord),sItem,'UniformOutput',false);
-                   sItem.itemorder  = zzz               
-                   
-                   fLIDiItemIdx = find(fLIDiItem);
-                   FLIPfLIDiItemIdx = fliplr(fLIDiItemIdx);
-                   tmpLU_Item = LU.LU_Item(1,:);
-                   for i=1:length(fLIDiItemIdx)
-                       fLIDLU = tmpLU_Item == fLIDiItemIdx(i); %SAME : fLIDLU = ismember(LU.LU_Item(1,:) ,fLIDiItemIdx(i))                       
-                       LU.LU_Item(1, fLIDLU )  = FLIPfLIDiItemIdx(i);
-                   end
-                   % 同时更新LU.DOC
-                   LU.DOC(end-1:end,:) = LU.LU_Item;
-                        LU
-                        sItem
-                        sItem.Item_Strip
-                        sItem.CoordItemStrip
-                   % 防错语句
-                   flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-                   if isempty(flaged), error('同LID但宽度不同, 超预期错误'); end
-                   
-                end
-                
-            end
-        end
-        %     sItem.LWH(3,fIscalar)  %已安排在iLvel内 (最近的一个的Item高度) %         sItem.LWH(1,iItem) %         sItem.isHeightFull(fI)         sItem.isHeightFull(iItem)
-        end
-        end % END OF ISsItemAdjust
+% %         global ISsItemAdjust
+% %         if ISsItemAdjust==1
+% %         % 如果该iLevel非空,且放的下本次iITem, 进入
+% %         if  ~isempty(flaged) && Strip.LW(1,iLevel) < 2400 
+% % %         Strip.LW(1,iLevel)%         sItem.LWH(1,iItem)%         sItem.isHeightFull(iItem)%         sItem.HLayer(iItem)%         sItem.LWH(3,iItem) 
+% %         tmpLIDmat = cell2mat(sItem.LID);
+% %         
+% %         fIarray = sItem.Item_Strip(1,:) == iLevel; %已安排在iLvel内的Item
+% %         fIscalar =  fIarray & sItem.Item_Strip(2,:) == max(sItem.Item_Strip(2,fIarray)) %已安排在iLvel内考虑最近(序号最大)的一个        
+% %         
+% %         fLIDfIscalar = tmpLIDmat == sItem.LID{fIscalar} % 与fIscalar同LID的f值
+% %         fLIDiItem = tmpLIDmat == sItem.LID{iItem}        % 与iItem同LID的f值
+% %         
+% %         if sum(fIscalar)~=1, error('fff'); end
+% %         % 仅对与iLevel内最近序号的Item进行对比, 它们必须属于不同的LID值; 如相同Id值, 直接退出
+% %         if sItem.LID{fIscalar} ~= sItem.LID{iItem} 
+% %             % 既然转换LID, 则表明fIscalar后面没有相同与其相同ID了
+% %             if ismember(sItem.LID{fIscalar},tmpLIDmat(~fLIDfIscalar))    error('既然转换LID, 则表明fIscalar后面没有相同与其相同ID了');   end 
+% %             
+% %                             %     iItemsLID = ismember(tmpLIDmat(~fIarray),sItem.LID{iItem}); % 考虑iItem是否还有相同ID, 如果没有, 就啥也别说了, 安排iItem到此level
+% %             if sum(fLIDiItem) > 0,  % 如果本iItem对应LID仅有1个, 啥也别说了, 直接退出
+% %                     %     sItem.LWH(3,fIscalar) % sItem.LWH(3,iItem)                            
+% %                 ItemHeightwithSameLIDofiItem = sItem.LWH(3,fLIDiItem)
+% %                 
+% %                 if ~issorted(ItemHeightwithSameLIDofiItem,'descend') || isempty(ItemHeightwithSameLIDofiItem)
+% %                     error('同一LID下的Item高度非递减排序或为空值, 超预期错误')
+% %                 end
+% %                 
+% %                 %如果距离最小值更近, 则掉头摆放
+% %                 if abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(1)) > abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(end)) 
+% %                    ord = 1:length(sItem.Weight);
+% %                    ord(:,fLIDiItem)= fliplr(ord(:,fLIDiItem)); % 调换与iItem相同LID的Items的顺序
+% %                    ord(:,fLIDiItem)
+% %                    sItem.LWH(3,iItem) 
+% %                    % 除了Item要变, 对应的LU也要变
+% %                    zzz = sItem.itemorder
+% %                    sItem = structfun(@(x) x(:,ord),sItem,'UniformOutput',false);
+% %                    sItem.itemorder  = zzz               
+% %                    
+% %                    fLIDiItemIdx = find(fLIDiItem);
+% %                    FLIPfLIDiItemIdx = fliplr(fLIDiItemIdx);
+% %                    tmpLU_Item = LU.LU_Item(1,:);
+% %                    for i=1:length(fLIDiItemIdx)
+% %                        fLIDLU = tmpLU_Item == fLIDiItemIdx(i); %SAME : fLIDLU = ismember(LU.LU_Item(1,:) ,fLIDiItemIdx(i))                       
+% %                        LU.LU_Item(1, fLIDLU )  = FLIPfLIDiItemIdx(i);
+% %                    end
+% %                    % 同时更新LU.DOC
+% %                    LU.DOC(end-1:end,:) = LU.LU_Item;
+% %                         LU
+% %                         sItem
+% %                         sItem.Item_Strip
+% %                         sItem.CoordItemStrip
+% %                    % 防错语句
+% %                    flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+% %                    if isempty(flaged), error('同LID但宽度不同, 超预期错误'); end
+% %                    
+% %                 end
+% %                 
+% %             end
+% %         end
+% %         %     sItem.LWH(3,fIscalar)  %已安排在iLvel内 (最近的一个的Item高度) %         sItem.LWH(1,iItem) %         sItem.isHeightFull(fI)         sItem.isHeightFull(iItem)
+% %         end
+% %         end % END OF ISsItemAdjust
         
         
                 % V1 : 判断旋转与否

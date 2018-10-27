@@ -134,7 +134,6 @@ else
     % ËãÀı²ÎÊı
     if ~isfield(d, 'Par') || ~isfield(d.Par, 'H')
         d.Par.maxHeavey = 100; end % judge isHeavey
-        
     
 end
 end
