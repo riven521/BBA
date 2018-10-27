@@ -19,7 +19,7 @@
 %% Outputs
 %   output_CoordLUBin      (3,n)    Ã¿¸öLUµÄX,Y,Z
 %   output_LU_LWH            (3,n)    Ã¿¸öLUµÄ¿í³¤¸ß£¨Ğı×ªºóµÄ£ºÊµ¼ÊÖµ£©
-%   output_LU_Seq             (7,n)    ĞĞ1: LUÔÚÄ³¸öBINÄÚ£»ĞĞ2: LUÔÚ¸ÃBINÄÚµÄ°²·ÅË³Ğò ¡£¡£¡£
+%   output_LU_Seq             (8,n)    ĞĞ1: LUÔÚÄ³¸öBINÄÚ£»ĞĞ2: LUÔÚ¸ÃBINÄÚµÄ°²·ÅË³Ğò ¡£¡£¡£
 %
 
 %%
@@ -29,8 +29,7 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 %% Initialize Data Structure
 % clear;close all; format long g; format bank; %NOTE ²»±»MATLAB CODE Ö§³Ö
 % rng('default');rng(1); % NOTE ÊÇ·ñËæ»úµÄ±êÖ¾
-% close all 
-% clc
+% clear; close all;
 global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
 global ISisNonMixedLU ISisMixTileLU
@@ -87,13 +86,10 @@ else
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
-% l = rmfield(d.LU,{'margin','LWH'})
-l=d.LU
-l= structfun(@(x) x',l,'UniformOutput',false)
 % = structfun(@(x) x(:,LUorder),da.LUArray,'UniformOutput',false)
-t = struct2table(l)
-s = table2struct(t,'ToScalar',true)
-s.ID
+TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
+TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+% s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
 
 %%
@@ -103,9 +99,9 @@ S.SystolicBP = [124;122;130];
 S.DiastolicBP = [93;80;92];
 T = struct2table(S)
 %%
-t.ID
-t = [d.LU.ID;d.LU.LWH]
-sortrows(t',[1,4],{'ascend','descend'})
+% t.ID
+% t = [d.LU.ID;d.LU.LWH]
+% sortrows(t',[1,4],{'ascend','descend'})
 
 %% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó
     n = numel(d.LU.Weight);
@@ -118,7 +114,7 @@ nAlg = 1;
 for i = 3:3 %1-3 best first next¾ù¿É ÉèÎª3: ²»ÔÊĞíÇ°ÃæĞ¡¼äÏ¶·ÅÆäËü¶«Î÷ ÒòÎªÒ»µ©ÔÊĞí, »á´ó¸ÅÂÊÎ¥±³ÏàÁÚÔ¼Êø
     for j=3:3 %0-3 ÅÅĞò: 0: Vert£»1: Hori; 2:error  3:°´·ìÏ¶×îĞ¡ÅÅĞò   Gpreproc ´Ë´¦Ìæ´úHItemToStripº¯ÊıÖĞµÄÎïÆ·°Ú·Å
         for k=2:2 %0-2 Ä¬ÈÏ0 ²»¿ÉĞı×ª 1È«²¿¿ÉĞı×ª 2: °´ÈËÎªÉèÖÃÊÇ·ñÔÊĞíRotation 
-            for l=1:1 % ÒÑÎŞÓÃ :  % 0-2 0ÒÑÈ¡Ïû ±£Áô1-2 RotaHori 1hori 2 vert 555 ºá·Å²»ÁË»á×İ·Å£¬²»ÔÊĞí£»×İ·Åºó²»»áºá·Å£¨·Å²»ÏÂ£©£»
+            for TLUl=1:1 % ÒÑÎŞÓÃ :  % 0-2 0ÒÑÈ¡Ïû ±£Áô1-2 RotaHori 1hori 2 vert 555 ºá·Å²»ÁË»á×İ·Å£¬²»ÔÊĞí£»×İ·Åºó²»»áºá·Å£¨·Å²»ÏÂ£©£»
                 for m=3:3 %1-3 best first next¾ù¿É Ñ¡ÓÃµÄbest fit ÊÇ·ñ¸ÄÎ»NEXT FIT 1002ÈÕ¸ÄÎªm=3
                 % pA nAlg 
                 pA(nAlg) = ParameterInitialize( ...
@@ -126,7 +122,7 @@ for i = 3:3 %1-3 best first next¾ù¿É ÉèÎª3: ²»ÔÊĞíÇ°ÃæĞ¡¼äÏ¶·ÅÆäËü¶«Î÷ ÒòÎªÒ»µ©Ô
                              'whichBinH',m, ...
                              'whichSortItemOrder',j, ... 
                              'whichRotation',k, ...
-                             'whichRotationHori', l);
+                             'whichRotationHori', TLUl);
                  nAlg=nAlg+1;
                 end
             end
@@ -142,6 +138,7 @@ fprintf(1,'\nRunning the simulation...\n');
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
     %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
+    
      pA(iAlg).whichsq=1;
     % 1 »ñÈ¡d: ÔËĞĞÖ÷Êı¾İËã·¨
     d = RunAlgorithm(d,pA(iAlg));   %»ñÈ¡¿ÉĞĞ½â½á¹¹Ìå
@@ -149,8 +146,7 @@ for iAlg = 1:nAlg
     
     % 1.5 ĞŞ¶©dÄÚµÄLUºÍVehµÄLWHÊı¾İ % ·µ»ØÖ®Ç°¼ÆËã²»º¬marginµÄLUºÍItemµÄLWH+Coord.
     [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-    dA(iAlg)=d;
-    % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
+    dA(iAlg)=d;   
 
    % plotSolution(d,pA(iAlg)); %¾¡Á¿²»ÓÃ
     
@@ -292,7 +288,7 @@ for iAlg = 1:nAlg
         allidxVehType= allidxVehType-1;
         d1.Veh = [];
     end
-     end
+    end
 end
 
 %% Simulate - CHOOSE BEST ONE
@@ -310,8 +306,6 @@ if isempty(dA), error('±¾ËãÀıÄÚËùÓĞ½â¶¼´æÔÚÍĞÅÌ²»ÏàÁÚµÄÇé¿ö \n'); end
 if isempty(daBest), error('±¾ËãÀıÄÚÎ´ÕÒ³ö×îÓÅ½â·µ»ØBBA \n'); end
 
 bestOne = 1;
-z=daBest(bestOne)
-
 [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = getReturnBBA(daBest(bestOne)); %ÈçÓĞ¶à¸ö,·µ»ØµÚÒ»¸ö×îÓÅ½â
 
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ d1Êı¾İ »ñÈ¡ĞŞ¶©µÄ output ******************
@@ -376,7 +370,7 @@ end
 
 max(output_LU_Seq(7,:))
 if ISplotBBA
-    plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne));     %daBest(bestOne)½ö´ú±í³õÊ¼½â, ÒâÒå²»´ó
+    plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne)); 
 end
 
     % if  ISplotSolu 
@@ -387,15 +381,13 @@ end
     % %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %¾¡Á¿²»ÓÃ °üº¬plotStrip ½ö°üº¬µ¥³µĞÍ×÷Í¼
     % end
 
-% ÌŞ³ıÕ¹Ê¾Ë³Ğò
-output_LU_Seq = output_LU_Seq(1:7,:);
+% ÌŞ³ıÕ¹Ê¾Ë³Ğò % output_LU_Seq = output_LU_Seq(1:7,:);
 
 fprintf(1,'Simulation done.\n');
 
-
-
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-% d = rmfield(d, {'Veh', 'LU'});%  printstruct(dA(1,1),'sortfields',0,'PRINTCONTENTS',1)
+% printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
+% d = rmfield(d, {'Veh', 'LU'});
 end %END MAIN
 
 
@@ -512,25 +504,25 @@ end
 
 
     %% ************ ÅĞ¶ÏÊÇ·ñÏàÍ¬ÀàĞÍÍĞÅÌÏàÁÚ°Ú·Å
-    function flag = isAdjacent(d)
-        flag = 1;
-        printstruct(d);
-        % Ã¿¸öbinÖĞÕÒ³ö¸÷ÀàĞÍIDËùÔÚStripÊÇ·ñÏàÁÚ
-        nBin = size(d.Bin.LW,2);
-        for iBin = 1:nBin
-            t = [d.Item.LID; d.Item.Item_Strip; d.Item.Item_Bin ];
-            tiBin = t( : , t(4,:) == iBin );
-            nIdType = unique(tiBin(1,:)); %nIdType: ±¾iBinÄÚ°üº¬µÄLUµÄIDÀàĞÍ
-            for iId = 1:nIdType
-                tiId = tiBin( : , tiBin(1,:) == iId );
-                nIdStrip = unique(tiId(2,:)); %nIdStrip: ±¾iBin¼°±¾iIDÏÂ°üº¬µÄStripµÄĞòºÅ
-                % ÅĞ¶ÏÅÅĞòºóµÄ·ÅÈë±¾IDÀàĞÍµÄStripĞòºÅÊÇ·ñÏàÁÚ
-                if ~all(diff(sort(nIdStrip))==1)
-                    flag = 0;
-                end
-            end                    
-        end
-    end
+%     function flag = isAdjacent(d)
+%         flag = 1;
+%         printstruct(d);
+%         % Ã¿¸öbinÖĞÕÒ³ö¸÷ÀàĞÍIDËùÔÚStripÊÇ·ñÏàÁÚ
+%         nBin = size(d.Bin.LW,2);
+%         for iBin = 1:nBin
+%             t = [d.Item.LID; d.Item.Item_Strip; d.Item.Item_Bin ];
+%             tiBin = t( : , t(4,:) == iBin );
+%             nIdType = unique(tiBin(1,:)); %nIdType: ±¾iBinÄÚ°üº¬µÄLUµÄIDÀàĞÍ
+%             for iId = 1:nIdType
+%                 tiId = tiBin( : , tiBin(1,:) == iId );
+%                 nIdStrip = unique(tiId(2,:)); %nIdStrip: ±¾iBin¼°±¾iIDÏÂ°üº¬µÄStripµÄĞòºÅ
+%                 % ÅĞ¶ÏÅÅĞòºóµÄ·ÅÈë±¾IDÀàĞÍµÄStripĞòºÅÊÇ·ñÏàÁÚ
+%                 if ~all(diff(sort(nIdStrip))==1)
+%                     flag = 0;
+%                 end
+%             end                    
+%         end
+%     end
     
 % % %             % ns - ±¾binÄÚstrip¸öÊı¼°Ë³Ğò
 % % %             ns = d.Strip.stripBeBinMatrix(2,d.Strip.stripBeBinMatrix(1,:) == iBin);

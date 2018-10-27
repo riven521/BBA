@@ -272,13 +272,17 @@ V1019-1
 V1019-2
 1: 修改Item的高度满层定义, 
 
+V1027-1
+1: getReturnBBA(daMax)增加数据的Table格式（结构体->表格）
+
+
 TODO:
-崩溃问题
+返回数据的简单CHECK
 
 平铺all strip排序有问题 DONE 但未更新
 甩尾排序还有问题, 可能.
 展示顺序还有问题, 即相邻Strip,前后相同LID,需要
-
+循环多次运行 崩溃否？
 
 ************甩尾顺序综合属性选择***********
 LASTVEHICLE 测验
@@ -286,6 +290,7 @@ LASTVEHICLE 测验
 各种其它难点
 PPT书写
 FIGURE返回测试
+加密
 
 
 NOTE:
