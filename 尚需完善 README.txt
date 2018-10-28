@@ -281,28 +281,35 @@ V1027-2
 3: 车型选择增加updateItemMargin，修改margin
 4: 测试多次运行未发现崩溃现象（但有bug出现，还是要多测试才行）
 
-    l=LU.ID;
-    ll=LU.ID;
-    [l2,~] = sort(l);
-    [~,o2] = sort(ll);
-    [~,idxCusO] = sort(o2);
-    l3=l2(idxCusO);
+里程碑:
+V1028-1
+1 BBA-Main修改成从maind提取IuIdx个输入,而非从运算后的d中提取
+2 BBA-Main修改99 没有属性的临时增加
+3 BBA-Main增加 checkLU
+4 BBA-Main增加 224 d2Array d3Array  do2Array do3Array flagTiled
+5 BBA-Main增加 getdinThisVeh 从原始输入数据maind旋转d2 d3等数据
+6 BBA-Main增加 getTableLU 将d.LU转换table
+6 BBA-Main增加 T1 T23等向T的某个bin内的变化修改，不排序等
+6 BBA-Main增加 599 T = getShowSeq(T) 获取排序的Seq
 
 TODO:
+MAXL等确实属性的调整；
+OPID OSID等属性的注意
+平铺和车型在最后一车的更改，只能以某个为准，目前是平铺 LASTVEHICLE 测验
+返回值准确性的确定???
+PLOT的修改???
 返回数据的简单CHECK
+甩尾排序还有问题, 可能.
+展示顺序还有问题, 即相邻Strip,前后相同LID,可能
+对方崩溃问题
 
 平铺all strip排序有问题 DONE 但未更新
-甩尾排序还有问题, 可能.
-展示顺序还有问题, 即相邻Strip,前后相同LID,需要
 循环多次运行 崩溃否？ 否 DONE
-
 ************甩尾顺序综合属性选择***********
-LASTVEHICLE 测验
 各种strip属性记录
 各种其它难点
 PPT书写
 FIGURE返回测试
-
 
 NOTE:
 1: Item.Item_Strip(1,:) == iStrip 避免==右侧为i索引顺序. 因为Item_Strip的第一行可能并非从1开始,也非连续
@@ -318,8 +325,8 @@ Q1: I2S: order, 对同ID的LU,以高度递减排序(同STRIP混合可以), 异St
 A : 
 
 TODO:
-1 1/4车头的平铺问题(修订Item.isHeightFull修订)
-4 修订数量多的在车头(基于LU数量而非Item数量)
+1 1/4车头的平铺问题(修订Item.isHeightFull修订) DONE
+4 修订数量多的在车头(基于LU数量而非Item数量) BASIC DONE
 1 增加平铺功能 DONE
 2 甩尾后展示顺序功能
 3 最高限制和最多层次,哪个条件先达到按哪个做（或给选择，按高度或按层数） DONE

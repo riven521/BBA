@@ -12,15 +12,16 @@ Type = 'LU';
 % LU_Item(1,:); m7 PID;  m8 展示甩尾 m9 展示顺序
 
 global ISplotPause ISplotShowType
+% nIDType: 颜色的类型或差异
 if ISplotShowType == 1
     % 1: 按照LID区分颜色
     nIDType = unique(m(5,:));
 elseif ISplotShowType == 2
-    % 2: 按照甩尾与否区分颜色
+    % 2: 按照展示顺序区分颜色
     nIDType = unique(m(8,:));
 end
 
-nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
+arrayColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
 nBin = max(m(2,:)); %bin的个数;
 
 figure('name',num2str([nBin]));
@@ -38,20 +39,25 @@ for ibin=1:nBin
    % 1: 按照LID区分颜色 
    lid  = m(5,f);
    elseif ISplotShowType == 2
-   % 2: 按照甩尾与否区分颜色
+   % 2: 按照展示顺序区分颜色
    lid  = m(8,f);
     end
-
-    % LU在Bin内的顺序  LU_Bin(2,:)
+    
+    unique(lid)
+    % LU在某个Bin内的顺序  LU_Bin(2,:) seq必须是不能有重复值的
     seq = m(3,f);
 
     for i=1:numel(seq)
+        % idx只能有1个值
         idx =find(seq==i); % LU进入Bin内的画图顺序
-        LUColor = 0.8*nColors(nIDType==lid(idx), : );
+        if ~isscalar(idx),
+            error('同一bin内包含多个LU的进入顺序');
+        end
+        LUColor = 0.8*arrayColors(nIDType==lid(idx), : );
 
         % 当托盘不相连出现时, 中断
         if j~=1 && tmp ~=m(8,j) 
-                 if ISplotPause>=0 ,      pause(ISplotPause);   end
+                 if ISplotPause>0 ,      pause(ISplotPause);   end
         end        
         tmp = m(8,j);
         j=j+1;

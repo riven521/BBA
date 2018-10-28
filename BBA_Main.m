@@ -26,10 +26,10 @@
 function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
     BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin) %Ç°4¸ö±ØĞë
 
-%% Initialize Data Structure
+%% Initialize Global Variable
 % clear;close all; format long g; format bank; %NOTE ²»±»MATLAB CODE Ö§³Ö
 % rng('default');rng(1); % NOTE ÊÇ·ñËæ»úµÄ±êÖ¾
-% clear; close all;
+%close all;
 global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
 global ISisNonMixedLU ISisMixTileLU
@@ -37,12 +37,12 @@ global ISisNonMixedLU ISisMixTileLU
 % ISsItemAdjust = 1  % ÔİÊ±²»ÓÃ ÓÃÍ¾Íü¼ÇÁË
 % ISreStripToBinMixed = 1 %³µÍ·ÓÅÏÈ·ÇAllPureÀàĞÍ, ÔÙ¿¼ÂÇÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 Ó¦¸Ã¿ÉÒÔÉ¾³ıµÄ²ÎÊı
 
-ISplotBBA = 1
-ISplotShowType = 2 % 1 LID 2 isShuaiWei
+ISplotBBA = 0
+ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û
 ISplotEachPingPu = 0 % Ã¿´ÎMain Æ½ÆÌÊ± Éú³ÉStrip¾ÍÏÔÊ¾½á¹û
-ISplotPause = -0.3 % plot¼ä¸ôÊ±¼ä
+ISplotPause = 0.05 % plot¼ä¸ôÊ±¼ä
 
 ISdiagItem = 0  % Ä¬ÈÏÎª 0 °É Îª1 ×ÜÓĞĞ©¹ıÓÚµÍµÄ±»ÈÏÎªItem¸ß¶ÈÂú²ã, checkÔ­Òò°É
 
@@ -60,8 +60,9 @@ ISshuaiwei = 1          % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµ
 ISpingpu = 1            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
 ISpingpuAll =1         %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
 
-ISlastVehType = 1% 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
+ISlastVehType = 1    % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
 
+%% Initialize Data Structure
 if nargin ~= 0
     d = DataInitialize( ...
             'LUID', LUID,...
@@ -76,7 +77,7 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=16; m=2;  % 16ĞèÒª×¢Òâ
+    n=18; m=2;  % 16ĞèÒª×¢Òâ 250 srng1
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
     
     filename = strcat('GoodIns',num2str(n));
@@ -86,18 +87,10 @@ else
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
-TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
-TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+% TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
 % TLUIN.Properties.VariableNames{'PID'} = 'OPID'; TLUIN.Properties.VariableNames{'SID'} = 'OSID';
 % s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
-
-%%
-S.Name = {'CLARK';'BROWN';'MARTIN'};
-S.Gender = {'M';'F';'M'};
-S.SystolicBP = [124;122;130];
-S.DiastolicBP = [93;80;92];
-T = struct2table(S)
 %%
 % t.ID
 % t = [d.LU.ID;d.LU.LWH]
@@ -105,31 +98,48 @@ T = struct2table(S)
 
 %% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó
     n = numel(d.LU.Weight);
-%     if ~isfield(d.LU, 'maxL'),       d.LU.maxL = ones(3,n); end% maximum layer in three dimension
-    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = 10*ones(1,n); end% maximum layer in three dimension
-
+    % ¸ø¸ö³õÊ¼½øÈëË³Ğò ÔİÊ±Ã»ÓĞÓÃ
+    if ~isfield(d.LU, 'index')
+        d.LU.index = 1:n;
+    end
+    
+    % Æ½ÆÌÊ¹ÓÃÊôĞÔ
+    if ~isfield(d.LU, 'maxL')
+        d.LU.maxL(1,:) =  floor(d.Veh.LWH(1,1)./d.LU.LWH(1,:));
+        d.LU.maxL(2,:) =  floor(d.Veh.LWH(2,1)./d.LU.LWH(2,:));
+        d.LU.maxL(3,:) =  floor(d.Veh.LWH(3,1)./d.LU.LWH(3,:));   %¾ßÌåÃ¿¸öÍĞÅÌLUµÄ¸ß¶ÈµÄ×î´ó²ãÊı
+    end
+    
+    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = 10*ones(1,n); end% maximum given height layer
     
 %% Initialize Parameter
 nAlg = 1;
-for i = 3:3 %1-3 best first next¾ù¿É ÉèÎª3: ²»ÔÊĞíÇ°ÃæĞ¡¼äÏ¶·ÅÆäËü¶«Î÷ ÒòÎªÒ»µ©ÔÊĞí, »á´ó¸ÅÂÊÎ¥±³ÏàÁÚÔ¼Êø
-    for j=3:3 %0-3 ÅÅĞò: 0: Vert£»1: Hori; 2:error  3:°´·ìÏ¶×îĞ¡ÅÅĞò   Gpreproc ´Ë´¦Ìæ´úHItemToStripº¯ÊıÖĞµÄÎïÆ·°Ú·Å
-        for k=2:2 %0-2 Ä¬ÈÏ0 ²»¿ÉĞı×ª 1È«²¿¿ÉĞı×ª 2: °´ÈËÎªÉèÖÃÊÇ·ñÔÊĞíRotation 
-            for TLUl=1:1 % ÒÑÎŞÓÃ :  % 0-2 0ÒÑÈ¡Ïû ±£Áô1-2 RotaHori 1hori 2 vert 555 ºá·Å²»ÁË»á×İ·Å£¬²»ÔÊĞí£»×İ·Åºó²»»áºá·Å£¨·Å²»ÏÂ£©£»
-                for m=3:3 %1-3 best first next¾ù¿É Ñ¡ÓÃµÄbest fit ÊÇ·ñ¸ÄÎ»NEXT FIT 1002ÈÕ¸ÄÎªm=3
-                % pA nAlg 
-                pA(nAlg) = ParameterInitialize( ...
-                             'whichStripH', i,...
-                             'whichBinH',m, ...
-                             'whichSortItemOrder',j, ... 
-                             'whichRotation',k, ...
-                             'whichRotationHori', TLUl);
-                 nAlg=nAlg+1;
-                end
-            end
-        end
-    end
-end
-nAlg = nAlg - 1;
+pA(nAlg) = ParameterInitialize('whichStripH', 3,...
+                             'whichBinH',3, ...
+                             'whichSortItemOrder',3, ... 
+                             'whichRotation',2, ...
+                             'whichRotationHori', 1);
+                  
+% % nAlg = 1;
+% % for i = 3:3 %1-3 best first next¾ù¿É ÉèÎª3: ²»ÔÊĞíÇ°ÃæĞ¡¼äÏ¶·ÅÆäËü¶«Î÷ ÒòÎªÒ»µ©ÔÊĞí, »á´ó¸ÅÂÊÎ¥±³ÏàÁÚÔ¼Êø
+% %     for j=3:3 %0-3 ÅÅĞò: 0: Vert£»1: Hori; 2:error  3:°´·ìÏ¶×îĞ¡ÅÅĞò   Gpreproc ´Ë´¦Ìæ´úHItemToStripº¯ÊıÖĞµÄÎïÆ·°Ú·Å
+% %         for k=2:2 %0-2 Ä¬ÈÏ0 ²»¿ÉĞı×ª 1È«²¿¿ÉĞı×ª 2: °´ÈËÎªÉèÖÃÊÇ·ñÔÊĞíRotation 
+% %             for TLUl=1:1 % ÒÑÎŞÓÃ :  % 0-2 0ÒÑÈ¡Ïû ±£Áô1-2 RotaHori 1hori 2 vert 555 ºá·Å²»ÁË»á×İ·Å£¬²»ÔÊĞí£»×İ·Åºó²»»áºá·Å£¨·Å²»ÏÂ£©£»
+% %                 for m=3:3 %1-3 best first next¾ù¿É Ñ¡ÓÃµÄbest fit ÊÇ·ñ¸ÄÎ»NEXT FIT 1002ÈÕ¸ÄÎªm=3
+% %                 % pA nAlg 
+% %                 pA(nAlg) = ParameterInitialize( ...
+% %                              'whichStripH', i,...
+% %                              'whichBinH',m, ...
+% %                              'whichSortItemOrder',j, ... 
+% %                              'whichRotation',k, ...
+% %                              'whichRotationHori', TLUl);
+% %                  nAlg=nAlg+1;
+% %                 end
+% %             end
+% %         end
+% %     end
+% % end
+% % nAlg = nAlg - 1;
 
 %% Simulate - All ALGORITHM
 
@@ -137,82 +147,149 @@ fprintf(1,'\nRunning the simulation...\n');
 
 % Run ALL algorithm configure
 for iAlg = 1:nAlg
-    %     printstruct(pA(iAlg));   %    printstruct(d.Veh);
     
-     pA(iAlg).whichsq=1;
-    % 1 »ñÈ¡d: ÔËĞĞÖ÷Êı¾İËã·¨
-    d = RunAlgorithm(d,pA(iAlg));   %»ñÈ¡¿ÉĞĞ½â½á¹¹Ìå
-    d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
+    %% 1 ÔËĞĞÖ÷Ëã·¨
+    % 1.1 »ñÈ¡d: ÔËĞĞÖ÷Êı¾İËã·¨    
+    maind = d; % Ö÷ÒªµÄÊäÈëÊı¾İ±£Áô
     
-    % 1.5 ĞŞ¶©dÄÚµÄLUºÍVehµÄLWHÊı¾İ % ·µ»ØÖ®Ç°¼ÆËã²»º¬marginµÄLUºÍItemµÄLWH+Coord.
-    [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
-    dA(iAlg)=d;   
+    do = RunAlgorithm(d,pA(iAlg));   %»ñÈ¡¿ÉĞĞ½â½á¹¹Ìå
+    do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
 
-   % plotSolution(d,pA(iAlg)); %¾¡Á¿²»ÓÃ
+    % 1.2 ĞŞ¶©dÄÚµÄLUºÍVehµÄLWHÊı¾İ % ·µ»ØÖ®Ç°¼ÆËã²»º¬marginµÄLUºÍItemµÄLWH+Coord.
+    [do.LU,do.Item] = updateItemMargin(do.LU,do.Item);
+    dA(iAlg)=do;
     
-    %% 1.6 Æ½ÆÌ
+    % 1.3 CHECK ÊäÈëºÍÊä³öµÄLU
+    maintLU = struct2table(structfun(@(x) x',maind.LU,'UniformOutput',false));
+    tLU = struct2table(structfun(@(x) x',do.LU,'UniformOutput',false));    
+    checkLU(maintLU,tLU);
+
+   % plotSolution(do,pA(iAlg)); %¾¡Á¿²»ÓÃ
+    
+    %% 2 ÔËĞĞ³µĞÍµ÷ÕûËã·¨,²»¸Ä±äd »ñÈ¡d1ºÍdo1, flaggetSmallVeh : 
+    if ISlastVehType
+    % 2.1 ³õÊ¼»¯
+    allidxVehType = length(unique(do.Veh.ID)); %´ËËãÀı³µĞÍÊıÁ¿(Î´ÅÅ³ıÏàÍ¬³µĞÍ)
+    flaggetSmallVeh = 0;
+    
+                                                                        % ×¼±¸Ìæ»»d1 %  ¶Ôµ÷Lu.LWHµÄ³¤¿í -< Ö®Ç°ÊÇ¿í³¤ (ÒÑ·ÅÈëgetdinLastVehÖĞ)
+                                                                        %     d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); 
+                                                                        %d1 = getdinLastVeh(do);
+    % 2.2 CHANGE ´ÓmaindÖĞÄÃÊäÈëÊı¾İ
+    luIdx = do.LU.LU_Bin(1,:) == max(do.LU.LU_Bin(1,:));
+    d1 = getdinThisVeh(maind,luIdx);                    
+                    
+    % 2.3 µ±³µÁ¾ÀàĞÍ¶àÓÚ2ÖÖ,²Å½øĞĞÌæ»»
+    while(allidxVehType>=2)
+        % 2.1 »ñÈ¡×îºó³µĞÍ²¢ÔËĞĞËã·¨ % ´Ó×îºóÒ»Á¾³µ²»¶ÏÍùÇ°Ñ­»·; untilµÚ¶şÁ¾³µ; ´Ë´¦¼ÙÉè
+        d1.Veh = structfun(@(x) x(:,allidxVehType), do.Veh,'UniformOutput',false); %´Ó×îºóÒ»ÖÖ³µĞÍ¿ªÊ¼¿¼ÂÇ
+                                            %disp(d1.Veh.LWH)
+                                            %TLUIN_LAST = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
+        
+                                                                                                                            %d1 = RunAlgorithm(d1,pA(iAlg));
+        do1 = RunAlgorithm(d1,pA(iAlg));   %Õë¶ÔÉÙÊıµÄ×îºóÒ»¸öBinµÄÊäÈëlastd½øĞĞÔËËã 555555555555555555555
+                                            %     plotSolution(do1,pA(iAlg));
+
+                            %             do1.LU.LU_VehType = ones(size(do1.LU.ID)) * do1.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
+        do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % ²¹³ä±äÁ¿LU_VehType
+        [do1.LU,do1.Item] = updateItemMargin(do1.LU,do1.Item);
+
+        % 2.4 ÅĞ¶Ï¸Ã³µĞÍÊÇ·ñ¿ÉÓÃ
+        % ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚ¸ö×÷Îªµ±Ç°¶ÔÓ¦Õæ³µĞÍË÷ÒıºÅ
+        % ÅĞ¶Ï: ÊÇ·ñ¸ÄÎªµÚallidxVehType(Ğ¡)³µĞÍºó,1¸ö³µÁ¾¿ÉÒÔ·ÅÏÂ;
+        if max(do1.LU.LU_Bin(1,:)) == 1
+                                                                                                                                    %do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % ²¹³ä±äÁ¿LU_VehType
+            flaggetSmallVeh=1;
+            break;
+        end
+        
+        % 2.5 Èô·Å²»ÏÂ,Ñ¡Ôñ¸ü´ó³µĞÍ -> allidxVehTypeµİ¼õ do1.Veh¸³Óè¿ÕÖµ
+        allidxVehType= allidxVehType-1;
+        d1.Veh = [];
+    end
+    
+    % CHECK
+    if flaggetSmallVeh==1
+        % d1;
+        % do1
+        t1 = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
+        to1 = struct2table(structfun(@(x) x',do1.LU,'UniformOutput',false));
+        checkLU(t1,to1);
+    end
+    end
+
+
+
+
+
+    %% 3 ÔËĞĞÆ½ÆÌËã·¨,²»¸Ä±äd »ñÈ¡d2Array d3Array  do2Array do3Array flagTiled
     if ISpingpu==1
-    flagTiled = zeros(1,length(d.Bin.Weight));  %1´ú±íÕû³µÆ½ÆÌ 2´ú±íË¦Î²Æ½ÆÌ
-    do2Array(1:length(d.Bin.Weight)) = d;
+    % 3.1 ³õÊ¼»¯5¸öÊı¾İ    
+    flagTiledArray = zeros(1,length(do.Bin.Weight));  %1´ú±íÕû³µÆ½ÆÌ 2´ú±íË¦Î²Æ½ÆÌ
     
-                bidx = find(d.Bin.isTileNeed);
-    bidx = 1:length(d.Bin.Weight); % NOTE: ĞŞ¸ÄÖ»¿¼ÂÇË¦Î²Æ½ÆÌµ½È«²¿BinÄÉÈë¿¼ÂÇ, ¶Ô·ÇË¦Î²Æ½ÆÌµÄ½øĞĞÆ½ÆÌÅĞ¶Ï
-    % Ñ­»·: Ã¿¸öbin·Ö±ğÆ½ÆÌ
+    d2Array(1:length(do.Bin.Weight)) = maind;
+    do2Array(1:length(do.Bin.Weight)) = do;
+    d3Array(1:length(do.Bin.Weight)) = maind;
+    do3Array(1:length(do.Bin.Weight)) = do;
+            
+    %% 3.2 ½øÈëbinÑ­»·Æ½ÆÌ
+    bidx = 1:length(do.Bin.Weight); % NOTE: ĞŞ¸ÄÖ»¿¼ÂÇË¦Î²Æ½ÆÌµ½È«²¿BinÄÉÈë¿¼ÂÇ, ¶Ô·ÇË¦Î²Æ½ÆÌµÄ½øĞĞÆ½ÆÌÅĞ¶Ï % bidx = find(do.Bin.isTileNeed);
+    % Ñ­»·: Ã¿¸öbin·Ö±ğ³¢ÊÔÆ½ÆÌ(Õû³µÆ½ÆÌºÍË¦Î²Æ½ÆÌ¶şÑ¡Ò»£¬ÓÅÏÈÕû³µÆ½ÆÌ)
     for i=1:numel(bidx)
         ibin = bidx(i);
 
         % $1 GET d2 ±¾ibinÄÚ´ıËã·¨¼ÆËãµÄÊı¾İ
-        % 1 ×îºóÒ»¸ö³µÁ¾ÄÚµÄ³¤¿í¸ß±ä»¯
-        d2.Veh = d.Veh;
-        d2.Veh = rmfield(d2.Veh,{'Volume','order'});        
+        luIdx = do.LU.LU_Bin(1,:) == ibin;
+        d2 = getdinThisVeh(maind,luIdx); %ĞŞ¸Ä³É´ÓmaindÌáÈ¡IuIdx¸öÊäÈë,¶ø·Ç´ÓÔËËãºóµÄdÖĞÌáÈ¡
+
+        %% COMMENT
+%         d2.Veh = do.Veh;
+%         d2.Veh = rmfield(d2.Veh,{'Volume','order'});
         % 2 ×îºóÈô¸É/Ò»¸östripÄÚµÄLU
-        luidx = d.LU.LU_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
+%         luidx = do.LU.LU_Bin(1,:) == ibin;  %do.LU.LU_Strip(1,:) == istrip
 
-        d2.LU = structfun(@(x) x(:,luidx),d.LU,'UniformOutput',false);
-        d2.LU.LWH([1,2], d2.LU.Rotaed ) = flipud(d2.LU.LWH([1,2], d2.LU.Rotaed)); %LU.LWH ÈçĞı×ª,Ôò»Ö¸´Ô­ĞÎ
-        d2.LU = rmfield(d2.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
-            'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType'});
-        d2.Par = d.Par;
-        
-        % $2 GET do2 ±¾ibinÄÚº¬Êä³öÊı¾İ
-                do2.Veh = d.Veh;
-                do2.LU = structfun(@(x) x(:,luidx),d.LU,'UniformOutput',false);
-                do2.Bin = structfun(@(x) x(:,ibin),d.Bin,'UniformOutput',false);
-                stripidx = d.Strip.Strip_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
-                do2.Strip = structfun(@(x) x(:,stripidx),d.Strip,'UniformOutput',false);    
-                itemidx = d.Item.Item_Bin(1,:) == ibin; %d.LU.LU_Strip(1,:) == istrip
-                do2.Item = structfun(@(x) x(:,itemidx),d.Item,'UniformOutput',false);        
-        
-        % $3 Èç¹ûÔÊĞíÈ«²¿Æ½ÆÌ(¿ÉÄÜÊÇ·ÇË¦Î²Æ½ÆÌ), ¹Û²ì±¾ibinÄÚÊÇ·ñ¿ÉÒÔÈ«²¿Æ½ÆÌ,Èç¿ÉÒÔ,¾ÍÈ¡ÏûË¦Î²Æ½ÆÌ; ·ñÔò,½øÈëË¦Î²Æ½ÆÌ
-        if ISpingpuAll==1
-            do3 = do2;
+%         d2.LU = structfun(@(x) x(:,luidx),do.LU,'UniformOutput',false);
+%         d2.LU.LWH([1,2], d2.LU.Rotaed ) = flipud(d2.LU.LWH([1,2], d2.LU.Rotaed)); %LU.LWH ÈçĞı×ª,Ôò»Ö¸´Ô­ĞÎ
+%         d2.LU.PID = d2.LU.OPID;     d2.LU.SID = d2.LU.OSID;  %  d2.LU.LID = d2.LU.OLID;
+%         d2.LU = rmfield(d2.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
+%             'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType','OPID','OSID'});
+%         
+%         d2.Par = do.Par;
+        %% 3.3 Èç¹ûÔÊĞíÈ«²¿Æ½ÆÌ(¿ÉÄÜÊÇ·ÇË¦Î²Æ½ÆÌ), ¹Û²ì±¾ibinÄÚÊÇ·ñ¿ÉÒÔÈ«²¿Æ½ÆÌ,Èç¿ÉÒÔ,¾ÍÈ¡ÏûË¦Î²Æ½ÆÌ; ·ñÔò,½øÈëË¦Î²Æ½ÆÌ
+        if ISpingpuAll==1            
             d3 = d2;
-            d3.LU.maxHLayer(:) = 1; %d2ÄÚÈ«²¿LUµÄ²ãÊıÉè¶¨Îª1
-%             d3.LU.PID = d3.LU.OPID;
-%             d3.LU.PID = d3.LU.OSID;
-            % $5 reRunAlgorithm
-            TLUIN_PP1 = struct2table(structfun(@(x) x',d3.LU,'UniformOutput',false));
-            do3 = RunAlgorithm(d3,pA(iAlg)); 
-            
-            do3.LU.LU_VehType = ones(size(d3.LU.ID)) * do3.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
+            d3.LU.maxHLayer(:) = 1; %d2ÄÚÈ«²¿LUµÄ²ãÊıÉè¶¨Îª1 55555 È«²¿Æ½ÆÌµÄÖØÒªÌõ¼ş
+            d3Array(ibin) = d3;
 
-            [do3.LU,do3.Item] = updateItemMargin(do3.LU,do3.Item);
-                        %             plot3DBPP(do3,pA(iAlg))
-                        
-            % $6 ºó´¦Àí
+            % $3.3.1 reRunAlgorithm do3ÊÇd3ÔËËãºóµÄ½á¹û
+            do3 = RunAlgorithm(d3,pA(iAlg));             
+            do3Array(ibin) = do3;
+            
+            % $3.3.2 µ±È«²¿Æ½ÆÌÃ»ÓĞÎÊÌâ,×öºó´¦Àí
             if max(do3.LU.LU_Bin(1,:)) == 1
-                %do3.LU.LU_VehType = ones(size(do3.LU.ID))*d.Veh.order(1); 
-                flagTiled(ibin)=1; %1´ú±íÕû³µÆ½ÆÌ
-                do2Array(ibin) = do3;
-                continue; %continue²»»á½øÈëÏÂÃæµÄË¦Î²Æ½ÆÌÁË
-                %  do2 Êı¾İ²»½øÈëd ½öÔÚreturn2bbaÖĞĞŞ¸Ä
-             else
-%                 break;  %1¸ö³µÁ¾·Å²»ÏÂ
+                flagTiledArray(ibin)=1; %1´ú±íÕû³µÆ½ÆÌ
+                do3.LU.LU_VehType = ones(size(d3.LU.ID)) * do3.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
+                [do3.LU,do3.Item] = updateItemMargin(do3.LU,do3.Item);               %  plot3DBPP(do3,pA(iAlg))
+                do3Array(ibin) = do3;
+                
+                % do3ĞŞ¸Äµ½dÖĞ£¿£¿£¿Ä¿Ç°±£Áôµ½do2ArrayÖĞ£¬Î´ÓëdºÏ²¢
+                continue;   %continue²»»á½øÈëÏÂÃæµÄË¦Î²Æ½ÆÌÁË
             end
         end
+        %% 3.4 ÈôÕû³µÆ½ÆÌÊ§°Ü ½øÈëË¦Î²Æ½ÆÌ
+
+                % 3.4.1 GET do2 ±¾ibinÄÚº¬Êä³öÊı¾İ£ºË¦Î²Æ½ÆÌÊ¹ÓÃ
+                        stripidx = do.Strip.Strip_Bin(1,:) == ibin; %do.LU.LU_Strip(1,:) == istrip
+                        itemidx = do.Item.Item_Bin(1,:) == ibin; %do.LU.LU_Strip(1,:) == istrip
+                do2.Veh = do.Veh;
+                do2.LU = structfun(@(x) x(:,luIdx),do.LU,'UniformOutput',false);
+                do2.Bin = structfun(@(x) x(:,ibin),do.Bin,'UniformOutput',false);                       
+                do2.Strip = structfun(@(x) x(:,stripidx),do.Strip,'UniformOutput',false);
+                do2.Item = structfun(@(x) x(:,itemidx),do.Item,'UniformOutput',false);        
+               
             while do2.Bin.isTileNeed(1) == 1 %do2ÄÚµÄBinÓÀÔ¶Ö»ÓĞ1¸ö, ¿ÉÄÜÆ½ÆÌºó¸ÃbinÈÔĞèÒªÆ½ÆÌ,ËùÒÔÓĞwhileÅĞ¶Ï
 
-            % $4 ĞŞ¶©d2.LU.maxHLayer (½ö¶ÔibinÄÚ×îºóÑ¡¶¨µÄ¼¸¸östripÆ½ÆÌ) TODO $4Ğ´µÄÓĞĞ©¸´ÔÓ,ºóÆÚ¼ò»¯
+            % $3.4.2 ĞŞ¶©d2.LU.maxHLayer (½ö¶ÔibinÄÚ×îºóÑ¡¶¨µÄ¼¸¸östripÆ½ÆÌ) TODO $4Ğ´µÄÓĞĞ©¸´ÔÓ,ºóÆÚ¼ò»¯
             % $4.1 GET luidxPP
             % Ñ­»·´Ó±¾ibinÄÚ×îºóÒ»¸östrip¿ªÊ¼Æ½ÆÌ istrip= nbStrip;
             nbStrip = numel(do2.Strip.Weight);
@@ -224,6 +301,8 @@ for iAlg = 1:nAlg
                         if ~any(luidxPP),  error('luidxPPÈ«²¿Îª¿Õ, ²»´æÔÚu(fi)¶ÔÓ¦µÄLuÂß¼­ÅĞ¶Ï'); end
         
             % $4.2 ĞŞ¶©d2.LU.maxHLayer
+%              d2.LU
+%              maind.LU
             d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
 
             % $4.2 Èôµ±Ç°luidxPP¶ÔÓ¦LuµÄ²ãÊı¾ùÒÑ¾­Îª1ÁË, ÔòĞèÒªÔö¼Ó¸ü¶àµÄistrip¼°luidxPP; ÔÙĞŞ¶©d2.LU.maxHLayer
@@ -241,65 +320,54 @@ for iAlg = 1:nAlg
             d2.LU.maxHLayer(d2.LU.maxHLayer<=1) = 1;
 
             % $5 reRunAlgorithm
-            %    plotSolution(do2,pA(iAlg));
-            TLUIN_PP2 = struct2table(structfun(@(x) x',d2.LU,'UniformOutput',false));
+                                                             %    plotSolution(do2,pA(iAlg));
+
+            d2Array(ibin) = d2;
             do2 = RunAlgorithm(d2,pA(iAlg)); 
+            
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
-            if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
-
             [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);
-
+            do2Array(ibin) = do2;
+                                                                if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
             % $6 ºó´¦Àí
             if max(do2.LU.LU_Bin(1,:)) == 1
-                do2.LU.LU_VehType = ones(size(do2.LU.ID))*d.Veh.order(1); 
-                flagTiled(ibin)=2; %2´ú±íË¦Î²Æ½ÆÌ
+                                                                                                                                %    do2.LU.LU_VehType = ones(size(do2.LU.ID))*do.Veh.order(1); 
+                flagTiledArray(ibin)=2; %2´ú±íË¦Î²Æ½ÆÌ
                 do2Array(ibin) = do2;
                 % do2 Êı¾İ²»½øÈëd ½öÔÚreturn2bbaÖĞĞŞ¸Ä
+                % do2 Êı¾İ½øÈëd???? return2bba²»ĞŞ¸Ä£¿£¿£¿                
             else
-                break;  %1¸ö³µÁ¾·Å²»ÏÂ
+                break;  %µ¥³µË¦Î²·Å²»ÏÂ ²»ÔÙ¼ÌĞøË¦Î²Æ½ÆÌÁË£¬µ½´Ë½áÊø£¬½øÈëÏÂÒ»Á¾³µË¦Î²ÅĞ¶Ï
             end
             
             end % END OF WHILE
     end% END OF FOR
-    end
-   
-
-     %% 2 »ñÈ¡d1ºÍflaggetSmallVeh : ÔËĞĞ×îºóÒ»³µÊı¾İËã·¨,²»¸Ä±äd
-     if ISlastVehType
-    allidxVehType = length(unique(d.Veh.ID)); %´ËËãÀı³µĞÍÊıÁ¿(Î´ÅÅ³ıÏàÍ¬³µĞÍ)
-    flaggetSmallVeh = 0;
-    d1 = getdinLastVeh(d);   
-                    %  ¶Ôµ÷Lu.LWHµÄ³¤¿í -< Ö®Ç°ÊÇ¿í³¤ (ÒÑ·ÅÈëgetdinLastVehÖĞ)
-                    %     d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); 
-    while(allidxVehType>1)
-        % 2.1 »ñÈ¡×îºó³µĞÍ²¢ÔËĞĞËã·¨ % ´Ó×îºóÒ»Á¾³µ²»¶ÏÍùÇ°Ñ­»·; untilµÚ¶şÁ¾³µ; ´Ë´¦¼ÙÉè
-        d1.Veh = structfun(@(x) x(:,allidxVehType), d.Veh,'UniformOutput',false); %´Ó×îºóÒ»ÖÖ³µĞÍ¿ªÊ¼¿¼ÂÇ
-        %disp(d1.Veh.LWH)
-        %d1 = RunAlgorithmLastVeh(d1,pA(iAlg));   %Õë¶ÔÉÙÊıµÄ×îºóÒ»¸öBinµÄÊäÈëlastd½øĞĞÔËËã 555555555555555555555
-        TLUIN_LAST = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
-        d1 = RunAlgorithm(d1,pA(iAlg));   %Õë¶ÔÉÙÊıµÄ×îºóÒ»¸öBinµÄÊäÈëlastd½øĞĞÔËËã 555555555555555555555
-%         plotSolution(d1,pA(iAlg));
-
-                            %             d1.LU.LU_VehType = ones(size(d1.LU.ID)) * d1.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
-            d1.LU.LU_VehType = ones(size(d1.LU.ID))*d.Veh.order(allidxVehType);
-            [d1.LU,d1.Item] = updateItemMargin(d1.LU,d1.Item);
-
-        % 2.2 ÅĞ¶Ï¸Ã³µĞÍÊÇ·ñ¿ÉÓÃ
-        % ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚ¸ö×÷Îªµ±Ç°¶ÔÓ¦Õæ³µĞÍË÷ÒıºÅ
-        % ÅĞ¶Ï: ÊÇ·ñ¸ÄÎªµÚallidxVehType(Ğ¡)³µĞÍºó,1¸ö³µÁ¾¿ÉÒÔ·ÅÏÂ;
-        if max(d1.LU.LU_Bin(1,:)) == 1
-            d1.LU.LU_VehType = ones(size(d1.LU.ID))*d.Veh.order(allidxVehType); % ²¹³ä±äÁ¿LU_VehType
-            flaggetSmallVeh=1;
-            break;
+    
+    %% CHECK
+    if any(flagTiledArray)
+        for ibin=1:length(flagTiledArray)
+            if flagTiledArray(ibin)==1 %Õû³µÆ½ÆÌ
+                t3 = struct2table(structfun(@(x) x',d3Array(ibin).LU,'UniformOutput',false));
+                to3 = struct2table(structfun(@(x) x',do3Array(ibin).LU,'UniformOutput',false));
+                checkLU(t3,to3);
+            end
+            if flagTiledArray(ibin)==2 %Ë¦Î²Æ½ÆÌ
+                t2 = struct2table(structfun(@(x) x',d2Array(ibin).LU,'UniformOutput',false));
+                to2 = struct2table(structfun(@(x) x',do2Array(ibin).LU,'UniformOutput',false));
+                checkLU(t2,to2);
+            end
+            
+            flagTiledArray;
+            d2Array;
+            do2Array;
+            d3Array;
+            do3Array;
         end
-        
-        % 2.3 Èô·Å²»ÏÂ,Ñ¡Ôñ¸ü´ó³µĞÍ -> allidxVehTypeµİ¼õ d1.Veh¸³Óè¿ÕÖµ
-        allidxVehType= allidxVehType-1;
-        d1.Veh = [];
     end
     end
 end
 
+   
 %% Simulate - CHOOSE BEST ONE
 % 555 Ëã·¨Ê×ÏÈÅĞ¶Ï²¢ÅÅ³ıbinÄÚÏàÍ¬ÀàĞÍÍĞÅÌ²»ÏàÁÚµÄ½â TODO Êı¾İµÄCHECK
 %  flagA(iAlg) =  isAdjacent(dA(iAlg));           % Ëã·¨ÅĞ¶ÏÊÇ·ñÏàÍ¬ÀàĞÍÍĞÅÌÏàÁÚ°Ú·Å +
@@ -307,38 +375,75 @@ end
 % % pA = pA(1,logical(flagA));
 
 % TODO ´Ó¶à´ÎËã·¨½á¹ûÖĞÑ¡³ö´Ó±Ø¶¨binÄÚÏàÁÚµÄ×îÓÅ½á¹û - NOTE: ²ÉÓÃµ¥²ÎÊıÊ±ÎŞĞè¿¼ÂÇ
-if isempty(dA), error('±¾ËãÀıÄÚËùÓĞ½â¶¼´æÔÚÍĞÅÌ²»ÏàÁÚµÄÇé¿ö \n'); end
-[daBest,paBest] = getbestsol(dA,pA);  %¿É²»¿¼ÂÇd1 -> ½âµÄÓÅÁÓÓë×îºóÒ»¸öbin¹ØÏµ²»´ó
-
+% if isempty(dA), error('±¾ËãÀıÄÚËùÓĞ½â¶¼´æÔÚÍĞÅÌ²»ÏàÁÚµÄÇé¿ö \n'); end
+% [daBest,paBest] = getbestsol(dA,pA);  %¿É²»¿¼ÂÇd1 -> ½âµÄÓÅÁÓÓë×îºóÒ»¸öbin¹ØÏµ²»´ó
+%%%% Return length(parMax) ¸ö solutions to BBA
+% if isempty(daBest), error('±¾ËãÀıÄÚÎ´ÕÒ³ö×îÓÅ½â·µ»ØBBA \n'); end
+% bestOne = 1;
+                                %%%% dA = do = daBest(1) = daBest(bestOne) %isequal(do,d1)
 %% POST PROCESSING
-% Return length(parMax) ¸ö solutions to BBA
-if isempty(daBest), error('±¾ËãÀıÄÚÎ´ÕÒ³ö×îÓÅ½â·µ»ØBBA \n'); end
 
-bestOne = 1;
-daBest(bestOne).LU;
-[T_Coord,T_LWH,T_Seq] = getReturnBBA(daBest(bestOne)); %ÈçÓĞ¶à¸ö,·µ»ØµÚÒ»¸ö×îÓÅ½â
-T_Seq = finalCheck([T_Coord,T_LWH,T_Seq],TLUIN); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+
+    % daBest(bestOne).LU.OPID
+%% 1 ******************»ñÈ¡Õ¹Ê¾Ë³Ğò T=d.LUÔö¼ÓShowSEQ
+T = getTableLU(do);
+%%
+% [T_Coord,T_LWH,T_Seq] = getReturnBBA(daBest(bestOne)); %ÈçÓĞ¶à¸ö,·µ»ØµÚÒ»¸ö×îÓÅ½â
+% T_Seq.tblorder
+% T_Seq1 = T_Seq;
+
+% T.SID = oD.SID;
+% T.PID = oD.PID;
+% T.LID = oD.LID;
+% Tseq = T(:,{'LU_VehType','BINID','BINSEQ','SID','LID','ITEMID','PID','ShowSEQ','Weight','tblorder'});
+
+% T_Seq1 = finalCheck([T_Coord,T_LWH,T_Seq],TLUIN); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
 
 %  [output_CoordLUBin,output_LU_LWH,output_LU_Seq]= getReturnBBA1(daBest(bestOne)); %% ½øĞĞ·µ»Ø´¦Àí
 
-% ****************** Õë¶Ô³µĞÍÑ¡Ôñ d1Êı¾İ »ñÈ¡ĞŞ¶©µÄ output ******************
-if ISlastVehType==1
-if flaggetSmallVeh %ÈçÓĞµ±³µĞÍÌæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
-     [TLAST_Coord,TLAST_LWH,TLAST_Seq] = getReturnBBA(d1); %% ½øĞĞ·µ»Ø´¦Àí
-    TLAST_Seq = finalCheck( [TLAST_Coord,TLAST_LWH,TLAST_Seq],TLUIN_LAST); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+%%
+% ĞĞ1£ºÍĞÅÌËùÔÚ³µĞÍºÅ(±ØĞë»»)    ĞĞ2£ºÍĞÅÌËùÔÚ³µĞòºÅ(»á±ä,²»ÄÜ»»,»»¾Í´í) ĞĞ3£ºÍĞÅÌ³µÄÚ°²ÖÃË³Ğò(±ØĞë»») ĞĞ4£ºÍĞÅÌSID¹©Ó¦ÉÌ±àºÅ(²»»á±ä,²»ÓÃ±ä??)
+% ĞĞ5£ºÍĞÅÌIDĞÍºÅLID(²»»á±ä,²»ÓÃ±ä?) ĞĞ6£ºÍĞÅÌ¶Ñ¶âĞòºÅITEM(»á±ä,²»ÄÜ»»,»»¾Í´í,ÓÃÍ¾?) ĞĞ7£ºÍĞÅÌÁã²¿¼ş±àºÅPID(²»»á±ä,²»ÓÃ±ä?) Ôö¼ÓĞĞ8: Õ¹Ê¾Ë³Ğò(±ØĞë»»)
+
+%% 2 ****************** Õë¶Ô³µĞÍ±ä»¯ do1Êı¾İ »ñÈ¡ĞŞ¶©µÄ output ******************
+if ISlastVehType==1 && flaggetSmallVeh == 1 %ÈçÓĞµ±ÔÊĞíÇÒ³µĞÍÌæ»»³É¹¦
+    T1 = getTableLU(do1);
+
+    % Ìæ»»TÖĞµÄ×îºóÒ»³µµÄ²¿·ÖÊôĞÔ À´×ÔT1
+    lastVehIdx = max(T{:,'BINID'});
+    flaglastLUIdx = T{:,'BINID'}==lastVehIdx;
     
-    %ÓÉÓÚorder¸Ä±äÁË,´Ë´¦½ö¶Ô×îºóÒ»¸öbinµÄË÷Òı½øĞĞĞŞ¸Ä
-    lastVehIdx = max(T_Seq{:,'BINID'});
-    flaglastLUIdx = T_Seq{:,'BINID'}==lastVehIdx;
+       %% ÄÄĞ©»á±ä»¯??
+       % Ä³¸öbinÄÚµ÷Õû,ÆäbinIDÒ»¶¨²»»á±ä»¯; 
+       % ÆäLID/Weight/LWHÓ¦¸Ã²»»á±ä»¯; SID/PID»á±ä»¯; ÒòÎªOPID OSID OIDµÈÔ­Òò
+       % Ä³¸öbinÄÚµ÷Õû,ÆäBINSEQ,CoordLUBin,LU_VehTypeÒ»¶¨·¢Éú±ä»¯ £¨°´bidºÍbinseqÅÅĞòµÄ£© ÆäITEMIDËÆºõÃ»ÓÃ ²»·µ»ØÁË°Ñ
+       % ÖØµãÊÇ¸üĞÂ×ø±êºÍLU_VehTypeºÍBINSEQ£¬LU_VehType Õâ¼¸¸ö±Ø¶¨±ä»¯(PID/SIDĞèÒªÁôÒâ) % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+    T{flaglastLUIdx,{'CoordLUBin','BINSEQ','LU_VehType'}} = T1{:,{'CoordLUBin','BINSEQ','LU_VehType'}};
+   
+    %%
     
-    % ÖØµãÊÇ¸üĞÂ×ø±êºÍ³¤¿í¸ß
-    T_Coord{flaglastLUIdx,:} = TLAST_Coord{:,:};
-    T_LWH{flaglastLUIdx,:} = TLAST_LWH{:,:};
-    % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
-    T_Seq{flaglastLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
-        TLAST_Seq{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
+        % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+                % %     T{flaglastLUIdx,{'LU_VehType','BINSEQ','ShowSEQ'}} = ...
+                % %         T1{:,{'LU_VehType','BINSEQ','ShowSEQ'}};
+                % %     T{flaglastLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+                % %         T1{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}}; 
+                
+%      [TLAST_Coord,TLAST_LWH,TLAST_Seq] = getReturnBBA(do1); %% ½øĞĞ·µ»Ø´¦Àí
+%     TLAST_Seq1 = finalCheck( [TLAST_Coord,TLAST_LWH,TLAST_Seq],TLUIN_LAST); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
     
+%     %ÓÉÓÚorder¸Ä±äÁË,´Ë´¦½ö¶Ô×îºóÒ»¸öbinµÄË÷Òı½øĞĞĞŞ¸Ä
+%     lastVehIdx = max(T_Seq{:,'BINID'});
+%     flaglastLUIdx = T_Seq1{:,'BINID'}==lastVehIdx;
+%     
+%     % ÖØµãÊÇ¸üĞÂ×ø±êºÍ³¤¿í¸ß
+%     T_Coord{flaglastLUIdx,:} = TLAST_Coord{:,:};
+%     T_LWH{flaglastLUIdx,:} = TLAST_LWH{:,:};
+%     % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+%     T_Seq1{flaglastLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+%         TLAST_Seq1{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
     
+%     T_Seq = finalCheck([T_Coord,T_LWH,T_Seq],TLUIN); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+
 %     output_CoordLUBin(:,flaglastLUIdx) = TLAST_Coord;
 %     output_LU_LWH(:,flaglastLUIdx) = TLAST_LWH;
 
@@ -349,59 +454,125 @@ if flaggetSmallVeh %ÈçÓĞµ±³µĞÍÌæ»»³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
     
         %     i = [4,5,7]; % ÕâĞ©Ó¦¸ÃÊÇ²»»á±äµÄ
         %     if sum(output_LU_Seq(i,flaglastLUIdx) ~= output_LU_Seq2(i,:) ) >0, error('²»»á±äµÄ±äÁË, ´íÎó'); end
-
 end
-end
-% ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
 
-% ĞĞ1£ºÍĞÅÌËùÔÚ³µĞÍºÅ(±ØĞë»»)    ĞĞ2£ºÍĞÅÌËùÔÚ³µĞòºÅ(»á±ä,²»ÄÜ»»,»»¾Í´í) ĞĞ3£ºÍĞÅÌ³µÄÚ°²ÖÃË³Ğò(±ØĞë»») ĞĞ4£ºÍĞÅÌSID¹©Ó¦ÉÌ±àºÅ(²»»á±ä,²»ÓÃ±ä??)
-% ĞĞ5£ºÍĞÅÌIDĞÍºÅLID(²»»á±ä,²»ÓÃ±ä?) ĞĞ6£ºÍĞÅÌ¶Ñ¶âĞòºÅITEM(»á±ä,²»ÄÜ»»,»»¾Í´í,ÓÃÍ¾?) ĞĞ7£ºÍĞÅÌÁã²¿¼ş±àºÅPID(²»»á±ä,²»ÓÃ±ä?) Ôö¼ÓĞĞ8: Õ¹Ê¾Ë³Ğò(±ØĞë»»)
-    
-% ****************** Õë¶ÔÆ½ÆÌÑ¡Ôñ do2ArrayÊı¾İ »ñÈ¡ĞŞ¶©µÄ output ******************
+%% 3 ****************** Õë¶ÔÆ½ÆÌÑ¡Ôñ do2/do3ArrayÊı¾İ »ñÈ¡ĞŞ¶©µÄ output ******************
 if ISpingpu==1
-for ibin=1:length(do2Array) %do2Array °üº¬ËùÓĞBIN
-if flagTiled(ibin) %ÈçÓĞµ±¸ÃibinÆ½ÆÌ³É¹¦ÁË,²ÅÖ´ĞĞgetReturnBBAº¯Êı ÒÔ¼°×÷Í¼
-    
-    [TPP_Coord,TPP_LWH,TPP_Seq]= getReturnBBA(do2Array(ibin)); %% ½øĞĞ·µ»Ø´¦Àí
-    %     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA1(do2Array(ibin)); %% ½øĞĞ·µ»Ø´¦Àí
-    if flagTiled(ibin)==1
-        TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP1); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+    for ibin=1:length(do2Array) %do*Array °üº¬ËùÓĞBIN
+        if flagTiledArray(ibin)==0  % ¸ÃibinÎ´Æ½ÆÌ ¼ÌĞøÑ­»·
+            continue;
+        end
+        if flagTiledArray(ibin)==1    % ¸ÃibinÕû³µÆ½ÆÌ³É¹¦
+            T23 = getTableLU(do3Array(ibin));
+        end
+        if flagTiledArray(ibin)==2    % ¸ÃibinË¦Î²Æ½ÆÌ³É¹¦
+            T23 = getTableLU(do2Array(ibin));
+        end
+
+       flagTileLUIdx = T{:,'BINID'}==ibin;
+       
+       %% CHECK
+       if ~issorted(sort(T23.BINSEQ),'strictascend') || ~issorted(sort(T.BINSEQ(flagTileLUIdx,:)'),'strictascend')
+               T.BINSEQ(flagTileLUIdx,:)
+               T23.BINSEQ'
+               error('1');
+       end
+       if sum(flagTileLUIdx) ~= height(T23)
+           error('1');
+       end
+       
+       a = T.OPID(flagTileLUIdx,:)'
+       b = T23.OPID'
+       
+       if  ~isequal(a,b)
+           error('1');
+       end
+               
+       %% ÄÄĞ©»á±ä»¯??
+       % Ä³¸öbinÄÚµ÷Õû,ÆäbinIDÒ»¶¨²»»á±ä»¯; ÆäbinµÄLU_VehTypeÒ»¶¨²»»á±ä»¯£»
+       % ÆäLID/Weight/LWHÓ¦¸Ã²»»á±ä»¯; SID/PID»á±ä»¯; ÒòÎªOPID OSID OIDµÈÔ­Òò idExchangeº¯Êı
+       % Ä³¸öbinÄÚµ÷Õû,ÆäBINSEQ,CoordLUBinÒ»¶¨·¢Éú±ä»¯ £¨°´bidºÍbinseqÅÅĞòµÄ£© ÆäITEMIDËÆºõÃ»ÓÃ ²»·µ»ØÁË°Ñ
+       % ÖØµãÊÇ¸üĞÂ×ø±ê % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+       T{flagTileLUIdx,{'CoordLUBin','BINSEQ'}} = T23{:,{'CoordLUBin','BINSEQ'}};    
+            
+            %% ÏÂÃæÊÇ´íµÄ
+            %        T{flagTileLUIdx,{'LU_VehType','BINSEQ','ShowSEQ'}} = ...
+%            T23{:,{'LU_VehType','BINSEQ','ShowSEQ'}};
+%        T{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+%            T23{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
+%        T{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ','CoordLUBin','LWH'}} = ...
+%            T23{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ','CoordLUBin','LWH'}};
+
+
+            %     T{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ','CoordLUBin','LWH','BINID','ITEMID','Weight'}} = ...
+            %         T2{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ','CoordLUBin','LWH','BINID','ITEMID','Weight'}};
+            
+            % output_LU_Seq=T{:,{'','BINID',',''ITEMID','Weight'}}'
+            
+            % % %     [TPP_Coord,TPP_LWH,TPP_Seq]= getReturnBBA(do2Array(ibin)); %% ½øĞĞ·µ»Ø´¦Àí
+            % % %     %     [output_CoordLUBin2,output_LU_LWH2,output_LU_Seq2]= getReturnBBA1(do2Array(ibin)); %% ½øĞĞ·µ»Ø´¦Àí
+            % % %     TPP_Seq1 = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP1);
+            % % % %     if  sum(flagTiled(:)~=0)>1
+            % % % %         sum(flagTiled(:)~=0)
+            % % % %         1
+            % % % %     end
+            % % % %     if flagTiled(ibin)==1
+            % % % %         if sum(flagTiled(:)==1)>1
+            % % % %             sum(flagTiled(:)==1)
+            % % % %             1
+            % % % %         end
+            % % % %         TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP1); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+            % % % %     end
+            % % % %     if flagTiled(ibin)==2
+            % % % %         if  sum(flagTiled(:)==2)>1
+            % % % %             sum(flagTiled(:)==2)
+            % % % %             1
+            % % % %         end
+            % % % %         TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP2); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+            % % % %     end
+            % % %
+            % % %     % ÕÒ³öÆ½ÆÌibinÄÚËùÓĞµÄÍĞÅÌÂß¼­Öµ
+            % % %     flagTileLUIdx = T_Seq1{:,'BINID'} == ibin;
+            % % %
+            % % %     % ÖØµãÊÇ¸üĞÂ×ø±êºÍ³¤¿í¸ß
+            % % %     T_Coord{flagTileLUIdx,:} = TPP_Coord{:,:};
+            % % %     T_LWH{flagTileLUIdx,:} = TPP_LWH{:,:};
+            % % %     % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
+            % % %     T_Seq1{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
+            % % %         TPP_Seq1{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
+            
+            
+            %         T_Seq = finalCheck([T_Coord,T_LWH,T_Seq],TLUIN); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
+            
+            % ²¿·ÖÏà¹Ø²ÎÊıĞèÒªÌæ»»: ĞĞ1£ºÍĞÅÌËùÔÚ³µĞÍºÅ ĞĞ3£ºÍĞÅÌ³µÄÚ°²ÖÃË³Ğò ĞĞ8: Õ¹Ê¾Ë³Ğò
+            %     output_LU_Seq([1,3,8],flagTileLUIdx) = output_LU_Seq2([1,3,8],:);
+            %     output_LU_Seq([1,3,4,5,7,8],flagTileLUIdx) = output_LU_Seq2([1,3,4,5,7,8],:); %[1,3,4,5,7,8]±íÊ¾½öĞŞ¸ÄÕâÀïµÄ¼¸ĞĞ
+            
+            %     i = [4,5,7]; % ÕâĞ©Ó¦¸ÃÊÇ²»»á±äµÄ
+            %     if sum(output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ) >0,
+            %          output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ;         output_LU_Seq(i,flagTileLUIdx);         output_LU_Seq3(i,:) ;
+            %         warning('²»»á±äµÄ±äÁË, ´íÎó'); end
     end
-    if flagTiled(ibin)==2
-        TPP_Seq = finalCheck([TPP_Coord,TPP_LWH,TPP_Seq],TLUIN_PP2); %²ÎÊı1£º¼ÆËã£» ²ÎÊı2£ºÔ­Ê¼.
-    end    
-    
-    % ÕÒ³öÆ½ÆÌibinÄÚËùÓĞµÄÍĞÅÌÂß¼­Öµ
-    flagTileLUIdx = T_Seq{:,'BINID'} == ibin;
-    
-    % ÖØµãÊÇ¸üĞÂ×ø±êºÍ³¤¿í¸ß
-    T_Coord{flagTileLUIdx,:} = TPP_Coord{:,:};
-    T_LWH{flagTileLUIdx,:} = TPP_LWH{:,:};
-    % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
-    T_Seq{flagTileLUIdx,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}} = ...
-        TPP_Seq{:,{'LU_VehType','BINSEQ','SID','LID','PID','ShowSEQ'}};
-    
-    % ²¿·ÖÏà¹Ø²ÎÊıĞèÒªÌæ»»: ĞĞ1£ºÍĞÅÌËùÔÚ³µĞÍºÅ ĞĞ3£ºÍĞÅÌ³µÄÚ°²ÖÃË³Ğò ĞĞ8: Õ¹Ê¾Ë³Ğò
-%     output_LU_Seq([1,3,8],flagTileLUIdx) = output_LU_Seq2([1,3,8],:); 
-%     output_LU_Seq([1,3,4,5,7,8],flagTileLUIdx) = output_LU_Seq2([1,3,4,5,7,8],:); %[1,3,4,5,7,8]±íÊ¾½öĞŞ¸ÄÕâÀïµÄ¼¸ĞĞ
-        
-        %     i = [4,5,7]; % ÕâĞ©Ó¦¸ÃÊÇ²»»á±äµÄ
-        %     if sum(output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ) >0,
-        %          output_LU_Seq(i,flagTileLUIdx) ~= output_LU_Seq3(i,:) ;         output_LU_Seq(i,flagTileLUIdx);         output_LU_Seq3(i,:) ;
-        %         warning('²»»á±äµÄ±äÁË, ´íÎó'); end
-        
-end
-end
 end
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
 
+T = getShowSeq(T); %Ôö¼ÓShowSEQ
 % ·µ»ØBBAÊı×é¸ñÊ½¸øJAR
-output_CoordLUBin=table2array(T_Coord)';
-output_LU_LWH= table2array(T_LWH)';
-output_LU_Seq=table2array(T_Seq,'ToScalar',true)';
+% T.index
+% T.BINID
+[~,T.ttt] = sort(T.tblorder)
+T = sortrows(T,'ttt')
+% T = sortrows(T,'BINID')
+% T.LID
+% T.BINID
+% T.BINSEQ
+output_CoordLUBin=T.CoordLUBin';
+output_LU_LWH=T.LWH';
+output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}';
 
+% output_LU_Seq([2,3,5,8],:)
 if ISplotBBA
-    plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,daBest(bestOne)); 
+    plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
 end
 
     % if  ISplotSolu 
@@ -409,7 +580,7 @@ end
     % %      if max(do2.LU.LU_Bin(1,:)) == 1
     % %      plotSolution(do2,pA(iAlg));
     % %      end
-    % %        if flaggetSmallVeh,   plotSolution(d1,paBest(bestOne));   end %¾¡Á¿²»ÓÃ °üº¬plotStrip ½ö°üº¬µ¥³µĞÍ×÷Í¼
+    % %        if flaggetSmallVeh,   plotSolution(do1,paBest(bestOne));   end %¾¡Á¿²»ÓÃ °üº¬plotStrip ½ö°üº¬µ¥³µĞÍ×÷Í¼
     % end
 
 % ÌŞ³ıÕ¹Ê¾Ë³Ğò % output_LU_Seq = output_LU_Seq(1:7,:);
@@ -417,8 +588,8 @@ end
 fprintf(1,'Simulation done.\n');
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
-% printstruct(d,'sortfields',1,'PRINTCONTENTS',0);    printstruct(d.Veh);
-% d = rmfield(d, {'Veh', 'LU'});
+% printstruct(do,'sortfields',1,'PRINTCONTENTS',0);    printstruct(do.Veh);
+% do = rmfield(do, {'Veh', 'LU'});
 % pcode 'H*.m'
 end %END MAIN
 
@@ -429,6 +600,54 @@ end %END MAIN
 
 
 %% ******* ¾Ö²¿º¯Êı ****************
+% Ã¿´ÎRunAlgorithmºó£¬ÅĞ¶Ïd.LUÔÚÊäÈëÓëÊä³öµÄ²î¾à
+function checkLU(TIN,TOUT)
+    TOUT.LWH(TOUT.Rotaed,1) = TIN.LWH(TOUT.Rotaed,1);
+    TOUT.LWH(TOUT.Rotaed,2) = TIN.LWH(TOUT.Rotaed,2);
+    %% 1.1 LWH CHECK
+    if any(TOUT.LWH ~= TIN.LWH),
+        any(TOUT.LWH ~= TIN.LWH);
+        error('LWH');
+    end
+    %% 1.2 Weight CHECK
+    if any(TOUT.Weight ~= TIN.Weight) || any(TOUT.OPID ~= TIN.PID) || any(TOUT.OSID ~= TIN.SID)
+        any(TOUT.Weight ~= TIN.Weight),
+        error('other');
+    end
+end
+
+% Ö¸¶¨ibin,»ñÈ¡¸ÃbinÄÚµÄLU,VehµÈ×÷ÎªÊäÈëÊı¾İ,ÖØµãÊÇLUÊı¾İ
+function thisd = getdinThisVeh(tmpd,luIdx)
+        % 1 VehºÍPar
+        thisd.Veh = tmpd.Veh;        
+        thisd.Par = tmpd.Par;
+        thisd.LU = structfun(@(x) x(:,luIdx),tmpd.LU,'UniformOutput',false);
+
+        % 2 binÄÚµÄLU
+%         luIdx = tmpd.LU.LU_Bin(1,:) == ibin;    %tmpd.LU.LU_Strip(1,:) == istrip
+        
+        % thisd.Veh = rmfield(thisd.Veh,{'Volume','order'});
+%         thisd.LU.LWH([1,2], thisd.LU.Rotaed ) = flipud(thisd.LU.LWH([1,2], thisd.LU.Rotaed)); %LU.LWH ÈçĞı×ª,Ôò»Ö¸´Ô­ĞÎ
+%         thisd.LU.PID = thisd.LU.OPID;     thisd.LU.SID = thisd.LU.OSID;  %  thisd.LU.LID = thisd.LU.OLID;
+%         thisd.LU = rmfield(thisd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
+%             'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType','OPID','OSID'});
+        
+        
+        
+%     % tmpdÖĞµÄBinÊÇÅÅĞòºóµÄ, ´Ó×îĞ¡µÄ¿ªÊ¼ÊÔ
+%     tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: ×îºóÒ»¸öBinµÄindexÖµ
+%     flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: ÕÒ³ö×îºóÒ»¸öBin¶ÔÓ¦µÄLUindexÖµ
+%     if isSameCol(tmpd.LU)
+%         % »ñÈ¡½ö×îºóÒ»¸öBinµÄÊäÈëÊı¾İ
+%         lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %½öÈ¡×îºóÒ»Á¾³µÄÚµÄLU
+%         lastd.LU.LWH([1,2], lastd.LU.Rotaed ) = flipud(lastd.LU.LWH([1,2], lastd.LU.Rotaed)); %LU.LWH ÈçĞı×ª,Ôò»Ö¸´Ô­ĞÎ
+%         lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin','maxL','CoordLUStrip'}); 
+%         lastd.Par = tmpd.Par;
+%     else
+%         error('²»ÄÜÊ¹ÓÃstructfun');
+%     end
+end
+
 function lastd = getdinLastVeh(tmpd)
     % tmpdÖĞµÄBinÊÇÅÅĞòºóµÄ, ´Ó×îĞ¡µÄ¿ªÊ¼ÊÔ
     tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: ×îºóÒ»¸öBinµÄindexÖµ
@@ -515,21 +734,21 @@ end % END OF ALL
 %% ********************** ÏÂÃæÊÇ»ù±¾ÎŞÓÃµÄ´úÂë ÔİÊ±²»ÓÃ ****************
 
         
-function plotSolution(d,par)
+function plotSolution(do,par)
 %% »­Í¼
 % V3 margin ÌáÇ°µ½RunAlgorithmÔËĞĞºó¾ÍÖ´ĞĞ:
-% plot2DBPP(d,par);
-plot3DBPP(d,par);
+% plot2DBPP(do,par);
+plot3DBPP(do,par);
 
         % V1 buff version
-        % d.Item.LWH = d.Item.LWH - d.LU.buff(:,1:size(d.Item.LWH,2));
-        % d.Item.LWH(1,:) = d.Item.LWH(1,:) - ( d.LU.margin(1, 1:size(d.Item.LWH,2) ) + d.LU.margin(2,: )); 
-        % d.Item.LWH(2,:) = d.Item.LWH(2,:) - (d.LU.margin(3,: ) + d.LU.margin(4,: )); 
-        % d.Item.CoordItemBin = d.Item.CoordItemBin + d.LU.buff(:,1:size(d.Item.LWH,2))/2;
+        % do.Item.LWH = do.Item.LWH - do.LU.buff(:,1:size(do.Item.LWH,2));
+        % do.Item.LWH(1,:) = do.Item.LWH(1,:) - ( do.LU.margin(1, 1:size(do.Item.LWH,2) ) + do.LU.margin(2,: )); 
+        % do.Item.LWH(2,:) = do.Item.LWH(2,:) - (do.LU.margin(3,: ) + do.LU.margin(4,: )); 
+        % do.Item.CoordItemBin = do.Item.CoordItemBin + do.LU.buff(:,1:size(do.Item.LWH,2))/2;
 
         % V2 margin version
         % ×÷Í¼Ç°¸üĞÂLU ITEMµÄCoordºÍLW; ¸üĞÂITEMÍ¬Ê±¸üĞÂLU
-        % [d.LU,d.Item] = updateItemMargin(d.LU,d.Item);
+        % [do.LU,do.Item] = updateItemMargin(do.LU,do.Item);
         
 
 end

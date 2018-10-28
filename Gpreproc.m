@@ -55,11 +55,11 @@ function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
     Veh.order = order;
     
     % 5 计算LU在当前车型下的最大长宽高层数 TODO 考虑margin
-    for i=1:length(LU.Weight)
-        LU.maxL(1,i) =  floor(Veh.LWH(1,1)/LU.LWH(1,i));
-        LU.maxL(2,i) =  floor(Veh.LWH(2,1)/LU.LWH(2,i));
-        LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));   %具体每个托盘LU的高度的最大层数
-    end
+    %     for i=1:length(LU.Weight)
+    %         LU.maxL(1,i) =  floor(Veh.LWH(1,1)/LU.LWH(1,i));
+    %         LU.maxL(2,i) =  floor(Veh.LWH(2,1)/LU.LWH(2,i));
+    %         LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));   %具体每个托盘LU的高度的最大层数
+    %     end
 
     % 6 计算LU同样ID/可堆垛ID下的个数
     % V1"
