@@ -14,7 +14,15 @@ function [d] = RunAlgorithm(d,p)
         
         % Item.isNonMixed Item.isMixedTile isHeightFull
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
+        
+        d.Item = isWeightUpDown(d.Item,d.LU);
+        all(d.Item.isWeightFine)
 
+    
+%         checktLU(getTableLU(d))
+%         checktItem(getTableItem(d))
+        1
+         
         %% 启发式: Item到Strip的算法        
         %  *******  *******  *******
         % 1 Item排序: %1: SID ; 2: isNonMixed; 一般正真开始: 
@@ -59,7 +67,7 @@ function [d] = RunAlgorithm(d,p)
         end
 
        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
-        
+
        d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
        %% 后处理: PID/SID等返回 改为返回顺序，此类不动的值从原始记录中获取

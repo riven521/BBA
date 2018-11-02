@@ -83,7 +83,9 @@ else
             case 'LUSID'
                 d.LU.SID                     = varargin{k+1};
             case 'LUPID'
-                d.LU.PID                     = varargin{k+1};                
+                d.LU.PID                     = varargin{k+1};      
+            case 'LUINDEX'      %LUINDEX 刘强专用返回系数
+                d.LU.Index              = varargin{k+1};                
             case 'VEHID'
                 d.Veh.ID                    = varargin{k+1};                
             case 'VEHLWH'

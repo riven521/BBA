@@ -297,7 +297,13 @@ V1102-1
 2 检查BUG问题：
 3 修改：do2Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false);
   修改：注释：% do2Array(ibin) = do2;
-4 
+
+V1102-2
+1 增加：clearvars -except output* 希望解决崩溃问题
+2 增加输入和输出刘工参数
+
+
+1 修改业务部门bug
 
 TODO:
 477行错误；1个bin有两个BINID的错.

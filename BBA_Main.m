@@ -37,7 +37,7 @@ global ISisNonMixedLU ISisMixTileLU
 % ISsItemAdjust = 1  % ÔİÊ±²»ÓÃ ÓÃÍ¾Íü¼ÇÁË
 % ISreStripToBinMixed = 1 %³µÍ·ÓÅÏÈ·ÇAllPureÀàĞÍ, ÔÙ¿¼ÂÇÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 Ó¦¸Ã¿ÉÒÔÉ¾³ıµÄ²ÎÊı
 
-ISplotBBA = 1
+ISplotBBA = 0
 ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û
@@ -60,7 +60,7 @@ ISshuaiwei = 1          % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµ
 ISpingpu = 1            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
 ISpingpuAll = 1        %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
 
-ISlastVehType = 0    % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
+ISlastVehType = 1    % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
 
 %% BUG
 %% Initialize Data Structure
@@ -76,7 +76,8 @@ if nargin ~= 0
             'LUMARGIN',varargin{4},...
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6},...
-            'LULID',varargin{7});
+            'LULID',varargin{7},...
+            'LUINDEX',varargin{8});
 else
     n=88; m=2;  % 16ĞèÒª×¢Òâ 250 srng1
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
@@ -100,8 +101,8 @@ end
 %% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó
     n = numel(d.LU.Weight);
     % ¸ø¸ö³õÊ¼½øÈëË³Ğò ÔİÊ±Ã»ÓĞÓÃ
-    if ~isfield(d.LU, 'index')
-        d.LU.index = 1:n;
+    if ~isfield(d.LU, 'Index') %µÈÍ¬ÁõÇ¿ËùĞèindex²ÎÊı
+        d.LU.Index = 1:n;
     end
     
     % Æ½ÆÌÊ¹ÓÃÊôĞÔ
@@ -461,12 +462,16 @@ if ISpingpu==1
         if flagTiledArray(ibin)==0  % ¸ÃibinÎ´Æ½ÆÌ ¼ÌĞøÑ­»·
             continue;
         end
+        if ISlastVehType==1 && flaggetSmallVeh == 1 && ibin == lastVehIdx
+            error('×îºóÒ»³µ¼È¸ü»»³µĞÍ,ÓÖĞèÒªÆ½ÆÌ;');
+        end
+        
         if flagTiledArray(ibin)==1    % ¸ÃibinÕû³µÆ½ÆÌ³É¹¦
             T23 = getTableLU(do3Array(ibin));
         end
         if flagTiledArray(ibin)==2    % ¸ÃibinË¦Î²Æ½ÆÌ³É¹¦
             T23 = getTableLU(do2Array(ibin));
-            do2.LU.LU_Bin
+            %do2.LU.LU_Bin
         end
 
        flagTileLUIdx = T{:,'BINID'}==ibin;
@@ -568,6 +573,49 @@ end
 % ****************** Õë¶Ô³µĞÍÑ¡Ôñ »ñÈ¡ĞŞ¶©µÄ output ******************
 
 T = getShowSeq(T); %Ôö¼ÓShowSEQ
+%% CHECK 1 ÉÏÇáÏÂÖØ
+
+%% table×ªÎª½á¹¹ÌåºóÅĞ¶ÏÊÇ·ñÉÏÇáÏÂÖØ
+% % % % lu = table2struct(T,'ToScalar',true)
+% % % % lu = (structfun(@(x) x',lu,'UniformOutput',false));
+% % %     em=struct();
+% % %     em = isWeightUpDown(em,T);
+% % %     all(em.isWeightFine)
+% % %     
+% % %     %% ÒÀ¾İTÄÚ×îÖÕLU_LUinBin×ø±êÊı¾İÅĞ¶Ï
+% % %     T.Properties.VariableNames
+% % %     T2 = sortrows(T,{'BINID','BINSEQ'},{'ascend','ascend'})
+% % %     %     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
+% % %     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
+% % %     % if ITEMIDÏàÍ¬ Æä×ø±êCoordLUBinµÄ³¤¿í±ØĞëÏàÍ¬ ²»Í¬ITEMIDµÄÉÏÏÂÖØÁ¿¶Ô±È
+% % %     % ¶Ôtable¸ñÊ½LU½øĞĞcheck
+% % %     checktLU(T2)
+% % %     
+% % %     head(x)
+% % %     
+% % %     1
+    
+    
+    %% ½á¹¹ÌåĞÎÊ½·Ö±ğºË¶ÔÊÇ·ñÉÏÇáÏÂÖØ
+% % %         do.Item = isWeightUpDown(do.Item,do.LU);
+% % %         all(do.Item.isWeightFine)  
+% % % 
+% % % %         do1.Item = isWeightUpDown(do1.Item,do1.LU);        all(do1.Item.isWeightFine)
+% % %         
+% % %         do2.Item = isWeightUpDown(do2.Item,do2.LU);
+% % %         all(do2.Item.isWeightFine)
+% % %         
+% % %         Item = isWeightUpDown(tItem,tLU);
+% % %         all(Item.isWeightFine)
+        
+
+%% ³£ÓÃÓï¾ä
+% T.Properties.VariableNames
+% % ¼òµ¥²é¿´Ä³¸öbinÄÚµÄ²¿·Ö×Ó±í
+% tmpT = sortrows(T,{'ITEMID'})
+% x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
+% sortrows(x,{'CoordLUBin'})
+
 % ·µ»ØBBAÊı×é¸ñÊ½¸øJAR
 % T.index
 % T.BINID
@@ -577,10 +625,12 @@ T = sortrows(T,'ttt')
 % T.LID
 % T.BINID
 % T.BINSEQ
+T.Properties.VariableNames
+
 output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
-output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}';
-
+% output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'
+output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %Ôö¼Ó·µ»ØĞĞ10: LuIndexÀ´×ÔÁõÇ¿Ö»ÒªÊÇÊı×Ö¾Í¿ÉÒÔ
 % output_LU_Seq([2,3,5,8],:)
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
@@ -595,7 +645,8 @@ end
     % end
 
 % ÌŞ³ıÕ¹Ê¾Ë³Ğò % output_LU_Seq = output_LU_Seq(1:7,:);
-
+% whos
+clearvars -except output*
 fprintf(1,'Simulation done.\n');
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'

@@ -16,6 +16,7 @@ args[7]=[10 10 10 10;
 args[8]=[100 200 100 100] // 托盘重量
 args[9]=[3000 2000 ] // 车型重量
 args[10]=[1 2 3 3]; //LULID 托盘ID号
+args[11]=[1 2 4 3]; //LUINDEX : LU相关刘强专用输入 
 
 output:
 CoordLUBin = //托盘xyz
@@ -32,8 +33,9 @@ LWHRota =	//托盘旋转后长宽高
           2.00          2.00          1.00          2.00
 
                   
-LUBeBinMatrix = {'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}';
-//增加1行：托盘所在车型号  行2：托盘所在车序号 行3：托盘安置顺序 行4：托盘供应商编号 行5：托盘ID型号 行6：托盘堆垛序号 行7：托盘零部件编号 增加行8: 展示顺序 增加行9: LU重量
+LUBeBinMatrix = {'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}
+//增加1行：托盘所在车型号  行2：托盘所在车序号 行3：托盘安置顺序 行4：托盘供应商编号 行5：托盘ID型号 行6：托盘堆垛序号 行7：托盘零部件编号 增加行8: 展示顺序 增加行9: LU重量 
+//增加10行：Index LU相关刘强专用输出
 
           1     1     1     2
           1     1     1     1    
@@ -44,6 +46,8 @@ LUBeBinMatrix = {'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','Sho
      			1     2     1     2 
           1     2     3     4   
           12    32    18   25
+          1     2     3     4
+
 
 
 -------------------------------------------------------------------
