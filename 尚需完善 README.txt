@@ -292,7 +292,15 @@ V1028-1
 6 BBA-Main增加 T1 T23等向T的某个bin内的变化修改，不排序等
 6 BBA-Main增加 599 T = getShowSeq(T) 获取排序的Seq
 
+V1102-1
+1 增加输入输出参数给刘用的
+2 检查BUG问题：
+3 修改：do2Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false);
+  修改：注释：% do2Array(ibin) = do2;
+4 
+
 TODO:
+477行错误；1个bin有两个BINID的错.
 MAXL等确实属性的调整；
 OPID OSID等属性的注意
 平铺和车型在最后一车的更改，只能以某个为准，目前是平铺 LASTVEHICLE 测验

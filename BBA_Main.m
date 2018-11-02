@@ -37,12 +37,12 @@ global ISisNonMixedLU ISisMixTileLU
 % ISsItemAdjust = 1  % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 0
+ISplotBBA = 1
 ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
 ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
-ISplotPause = 0.05 % plot间隔时间
+ISplotPause = -0.05 % plot间隔时间
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
@@ -58,10 +58,11 @@ ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1 必须
 ISshuaiwei = 1          % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 *******
 
 ISpingpu = 1            % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll =1         %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISpingpuAll = 1        %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
-ISlastVehType = 1    % 555: 最后一车的调整, 与其它无关, 暂不考虑
+ISlastVehType = 0    % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
+%% BUG
 %% Initialize Data Structure
 if nargin ~= 0
     d = DataInitialize( ...
@@ -77,13 +78,13 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7});
 else
-    n=18; m=2;  % 16需要注意 250 srng1
+    n=88; m=2;  % 16需要注意 250 srng1
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,已对其按体积从大到小排序; 
     
-%     save( strcat( '.\new\', filename), 'd');
+     save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
@@ -208,7 +209,7 @@ for iAlg = 1:nAlg
         d1.Veh = [];
     end
     
-    % CHECK
+    %% CHECK 2 运行车型调整算法,
     if flaggetSmallVeh==1
         % d1;
         % do1
@@ -219,18 +220,15 @@ for iAlg = 1:nAlg
     end
 
 
-
-
-
     %% 3 运行平铺算法,不改变d 获取d2Array d3Array  do2Array do3Array flagTiled
     if ISpingpu==1
     % 3.1 初始化5个数据    
     flagTiledArray = zeros(1,length(do.Bin.Weight));  %1代表整车平铺 2代表甩尾平铺
     
     d2Array(1:length(do.Bin.Weight)) = maind;
-    do2Array(1:length(do.Bin.Weight)) = do;
+    do2Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false);
     d3Array(1:length(do.Bin.Weight)) = maind;
-    do3Array(1:length(do.Bin.Weight)) = do;
+    do3Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false); %do;
             
     %% 3.2 进入bin循环平铺
     bidx = 1:length(do.Bin.Weight); % NOTE: 修改只考虑甩尾平铺到全部Bin纳入考虑, 对非甩尾平铺的进行平铺判断 % bidx = find(do.Bin.isTileNeed);
@@ -263,7 +261,7 @@ for iAlg = 1:nAlg
 
             % $3.3.1 reRunAlgorithm do3是d3运算后的结果
             do3 = RunAlgorithm(d3,pA(iAlg));             
-            do3Array(ibin) = do3;
+            % do3Array(ibin) = do3;
             
             % $3.3.2 当全部平铺没有问题,做后处理
             if max(do3.LU.LU_Bin(1,:)) == 1
@@ -327,12 +325,13 @@ for iAlg = 1:nAlg
             
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
             [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);
-            do2Array(ibin) = do2;
+                                                                                                                    % do2Array(ibin) = do2; 必须注释，因为是个循环
                                                                 if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
             % $6 后处理
             if max(do2.LU.LU_Bin(1,:)) == 1
                                                                                                                                 %    do2.LU.LU_VehType = ones(size(do2.LU.ID))*do.Veh.order(1); 
                 flagTiledArray(ibin)=2; %2代表甩尾平铺
+                do2.LU.LU_Bin
                 do2Array(ibin) = do2;
                 % do2 数据不进入d 仅在return2bba中修改
                 % do2 数据进入d???? return2bba不修改？？？                
@@ -467,23 +466,35 @@ if ISpingpu==1
         end
         if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功
             T23 = getTableLU(do2Array(ibin));
+            do2.LU.LU_Bin
         end
 
        flagTileLUIdx = T{:,'BINID'}==ibin;
        
-       %% CHECK
+       %% CHECK 1 是否该ibin内的LU排序是严格递增; 是否T内选中的flagTileLUIdx部分LU属于该ibin且也是严格递增的
        if ~issorted(sort(T23.BINSEQ),'strictascend') || ~issorted(sort(T.BINSEQ(flagTileLUIdx,:)'),'strictascend')
-               T.BINSEQ(flagTileLUIdx,:)
+               T.BINSEQ(flagTileLUIdx,:)'
                T23.BINSEQ'
+               sort(T23.BINSEQ)'
+               sort(T23.BINID)'
+               do2Array(ibin).LU.LU_Bin
+               sort(T.BINSEQ(flagTileLUIdx,:))'
                error('1');
        end
-       if sum(flagTileLUIdx) ~= height(T23)
-           error('1');
+       % 2 是否总表T内BINID内是统一binid；是否子表T23内是否同一binid；是否ibin等于T内LU对应的binid号
+       if ~isscalar(unique(sort(T.BINID(flagTileLUIdx,:))))  || ~isscalar(unique(sort(T23.BINID)))  || ibin~= unique(sort(T.BINID(flagTileLUIdx,:)))
+            sort(T23.BINID)'
+            unique(sort(T23.BINID))
+            unique(sort(T.BINID(flagTileLUIdx,:)))
+            error('11');
        end
-       
-       a = T.OPID(flagTileLUIdx,:)'
-       b = T23.OPID'
-       
+       % 3 是否T23内数量等于bin内LU个数
+       if sum(flagTileLUIdx) ~= height(T23)
+           error('111');
+       end
+       % 4 是否总表T内初始OPID与返回字表内T23的OPID相同;
+       a = T.OPID(flagTileLUIdx,:)';
+       b = T23.OPID';
        if  ~isequal(a,b)
            error('1');
        end

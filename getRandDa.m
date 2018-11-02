@@ -1,8 +1,8 @@
 function [d] = getRandDa(n,m)
 %     rng(10000);
 %     rng('default');
-    s = rng;     save('srng','s');
-%     load('srng2');    rng(s);
+%     s = rng;     save('srng','s');
+    load('srng');    rng(s);
     
     Par.maxHeavey = 18;
 %     Par.LUbuff = [0;0]; %以后无用
