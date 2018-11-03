@@ -52,7 +52,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         if ISdiagItem==1
             if maxHeightinLUofThisItem >= hMargin || diagItem >= hMargin, Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
         else
-            if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
+            if 0.95*maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
         end
     end
 

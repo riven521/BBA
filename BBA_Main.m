@@ -37,7 +37,7 @@ global ISisNonMixedLU ISisMixTileLU
 % ISsItemAdjust = 1  % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 1
+ISplotBBA = 0
 ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
 
@@ -260,7 +260,7 @@ for iAlg = 1:nAlg
 %         
 %         d2.Par = do.Par;
         %% 3.3 如果允许全部平铺(可能是非甩尾平铺), 观察本ibin内是否可以全部平铺,如可以,就取消甩尾平铺; 否则,进入甩尾平铺
-        if ISpingpuAll==1            
+        if ISpingpuAll==1
             d3 = d2;
             d3.LU.maxHLayer(:) = 1; %d2内全部LU的层数设定为1 55555 全部平铺的重要条件
             d3Array(ibin) = d3;
@@ -292,7 +292,7 @@ for iAlg = 1:nAlg
                 do2.Bin = structfun(@(x) x(:,ibin),do.Bin,'UniformOutput',false);                       
                 do2.Strip = structfun(@(x) x(:,stripidx),do.Strip,'UniformOutput',false);
                 do2.Item = structfun(@(x) x(:,itemidx),do.Item,'UniformOutput',false);        
-               
+%                plotSolutionT(do2.LU,do2.Veh);
             while do2.Bin.isTileNeed(1) == 1 %do2内的Bin永远只有1个, 可能平铺后该bin仍需要平铺,所以有while判断
 
             % $3.4.2 修订d2.LU.maxHLayer (仅对ibin内最后选定的几个strip平铺) TODO $4写的有些复杂,后期简化
@@ -333,7 +333,8 @@ for iAlg = 1:nAlg
             
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
             [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);
-                                                                                                                    % do2Array(ibin) = do2; 必须注释，因为是个循环
+
+            % do2Array(ibin) = do2; 必须注释，因为是个循环
                                                                 if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
             % $6 后处理
             if max(do2.LU.LU_Bin(1,:)) == 1
@@ -609,11 +610,8 @@ T = getShowSeq(T); %增加ShowSEQ
 %% table转为结构体后判断是否上轻下重
 % lu = table2struct(T,'ToScalar',true)
 % lu = (structfun(@(x) x',lu,'UniformOutput',false));
-
-
     
     %% 依据T内最终LU_LUinBin坐标数据判断
-    T.Properties.VariableNames
 %     T2 = sortrows(T,{'BINID','BINSEQ'},{'ascend','ascend'})
     %     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
 %     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
@@ -637,12 +635,10 @@ output_LU_LWH=T.LWH';
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 % output_LU_Seq([2,3,5,8],:)
 
-% 给定车辆等信息; 作图
-V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-plotSolutionT(T,V);
-
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
+    V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+    plotSolutionT(T,V);
 end
 
     % if  ISplotSolu 

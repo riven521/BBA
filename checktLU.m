@@ -26,8 +26,8 @@ uniItemID = unique(t.ITEMID(:));
 for iItem = 1:length(uniItemID) %对ITEM进行循环
     flagIdx = t.ITEMID==uniItemID(iItem); %对单一ItemId去逻辑值;
     if any(strcmp('Y', t.Properties.VariableNames))
-        vX = t{flagIdx,'X'}
-        vY = t{flagIdx,'Y'}
+        vX = t{flagIdx,'X'};
+        vY = t{flagIdx,'Y'};
         if any(vX ~= vX(1)) || any(vY ~= vY(1))
             error('相同ITEM,但X或Y坐标错位'); end
         
