@@ -71,7 +71,7 @@ nBin = max(d.LU.LU_Bin(1,:)); %bin的个数;
 
 figure('name',num2str([nBin, aField]));
 subplot(2,ceil((nBin+1)/2),1);
-plot3DStrip(d.LU,d.Item,d.Veh,'Item');
+plot3DStrip(d.LU,d.Item,d.Veh,'Item');  %此处增加Strip作为子图1
 for ibin=1:nBin
 % 网上找的几个画图的函数
 %     fig

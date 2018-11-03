@@ -8,6 +8,8 @@ function   [Strip,LUisShuaiWei] = HStripSW(Strip,LU)
     
 %% 1: ********************** 甩尾 ********************************** 
 % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
+Strip.isHeightFull
+Strip.isWidthFull
 if any(~Strip.isWidthFull | ~Strip.isHeightFull)
     % Get b : strip index to be move to end of Vehicle
     [~,bNOTheightfull] = find(Strip.isHeightFull == 0);

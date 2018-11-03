@@ -11,17 +11,20 @@ function [d] = RunAlgorithm(d,p)
         %% 启发式: LU到Item的算法    
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
         printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
-        
+
         % Item.isNonMixed Item.isMixedTile isHeightFull
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
         
-        d.Item = isWeightUpDown(d.Item,d.LU);
-        all(d.Item.isWeightFine)
-
-    
+        % 核查是否还有上轻下重的情况
+        checktLU(d.LU);
+                
+%         d.Item = isWeightUpDown(d.Item,d.LU);
+%         all(d.Item.isWeightFine)
+        
+          
 %         checktLU(getTableLU(d))
 %         checktItem(getTableItem(d))
-        1
+        
          
         %% 启发式: Item到Strip的算法        
         %  *******  *******  *******
@@ -32,16 +35,19 @@ function [d] = RunAlgorithm(d,p)
 
         % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
-% figure(randi(222));     plot3DStrip(d.LU,d.Item,d.Veh,'LU');  
-        if ISplotStrip==1,      figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %         figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
 
+        if ISplotStrip==1,      figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %         figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+% checktLU(d.LU);
         %% 启发式：Strip到Bin的算法        
         % ********* 1 Strip排序: % 1: SID 2: priorityofLID
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
         
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
-        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
+        
+        if ISplotStrip==1,      
+            plot3DBPP(d,p);      
+        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
 %         plot3DBPP(d,p); 
         % ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
@@ -58,7 +64,7 @@ function [d] = RunAlgorithm(d,p)
         list_struct(er1)
         
        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
-
+% checktLU(d.LU);
 %        plot3DBPP(d,p);
         % ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin
         if ISshuaiwei==1,      [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    

@@ -38,6 +38,7 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
 
 %% 0.0 计算LU.LU_Strip, LU.CoordLUStrip, Strip内的PID,LID,SID
 % 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
+LU
 nbLU = size(LU.LWH,2);
 LU.LU_Strip = zeros(2,nbLU);
 LU.CoordLUStrip = zeros(3,nbLU);
@@ -155,7 +156,7 @@ function Strip = isHeightBalanceStrip(Strip,Item)
         % 高度间隙
         maxHeightDiff = max(abs(diff(Item.LWH(3,fItem))));
         % 对比2: 最高的Item的1/3
-        oneThirdsHeightItem = max(Item.LWH(3,fItem))*1/3
+        oneThirdsHeightItem = max(Item.LWH(3,fItem))*1/3;
         
         % 对比2: 最大差值, 是否<= 1/3最高Item (Item高度平行, 即使很低,  也认为是满层)
         if ~isempty(maxHeightDiff)

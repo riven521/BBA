@@ -37,11 +37,13 @@ global ISisNonMixedLU ISisMixTileLU
 % ISsItemAdjust = 1  % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 0
+ISplotBBA = 1
 ISplotShowType = 1 % 1 LID 2 isShuaiWei
         % ISplotSolu = 0
-ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果
-ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果
+
+        ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果 看细节
+        ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节
+
 ISplotPause = -0.05 % plot间隔时间
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
@@ -55,12 +57,11 @@ ISisMixTile  = 1    % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必
 
 ISreStripToBin = 1  % 车头优先LU数量排序参数 默认为1 必须
 
-ISshuaiwei = 1          % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 *******
-
+ISshuaiwei = 1          % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
 ISpingpu = 1            % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1        %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
-ISlastVehType = 1    % 555: 最后一车的调整, 与其它无关, 暂不考虑
+ISlastVehType = 1   % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
 %% BUG
 %% Initialize Data Structure
@@ -79,7 +80,7 @@ if nargin ~= 0
             'LULID',varargin{7},...
             'LUINDEX',varargin{8});
 else
-    n=88; m=2;  % 16需要注意 250 srng1
+    n=28; m=2;  % 16需要注意 250 srng1
     d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     
     filename = strcat('GoodIns',num2str(n));
@@ -165,7 +166,10 @@ for iAlg = 1:nAlg
     maintLU = struct2table(structfun(@(x) x',maind.LU,'UniformOutput',false));
     tLU = struct2table(structfun(@(x) x',do.LU,'UniformOutput',false));    
     checkLU(maintLU,tLU);
-
+    checktLU(do.LU);
+    
+%     plotSolutionT(do.LU,do.Veh);
+    1
    % plotSolution(do,pA(iAlg)); %尽量不用
     
     %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh : 
@@ -217,6 +221,7 @@ for iAlg = 1:nAlg
         t1 = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
         to1 = struct2table(structfun(@(x) x',do1.LU,'UniformOutput',false));
         checkLU(t1,to1);
+        checktLU(do1.LU);
     end
     end
 
@@ -271,6 +276,8 @@ for iAlg = 1:nAlg
                 [do3.LU,do3.Item] = updateItemMargin(do3.LU,do3.Item);               %  plot3DBPP(do3,pA(iAlg))
                 do3Array(ibin) = do3;
                 
+%                 plotSolutionT(do3.LU,do3.Veh);
+% 1
                 % do3修改到d中？？？目前保留到do2Array中，未与d合并
                 continue;   %continue不会进入下面的甩尾平铺了
             end
@@ -334,6 +341,8 @@ for iAlg = 1:nAlg
                 flagTiledArray(ibin)=2; %2代表甩尾平铺
                 do2.LU.LU_Bin
                 do2Array(ibin) = do2;
+%                 plotSolutionT(do2.LU,do2.Veh);
+                1
                 % do2 数据不进入d 仅在return2bba中修改
                 % do2 数据进入d???? return2bba不修改？？？                
             else
@@ -350,11 +359,16 @@ for iAlg = 1:nAlg
                 t3 = struct2table(structfun(@(x) x',d3Array(ibin).LU,'UniformOutput',false));
                 to3 = struct2table(structfun(@(x) x',do3Array(ibin).LU,'UniformOutput',false));
                 checkLU(t3,to3);
+                checktLU(t3);
+                checktLU(to3);
+                
             end
             if flagTiledArray(ibin)==2 %甩尾平铺
                 t2 = struct2table(structfun(@(x) x',d2Array(ibin).LU,'UniformOutput',false));
                 to2 = struct2table(structfun(@(x) x',do2Array(ibin).LU,'UniformOutput',false));
                 checkLU(t2,to2);
+                % checktLU(t2);
+                checktLU(to2);
             end
             
             flagTiledArray;
@@ -387,6 +401,8 @@ end
     % daBest(bestOne).LU.OPID
 %% 1 ******************获取展示顺序 T=d.LU增加ShowSEQ
 T = getTableLU(do);
+        checktLU(T) 
+        1
 %%
 % [T_Coord,T_LWH,T_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
 % T_Seq.tblorder
@@ -408,7 +424,8 @@ T = getTableLU(do);
 %% 2 ****************** 针对车型变化 do1数据 获取修订的 output ******************
 if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
     T1 = getTableLU(do1);
-
+        checktLU(T1) 
+        1
     % 替换T中的最后一车的部分属性 来自T1
     lastVehIdx = max(T{:,'BINID'});
     flaglastLUIdx = T{:,'BINID'}==lastVehIdx;
@@ -419,7 +436,7 @@ if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
        % 某个bin内调整,其BINSEQ,CoordLUBin,LU_VehType一定发生变化 （按bid和binseq排序的） 其ITEMID似乎没用 不返回了把
        % 重点是更新坐标和LU_VehType和BINSEQ，LU_VehType 这几个必定变化(PID/SID需要留意) % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
     T{flaglastLUIdx,{'CoordLUBin','BINSEQ','LU_VehType'}} = T1{:,{'CoordLUBin','BINSEQ','LU_VehType'}};
-   
+    checktLU(T) 
     %%
     
         % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
@@ -458,6 +475,9 @@ end
 
 %% 3 ****************** 针对平铺选择 do2/do3Array数据 获取修订的 output ******************
 if ISpingpu==1
+    if ~all(flagTiledArray==0)
+        flagTiledArray
+        warning('需要平铺');;end
     for ibin=1:length(do2Array) %do*Array 包含所有BIN
         if flagTiledArray(ibin)==0  % 该ibin未平铺 继续循环
             continue;
@@ -468,9 +488,11 @@ if ISpingpu==1
         
         if flagTiledArray(ibin)==1    % 该ibin整车平铺成功
             T23 = getTableLU(do3Array(ibin));
+                    checktLU(T23) ;
         end
         if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功
             T23 = getTableLU(do2Array(ibin));
+                    checktLU(T23) ;
             %do2.LU.LU_Bin
         end
 
@@ -507,10 +529,19 @@ if ISpingpu==1
        %% 哪些会变化??
        % 某个bin内调整,其binID一定不会变化; 其bin的LU_VehType一定不会变化；
        % 其LID/Weight/LWH应该不会变化; SID/PID会变化; 因为OPID OSID OID等原因 idExchange函数
-       % 某个bin内调整,其BINSEQ,CoordLUBin一定发生变化 （按bid和binseq排序的） 其ITEMID似乎没用 不返回了把
+       % 某个bin内调整,其BINSEQ,CoordLUBin一定发生变化 （按bid和binseq排序的） 
+       % 其LU_Item一定会变化 但似乎没用了 不返回了把
        % 重点是更新坐标 % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
-       T{flagTileLUIdx,{'CoordLUBin','BINSEQ'}} = T23{:,{'CoordLUBin','BINSEQ'}};    
-            
+%        sortrows(T.LU_Item)'
+%        sortrows(T23.LU_Item)'
+%        T.LU_Item
+%        T{flagTileLUIdx,{'CoordLUBin','BINSEQ'}} = T23{:,{'CoordLUBin','BINSEQ'}};    
+        T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
+            T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};    
+%        T.LU_Item
+%        sortrows(T.LU_Item)'
+%        checktLU(T) %仍有无法通过的可能性; 如LU_Item影响不大,建议先注释 TODO
+
             %% 下面是错的
             %        T{flagTileLUIdx,{'LU_VehType','BINSEQ','ShowSEQ'}} = ...
 %            T23{:,{'LU_VehType','BINSEQ','ShowSEQ'}};
@@ -576,62 +607,40 @@ T = getShowSeq(T); %增加ShowSEQ
 %% CHECK 1 上轻下重
 
 %% table转为结构体后判断是否上轻下重
-% % % % lu = table2struct(T,'ToScalar',true)
-% % % % lu = (structfun(@(x) x',lu,'UniformOutput',false));
-% % %     em=struct();
-% % %     em = isWeightUpDown(em,T);
-% % %     all(em.isWeightFine)
-% % %     
-% % %     %% 依据T内最终LU_LUinBin坐标数据判断
-% % %     T.Properties.VariableNames
-% % %     T2 = sortrows(T,{'BINID','BINSEQ'},{'ascend','ascend'})
-% % %     %     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
-% % %     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
-% % %     % if ITEMID相同 其坐标CoordLUBin的长宽必须相同 不同ITEMID的上下重量对比
-% % %     % 对table格式LU进行check
-% % %     checktLU(T2)
-% % %     
-% % %     head(x)
-% % %     
-% % %     1
-    
-    
-    %% 结构体形式分别核对是否上轻下重
-% % %         do.Item = isWeightUpDown(do.Item,do.LU);
-% % %         all(do.Item.isWeightFine)  
-% % % 
-% % % %         do1.Item = isWeightUpDown(do1.Item,do1.LU);        all(do1.Item.isWeightFine)
-% % %         
-% % %         do2.Item = isWeightUpDown(do2.Item,do2.LU);
-% % %         all(do2.Item.isWeightFine)
-% % %         
-% % %         Item = isWeightUpDown(tItem,tLU);
-% % %         all(Item.isWeightFine)
-        
+% lu = table2struct(T,'ToScalar',true)
+% lu = (structfun(@(x) x',lu,'UniformOutput',false));
 
-%% 常用语句
-% T.Properties.VariableNames
-% % 简单查看某个bin内的部分子表
-% tmpT = sortrows(T,{'ITEMID'})
-% x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
-% sortrows(x,{'CoordLUBin'})
+
+    
+    %% 依据T内最终LU_LUinBin坐标数据判断
+    T.Properties.VariableNames
+%     T2 = sortrows(T,{'BINID','BINSEQ'},{'ascend','ascend'})
+    %     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
+%     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
+    % if ITEMID相同 其坐标CoordLUBin的长宽必须相同 不同ITEMID的上下重量对比
+    % 对table格式LU进行check 主要是重量
+
+%        checktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
 
 % 返回BBA数组格式给JAR
-% T.index
-% T.BINID
-[~,T.ttt] = sort(T.tblorder)
-T = sortrows(T,'ttt')
+[~,T.ttt] = sort(T.tblorder);
+T = sortrows(T,'ttt');
 % T = sortrows(T,'BINID')
 % T.LID
 % T.BINID
 % T.BINSEQ
-T.Properties.VariableNames
 
 output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
 % output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'
+% ITEMID意义不大, 且
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 % output_LU_Seq([2,3,5,8],:)
+
+% 给定车辆等信息; 作图
+V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+plotSolutionT(T,V);
+
 if ISplotBBA
     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
 end
@@ -644,8 +653,16 @@ end
     % %        if flaggetSmallVeh,   plotSolution(do1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
     % end
 
+    
+%% 常用语句
+% T.Properties.VariableNames
+% % 简单查看某个bin内的部分子表
+% tmpT = sortrows(T,{'ITEMID'})
+% x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
+% sortrows(x,{'CoordLUBin'})
 % 剔除展示顺序 % output_LU_Seq = output_LU_Seq(1:7,:);
 % whos
+
 clearvars -except output*
 fprintf(1,'Simulation done.\n');
 

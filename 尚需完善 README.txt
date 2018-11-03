@@ -300,7 +300,26 @@ V1102-1
 
 V1102-2
 1 增加：clearvars -except output* 希望解决崩溃问题
-2 增加输入和输出刘工参数
+2 增加输入11和输出刘工参数10行 LU.Index
+3 getTableLU增加X Y Z输出
+
+V1102-3
+1 增加checktLU（输入LU的table或结构体：判断重量和坐标系）
+2 bug->上轻下重 还存在，可能是甩尾平铺等导致.
+3 cpuItem修改修复上轻下重的bug; 取消isWeightFine变量.
+4 
+
+V1103-3
+1 增加函数：基于table作图plotSolutionT
+        T = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
+        V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+        
+        T = T(T.LID == 1,:)
+        plotSolutionT(T,V);
+        plotSolutionT(d.LU,d.Veh);
+
+TODO
+甩尾还有问题:前面的被移动后车尾了.奇怪的很
 
 
 1 修改业务部门bug
