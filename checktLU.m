@@ -1,3 +1,4 @@
+%% 功能：核验是否数据是上轻下重；是否Z高度与ItemSEQ一致；是否ITEMID与XY坐标一致;
 function checktLU(t) % t必定是托盘类型的table或struct
 %% 0 结构体转换为table 预处理
 if isstruct(t)

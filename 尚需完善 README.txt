@@ -311,18 +311,37 @@ V1102-3
 
 V1103-3
 1 增加函数：基于table作图plotSolutionT
-        T = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
-        V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-        
         T = T(T.LID == 1,:)
         plotSolutionT(T,V);
         plotSolutionT(d.LU,d.Veh);
+2        
 
-TODO
-甩尾还有问题:前面的被移动后车尾了.奇怪的很
+V1104-1
+1 修改高度满垛判定 防止该甩未甩 if 0.95*maxHeightinLUofThisItem >= hMargin
+
+V1104-2
+1 整车平铺尾部 由1层-》多层 最后一车 且 一种完全一样的LID/ID的方可1-2-3的堆
+            if ibin == numel(bidx) && range(d3.LU.ID) == 0 % 最后一车 且 一种完全一样的LID/ID的方可1-2-3的堆
+                minmaxLayer = min(max(d3.LU.maxHLayer), max(d3.LU.maxL(3,:)));
+            else
+                minmaxLayer = 1;
+            end
+2 增加仅LU的作图 在 plotSolutionT(sLU,Veh)
+	% 5555 构建仅plotLU的LU的坐标系
+    XYZ = zeros(height(subT),3);
+    XYZ(:,1) = cumsum(subT.LWH(:,1));
+    subT.Coord =[0 0 0; XYZ(1:end-1,:)];
+3 getLUorder 中 顺序修改为PID优先放在相同LID高度优先之后
 
 
-1 修改业务部门bug
+
+2 增加堆垛均衡函数 TODO
+多层甩尾平铺问题 甩尾了 但平铺问题 ppt3
+isNonMixed/isMixedTile ITEM AND LU
+目的：LU和Item的排序问题： 这两个计算有问题；后期需要调整
+
+
+3 SID/LID问题
 
 TODO:
 477行错误；1个bin有两个BINID的错.

@@ -12,13 +12,35 @@ if ~ismember('LWH_V', T.Properties.VariableNames),  T = join(T,V,'Keys','LU_VehT
 
 % 1 获取含 颜色 属性的T  LID/SID/OPID etc   % 作图所需 1 LU的bin序号; 2 LWH 3 COORDLUBIN 4 LID 排序
 if ISplotShowType == 1
-    tmpT = unique(T(:,{'LID'}));
+    tmpT = unique(T(:,{'ID'})); %LID/ID/isNonMixed/isMixTile
 elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
 end
 
 tmpT.LUcolor = 0.8*hsv(height(tmpT));
 T = join(T,tmpT);
+
+
+% 仅作图LU,按给定顺序作图
+plotLU = 1;
+if plotLU
+    subT = T(1:end,:);
+
+    % 5555 构建仅plotLU的LU的坐标系
+    XYZ = zeros(height(subT),3);
+    XYZ(:,1) = cumsum(subT.LWH(:,1));
+    subT.Coord =[0 0 0; XYZ(1:end-1,:)];
+    
+    for iLU=1:height(subT)
+        plotcube(subT.LWH(iLU,:),subT.Coord(iLU,:),0.7, subT.LUcolor(iLU,:));
+        axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+        view(60,40); %view(111,33);  
+    end
+end
+
+%%
+
+%%
 
 pos = 1;
 % 2 开始作图 - 按Bin划分

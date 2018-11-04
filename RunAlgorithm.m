@@ -10,21 +10,13 @@ function [d] = RunAlgorithm(d,p)
 
         %% 启发式: LU到Item的算法    
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
-        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
+                                %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
 
-        % Item.isNonMixed Item.isMixedTile isHeightFull
+                                % Item.isNonMixed Item.isMixedTile isHeightFull
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
         
         % 核查是否还有上轻下重的情况
         checktLU(d.LU);
-                
-%         d.Item = isWeightUpDown(d.Item,d.LU);
-%         all(d.Item.isWeightFine)
-        
-          
-%         checktLU(getTableLU(d))
-%         checktItem(getTableItem(d))
-        
          
         %% 启发式: Item到Strip的算法        
         %  *******  *******  *******
@@ -36,43 +28,101 @@ function [d] = RunAlgorithm(d,p)
         % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
+% %         d.LU
+% %         maxL: [3×39 double]
+% %        maxHLayer: [1×39 double]
+% %         LU_Item: [2×39 double]
+% %          LU_Strip: [2×39 double]
+% %     CoordLUStrip: [3×39 double]
+% %         d.Item
+% %         LWH: [3×16 double]
+% %             Weight: [1×16 double]
+% %              Item_Strip: [2×16 double]
+% %     CoordItemStrip: [2×16 double]
+% %         d.Strip
+% %         LID: {[3]  [1]  [2]  [2]  [2]  [2]  [2]  [2]  [4]  [5]  [5]}
+% %                  SID: {[1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]}
+% %                 nbLU: [5 8 11 11 11 11 11 11 8 7 7]
+% %              nbLULID: [5 -1 11 11 11 11 11 11 8 7 7]
+
+%         nbstrip = sum(fstrip);
+        
+%         plotSolutionT(d.LU,d.Veh);
+        
+% % %         while any(d.Strip.isHeightBalance==0)
+% % %         fstrip = d.Strip.isHeightBalance==0;
+% % %         uniStrip=unique(d.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
+% % %         luidxPP = ismember(d.LU.LU_Strip(1,:), uniStrip(fstrip)); %%% fi->u(fi) 真正的序号 *********************        
+% % %          d.LU.LWH(3,luidxPP)
+% % %          d.LU.ID(luidxPP)
+% % % %         d.LU.maxL(3,luidxPP)
+% % % a =   unique(d.LU.maxHLayer(luidxPP))
+% % %         d.LU.maxHLayer(luidxPP) = min( max(d.LU.maxL(3,luidxPP)), max(d.LU.maxHLayer(luidxPP))) - 1;
+% % %         d.LU.maxHLayer(d.LU.maxHLayer<=1) = 1;
+% % %         
+% % %         a =   unique(d.LU.maxHLayer(luidxPP))
+% % %         if a <= 4
+% % %             1
+% % %         end
+% % %         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）        
+% % %         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);        
+% % %         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p); 
+% % %          [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
+% % % %         checktLU(d.LU);
+% % % find(luidxPP) %1     2     9    10    23    24    29    38
+% % % a = unique(d.LU.maxHLayer(luidxPP))
+% % % if a<=5
+% % %         figure(randi(200));
+% % %         plotSolutionT(d.LU,d.Veh);
+% % % end
+% % %         end
+% % %         
+% % %         d.Strip.isHeightBalance
+% % %         
+% % %         
+% % %         for iu = 1:nbstrip
+% % %             
+% % %         end
+% % %         
+% % %             
+% % %         
+% % %         
+% % %         plotSolutionT(d.LU,d.Veh);
         if ISplotStrip==1,      figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %         figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
-% checktLU(d.LU);
+
         %% 启发式：Strip到Bin的算法        
-        % ********* 1 Strip排序: % 1: SID 2: priorityofLID
+        %% ********* 1 Strip排序: % 1: SID 2: priorityofLID
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
         
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         
-        if ISplotStrip==1,      
-            plot3DBPP(d,p);      
-        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
-%         plot3DBPP(d,p); 
-        % ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
+                                             if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
+        
+                                             
+        %% ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
-                        ti = d.Strip;  tl = d.Bin;
-%                         plot3DBPP(d,p);
-        if ISreStripToBin==1,   
-            [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
+                                                        %         ti = d.Strip;  tl = d.Bin;
+        if ISreStripToBin==1
+                [d.Strip,d.Bin] = HreStripToBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
 
-        [match, er1, er2] = comp_struct(ti,d.Strip,1);
-        [match, er1, er2] = comp_struct(tl,d.Bin,1);
-        list_struct(er1)
+                                                        %         [match, er1, er2] = comp_struct(ti,d.Strip,1);
+                                                        %         [match, er1, er2] = comp_struct(tl,d.Bin,1);
+                                                        %         list_struct(er1)
         
-       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
-% checktLU(d.LU);
-%        plot3DBPP(d,p);
-        % ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin
+                                          if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
+
+                                          
+        %% ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin 第二行
         if ISshuaiwei==1,      [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end
 
-       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
+                                      if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
 
        d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
@@ -271,11 +321,10 @@ end
 % % end
 
 %% 函数1: 量大车头方案2: V3: 
-    % s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
+    % s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip; cpuStripnbItem为全部Strip进入
 function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
-        % DONE: 量大车头方案2: 
         % 目的: 解决量大的LU被车辆拆分为量小但仍摆放车头;
-        % 方法: 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法.
+        % 方法: ****** 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法. ******
         nbBin = max(Strip.Strip_Bin(1,:));
         if nbBin>1
             ibin=2;
@@ -330,7 +379,7 @@ function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
 end
 
 
-% % %% 函数1: 量大车头方案2: V2: s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
+%% %% 函数1: 量大车头方案2: V2: s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip;cpuStripnbItem为全部Strip进入
 % % function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
 % %         % DONE: 量大车头方案2: 
 % %         % 目的: 解决量大的LU被车辆拆分为量小但仍摆放车头;

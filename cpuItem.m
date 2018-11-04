@@ -177,6 +177,29 @@ end
 
 end
 
+%% 函数2 : repairItemWeight: LU如不是上轻下重,进行修复
+% V2: 仅仅修改LU.LU_Item的第二行的值 LU.LU_Item(2,flagLU)
+function LU = repairItemWeight(oLU,itemIdx)
+if istable(oLU)
+    LU = table2struct(oLU,'ToScalar',true);
+    LU = (structfun(@(x) x',LU,'UniformOutput',false));
+else
+    LU = oLU;
+end
+
+flagLU = (LU.LU_Item(1,:)==itemIdx);   %找出本item对应的lu的index
+tmpWeight=LU.Weight(:,flagLU);
+[~,b] = sort(tmpWeight,'descend');
+[~,b] = sort(b);
+
+LU.LU_Item(2,flagLU) = b;
+
+if istable(oLU) %返回的也要是table
+    LU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+end
+end
+
+
 %% V1版 isWeightUpDown 无法找全所有上轻下重的case
 % % function Item = isWeightUpDown(Item,LU)
 % % for iItem = 1:max(LU.LU_Item(1,:)) %对ITEM进行循环
@@ -209,29 +232,7 @@ end
 % % end
 % % end
 
-%% 函数2 : repairItemWeight: LU如不是上轻下重,进行修复
-% V2: 仅仅修改LU.LU_Item的第二行的值 LU.LU_Item(2,flagLU)
-function LU = repairItemWeight(oLU,itemIdx)
-if istable(oLU)
-    LU = table2struct(oLU,'ToScalar',true);
-    LU = (structfun(@(x) x',LU,'UniformOutput',false));
-else
-    LU = oLU;
-end
-
-flagLU = (LU.LU_Item(1,:)==itemIdx);   %找出本item对应的lu的index
-tmpWeight=LU.Weight(:,flagLU);
-[~,b] = sort(tmpWeight,'descend');
-[~,b] = sort(b);
-
-LU.LU_Item(2,flagLU) = b;
-
-if istable(oLU) %返回的也要是table
-    LU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
-end
-end
-
-
+%% V1版 repairItemWeight 先在insert2Item中赋予初始值, 此处再进行修复
 % ****************** 对角线开关修复 ************ 关闭
 % % % V1: 先在insert2Item中赋予初始值, 此处再进行修复
 % % % repairItemFull: 如果存在非满层的case, 进行微调:为0的改为1,当剩余高度小于ITEM对角线的高度, 视为FULL 满层

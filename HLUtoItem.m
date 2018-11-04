@@ -53,17 +53,29 @@ tmpItem_LU = zeros(1,nLU);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不
 % sLU新增
 sLU.LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
 
-iItem = 1; iLU = 1; %iStrip代表item实质
+% 作图排序后的LU图形
+sLU.ID  sLU.LID sLU.LWH(3,:) sLU.PID
+plotSolutionT(sLU,Veh)
+    
+iItem = 1; iLU = 1; %isrip代表item实质
 % 固定LU, 选择ITEM; 
 while 1
     if iLU > nLU, break; end
+    sLU.LID
+    sLU.ID
+    sLU.isNonMixed
+    sLU.isMixedTile
+    if sLU.ID(iItem) == 1
+        1
+    end
     [thisItem,iItem] = getThisItem(iItem);
     insertLUToItem(thisItem,iLU);
+    
     iLU = iLU + 1;
 end
 
 
-%% Get ITEM 务必可以放 NEXT FIT 
+%% Get ITEM 务必可以放 NEXT FIT 如果非空Item，满足高度/层数,放入; 否则,换新Item放入
     function [thisItem,iItem] = getThisItem(iItem)
     % isflagHeight : 是否ITEM高度满足
     % isNewItem2 ：是否ITEM属于新
@@ -150,51 +162,9 @@ end
 
 %% 测试script TO BE FIX
 % 输出主要结果:获得每个item包含的 原始 LU序号
-printscript(LU,Item);
-
+% printscript(LU,Item);
 end
 
-function printscript(LU,Item)
-    for iItem = 1:max(LU.LU_Item(1,:))
-%         [~,idx] = find(LU.LU_Item(1,:)==iItem);
-%         fprintf('item %d 的长宽高为:  ',iItem);
-%         fprintf('( %d ) ',Item.LWH(:,iItem));
-%         fprintf('\n');
-%         fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
-%         fprintf('%d ',idx);
-%         fprintf('( %d ) ', LU.LWH(:,idx));
-%         fprintf('\n');
-%         fprintf('item %d 包含 original LU 索引号(高)为  \n  ',iItem);
-%         fprintf('%d ',idx);
-%         fprintf('( %d ) ', LU.LWH(3,idx)); 
-%         fprintf('\n');
-%         fprintf('item %d 包含 original LU 重量为  \n  ',iItem);
-%         fprintf('%d ',idx);
-%         fprintf('( %d ) ', LU.Weight(:,idx));
-%         fprintf('\n');
-%                fprintf('item %d 包含 original LU ***为  \n  ',iItem);
-%         fprintf('%d ',idx);
-%         fprintf('( %d ) ', LU.LU_Item(2,idx)); 
-%         fprintf('\n'); 
-%         isWeightUpDown
-%         if length(idx) > 1 %Item包含不只一个Item,需要判断是否有轻重的变化
-%             currLUWeight = zeros(1,length(idx));
-%             currLUHight = zeros(1,length(idx));
-%             for iIdx = 1:length(idx)
-%                currIdx = idx(LU.LU_Item(2,idx) == iIdx);
-%                currLUWeight(iIdx) = LU.Weight(:,currIdx);
-%                currLUHight(iIdx) = LU.LWH(3,currIdx);      
-%             end
-%             if diff(currLUWeight) > 0 % 代表下轻上重
-%                 currLUWeight
-%             end
-%             if diff(currLUHight) >0  
-%                 currLUHight
-%             end
-%         end
-
-    end
-end
 
 
 function [tepLUorder] = getLUorder(LU)
@@ -213,7 +183,10 @@ tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; ...
                            LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; ];
 if ISisNonMixedLU==1    
     if ISisMixTileLU==1
-        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
+        % V2: 修改为PID优先放在相同LID高度优先之后
+        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 8, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend','descend'}); 
+        % V1 : 问题在于LU.PID 零件号排序意义不大,无论递增或递减
+        %[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
     else
         [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','ascend','ascend','descend'}); 
     end
@@ -240,3 +213,47 @@ if ~isrow(tepLUorder)
     tepLUorder = tepLUorder';
 end
 end
+
+%% COMMENT
+% function printscript(LU,Item)
+%     for iItem = 1:max(LU.LU_Item(1,:))
+% %         [~,idx] = find(LU.LU_Item(1,:)==iItem);
+% %         fprintf('item %d 的长宽高为:  ',iItem);
+% %         fprintf('( %d ) ',Item.LWH(:,iItem));
+% %         fprintf('\n');
+% %         fprintf('item %d 包含 original LU 索引号(长宽高)为  \n  ',iItem);
+% %         fprintf('%d ',idx);
+% %         fprintf('( %d ) ', LU.LWH(:,idx));
+% %         fprintf('\n');
+% %         fprintf('item %d 包含 original LU 索引号(高)为  \n  ',iItem);
+% %         fprintf('%d ',idx);
+% %         fprintf('( %d ) ', LU.LWH(3,idx)); 
+% %         fprintf('\n');
+% %         fprintf('item %d 包含 original LU 重量为  \n  ',iItem);
+% %         fprintf('%d ',idx);
+% %         fprintf('( %d ) ', LU.Weight(:,idx));
+% %         fprintf('\n');
+% %                fprintf('item %d 包含 original LU ***为  \n  ',iItem);
+% %         fprintf('%d ',idx);
+% %         fprintf('( %d ) ', LU.LU_Item(2,idx)); 
+% %         fprintf('\n'); 
+% %         isWeightUpDown
+% %         if length(idx) > 1 %Item包含不只一个Item,需要判断是否有轻重的变化
+% %             currLUWeight = zeros(1,length(idx));
+% %             currLUHight = zeros(1,length(idx));
+% %             for iIdx = 1:length(idx)
+% %                currIdx = idx(LU.LU_Item(2,idx) == iIdx);
+% %                currLUWeight(iIdx) = LU.Weight(:,currIdx);
+% %                currLUHight(iIdx) = LU.LWH(3,currIdx);      
+% %             end
+% %             if diff(currLUWeight) > 0 % 代表下轻上重
+% %                 currLUWeight
+% %             end
+% %             if diff(currLUHight) >0  
+% %                 currLUHight
+% %             end
+% %         end
+% 
+%     end
+% end
+
