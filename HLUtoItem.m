@@ -54,20 +54,13 @@ tmpItem_LU = zeros(1,nLU);  % 行1：每个Strip内的Item数量 ； 行2：每个Strip内的不
 sLU.LU_Item = zeros(2,sz(2));     %dim1:属于第几个Item dim2:属于该Item第几个排放
 
 % 作图排序后的LU图形
-sLU.ID  sLU.LID sLU.LWH(3,:) sLU.PID
-plotSolutionT(sLU,Veh)
+% sLU.ID  sLU.LID sLU.LWH(3,:) sLU.PID
+% plotSolutionT(sLU,Veh)
     
 iItem = 1; iLU = 1; %isrip代表item实质
 % 固定LU, 选择ITEM; 
 while 1
     if iLU > nLU, break; end
-    sLU.LID
-    sLU.ID
-    sLU.isNonMixed
-    sLU.isMixedTile
-    if sLU.ID(iItem) == 1
-        1
-    end
     [thisItem,iItem] = getThisItem(iItem);
     insertLUToItem(thisItem,iLU);
     
@@ -185,13 +178,13 @@ if ISisNonMixedLU==1
     if ISisMixTileLU==1
         % V2: 修改为PID优先放在相同LID高度优先之后
         [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 8, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend','descend'}); 
-        % V1 : 问题在于LU.PID 零件号排序意义不大,无论递增或递减
-        %[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
+                % V1 : 问题在于LU.PID 零件号排序意义不大,无论递增或递减
+                % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
     else
         [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','ascend','ascend','descend'}); 
     end
 else
-    [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend'}); 
+        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend'}); 
 end
 
 

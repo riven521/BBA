@@ -334,6 +334,15 @@ V1104-2
 3 getLUorder 中 顺序修改为PID优先放在相同LID高度优先之后
 
 
+V1104-3
+1 Gpreproc增加maxHLayer初始化和判定
+	if ~isfield(LU, 'maxHLayer') % 如不存在,直接以maxL指示; 如存在,以最小值取代
+        LU.maxHLayer = LU.maxL(3,:); 
+    else
+        LU.maxHLayer = min( [LU.maxHLayer',LU.maxL(3,:)'], [], 2 )';  % 同步更新对应LU的maxHLayer    
+    end
+2 
+
 
 2 增加堆垛均衡函数 TODO
 多层甩尾平铺问题 甩尾了 但平铺问题 ppt3

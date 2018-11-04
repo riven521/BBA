@@ -30,19 +30,33 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
 %close all;
-global ISdiagItem ISshuaiwei ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
+global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
-global ISisNonMixedLU ISisMixTileLU
+global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1  
+global parBalance
+parBalance = 8/30
+% ISisNonMixedLU    1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
+% ISisMixTileLU         1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
+% ISisGpreprocLU1    1 与ISisNonMixedLU取值有关
+% ISstripbalance       1 调用高度均衡开关
 
+%% 后期打开这个开关 + Gpreproc 的V2版本 再 修复业务3问题
+ISstripbalance = 0     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
+ISisGpreprocLU1 = 0 % 必须有; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
+% ISstripbalance=0即不均衡时,可以ISisGpreprocLU1=0; 表示LU使劲高度堆,更多的ISisNonMixedLU=0.
+
+%% 
+% DEL ISisMixedStrip = 1 可以删除了 % 1表示依据LU.ID判断是否混合 0依据LU.LID判断 NOTE: 所有STRIP
+% ITEM均为ID替换LID
 % ISsItemAdjust = 1  % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1 %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 1
-ISplotShowType = 1 % 1 LID 2 isShuaiWei
+ISplotBBA = 0
+ISplotShowType = 1 % 1 LID 2 PID 3 ID
         % ISplotSolu = 0
 
-        ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果 看细节
-        ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节
+                            ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
+                            ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节 后期替换为同一
 
 ISplotPause = -0.05 % plot间隔时间
 
@@ -113,7 +127,7 @@ end
         d.LU.maxL(3,:) =  floor(d.Veh.LWH(3,1)./d.LU.LWH(3,:));   %具体每个托盘LU的高度的最大层数
     end
     
-    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = 10*ones(1,n); end% maximum given height layer
+    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = d.LU.maxL(3,:); end% maximum given height layer
     
 %% Initialize Parameter
 nAlg = 1;
@@ -168,7 +182,7 @@ for iAlg = 1:nAlg
     checkLU(maintLU,tLU);
     checktLU(do.LU);
     
-%     plotSolutionT(do.LU,do.Veh);
+%      plotSolutionT(do.LU,do.Veh);
     1
    % plotSolution(do,pA(iAlg)); %尽量不用
     

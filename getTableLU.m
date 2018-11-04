@@ -1,7 +1,10 @@
 function [TLU] = getTableLU(d)
 %% 转变为Table: TLU
-                                                                            % TVEH = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-TLU = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
+if isfield(d, 'LU')
+    TLU = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false)); % TVEH = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+else
+    TLU = struct2table(structfun(@(x) x',d,'UniformOutput',false)); 
+end
                                                                             % TLU = TLU(:,{'CoordLUBin','LWH','LID','SID','PID','Weight','LU_VehType','LU_Bin','LU_Item','isShuaiWei','Rotaed'});
 % splitvar 获取多维列变量->单变量
 TLU.L = TLU.LWH(:,1); 

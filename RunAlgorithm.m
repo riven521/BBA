@@ -1,5 +1,5 @@
 function [d] = RunAlgorithm(d,p)
-        global ISshuaiwei ISplotStrip ISreStripToBin %重新执行HStripToBin方案
+        global ISshuaiwei ISplotStrip ISreStripToBin ISstripbalance %重新执行HStripToBin方案
                 
         %% 预处理:检验Input输入数据
 
@@ -28,66 +28,12 @@ function [d] = RunAlgorithm(d,p)
         % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
-% %         d.LU
-% %         maxL: [3×39 double]
-% %        maxHLayer: [1×39 double]
-% %         LU_Item: [2×39 double]
-% %          LU_Strip: [2×39 double]
-% %     CoordLUStrip: [3×39 double]
-% %         d.Item
-% %         LWH: [3×16 double]
-% %             Weight: [1×16 double]
-% %              Item_Strip: [2×16 double]
-% %     CoordItemStrip: [2×16 double]
-% %         d.Strip
-% %         LID: {[3]  [1]  [2]  [2]  [2]  [2]  [2]  [2]  [4]  [5]  [5]}
-% %                  SID: {[1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1]}
-% %                 nbLU: [5 8 11 11 11 11 11 11 8 7 7]
-% %              nbLULID: [5 -1 11 11 11 11 11 11 8 7 7]
+        %% 堆垛均衡设置
+        %% ********* 1 5555 堆垛均衡设置 *********** 修改 d.LU.maxHLayer(luidxPP) 
+         if ISstripbalance==1
+             [d.Strip,d.Item,d.LU] = HStripBalance(d.Strip,d.Item,d.LU,d.Veh,p);  end
 
-%         nbstrip = sum(fstrip);
-        
-%         plotSolutionT(d.LU,d.Veh);
-        
-% % %         while any(d.Strip.isHeightBalance==0)
-% % %         fstrip = d.Strip.isHeightBalance==0;
-% % %         uniStrip=unique(d.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
-% % %         luidxPP = ismember(d.LU.LU_Strip(1,:), uniStrip(fstrip)); %%% fi->u(fi) 真正的序号 *********************        
-% % %          d.LU.LWH(3,luidxPP)
-% % %          d.LU.ID(luidxPP)
-% % % %         d.LU.maxL(3,luidxPP)
-% % % a =   unique(d.LU.maxHLayer(luidxPP))
-% % %         d.LU.maxHLayer(luidxPP) = min( max(d.LU.maxL(3,luidxPP)), max(d.LU.maxHLayer(luidxPP))) - 1;
-% % %         d.LU.maxHLayer(d.LU.maxHLayer<=1) = 1;
-% % %         
-% % %         a =   unique(d.LU.maxHLayer(luidxPP))
-% % %         if a <= 4
-% % %             1
-% % %         end
-% % %         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）        
-% % %         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);        
-% % %         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p); 
-% % %          [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
-% % % %         checktLU(d.LU);
-% % % find(luidxPP) %1     2     9    10    23    24    29    38
-% % % a = unique(d.LU.maxHLayer(luidxPP))
-% % % if a<=5
-% % %         figure(randi(200));
-% % %         plotSolutionT(d.LU,d.Veh);
-% % % end
-% % %         end
-% % %         
-% % %         d.Strip.isHeightBalance
-% % %         
-% % %         
-% % %         for iu = 1:nbstrip
-% % %             
-% % %         end
-% % %         
-% % %             
-% % %         
-% % %         
-% % %         plotSolutionT(d.LU,d.Veh);
+        %         plotSolutionT(d.LU,d.Veh);
         if ISplotStrip==1,      figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %         figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
 
         %% 启发式：Strip到Bin的算法        
