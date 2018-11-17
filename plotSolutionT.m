@@ -6,7 +6,9 @@ global ISplotPause ISplotShowType
 
 % 0 首次join 获取车辆相关数据
 if ~ismember('LU_VehType', V.Properties.VariableNames),
-V.LU_VehType = 1:height(V); V = V(:,{'LU_VehType','LWH'}); V.Properties.VariableNames{'LWH'} = 'LWH_V'; end
+V.LU_VehType = [1:height(V)]'; 
+V = V(:,{'LU_VehType','LWH'}); 
+V.Properties.VariableNames{'LWH'} = 'LWH_V'; end
 if ~ismember('LU_VehType', T.Properties.VariableNames),  T.LU_VehType = ones(height(T),1); end
 if ~ismember('LWH_V', T.Properties.VariableNames),  T = join(T,V,'Keys','LU_VehType');  end
 

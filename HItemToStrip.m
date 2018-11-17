@@ -380,55 +380,55 @@ if ~isrow(order), order=order'; end
 end
 
 
-function itemPriority = getPriorityofItem(SIDorder, isNonMixed, isHeightFull, LWH)
-
-itemPriority = zeros(1,size(isNonMixed,2));
-uniOrd = unique(SIDorder);
-
-% 不同SID获取不同的顺序, 从SID的序号1开始
-for i=1:length(uniOrd)    
-    idxSID = SIDord==uniOrd(i);
-    
-    % UNUSED 获取本SID内的STRIP对应的值tLW;tLL;tL;tID;celltID.
-    tLW = SLW(:,idxSID);   tLL = SLoadingRateLimit(:,idxSID);
-    tID = SLID(:,idxSID);    celltID = tID;
-    tPured = Spured(:,idxSID);
-    tSingle = Ssingle(:,idxSID);   %作用未知
-    
-    % FINALLY USED 优先车头摆放的顺序
-    tnbItem = SnbItem(:,idxSID);
-    tMixed = SisMixed(:,idxSID);
-    tFull = SHeightfullfull(:,idxSID);
-    tLR = SLoadingrate(:,idxSID);        % max(tL)  %  min(tL)  % mean(tL)
-    
-    priority = 1;
-    SIDorder = zeros(1,size(tID,2));
-    szRow = cellfun(@(x)size(x,1), tID);
-    if isscalar(szRow) %如果该STRIP的只有1STRIP，且为单纯型STRIP，赋值为1
-        SIDorder = 1;
-    else
-        [tID, ~] = padcat(tID{:});   if iscolumn(tID), tID = tID'; end
-        
-
-        tmpM = [tnbItem; tMixed; tFull; tLL; tLR; tLW ];  
-        [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
-
-        if ~isrow(order), order=order'; end
-        
-        % 2 基于1的摆放顺序, 给定最终STRIP顺序到torder
-        while any(SIDorder==0)
-            [~,o]=find(SIDorder(order) == 0,1,'first');
-            SIDorder(order(o)) = priority;  
-            priority=priority+1;
-            
-            % 2.2 找出给order(o)位置tLID对应的相邻Strip.
-            tnbItem = celltID{:,order(o)};
-            [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tnbItem);
-        end
-    end
-    itemPriority(idxSID) = SIDorder;
-end
-end
+% % function itemPriority = getPriorityofItem(SIDorder, isNonMixed, isHeightFull, LWH)
+% % 
+% % itemPriority = zeros(1,size(isNonMixed,2));
+% % uniOrd = unique(SIDorder);
+% % 
+% % % 不同SID获取不同的顺序, 从SID的序号1开始
+% % for i=1:length(uniOrd)    
+% %     idxSID = SIDord==uniOrd(i);
+% %     
+% %     % UNUSED 获取本SID内的STRIP对应的值tLW;tLL;tL;tID;celltID.
+% %     tLW = SLW(:,idxSID);   tLL = SLoadingRateLimit(:,idxSID);
+% %     tID = SLID(:,idxSID);    celltID = tID;
+% %     tPured = Spured(:,idxSID);
+% %     tSingle = Ssingle(:,idxSID);   %作用未知
+% %     
+% %     % FINALLY USED 优先车头摆放的顺序
+% %     tnbItem = SnbItem(:,idxSID);
+% %     tMixed = SisMixed(:,idxSID);
+% %     tFull = SHeightfullfull(:,idxSID);
+% %     tLR = SLoadingrate(:,idxSID);        % max(tL)  %  min(tL)  % mean(tL)
+% %     
+% %     priority = 1;
+% %     SIDorder = zeros(1,size(tID,2));
+% %     szRow = cellfun(@(x)size(x,1), tID);
+% %     if isscalar(szRow) %如果该STRIP的只有1STRIP，且为单纯型STRIP，赋值为1
+% %         SIDorder = 1;
+% %     else
+% %         [tID, ~] = padcat(tID{:});   if iscolumn(tID), tID = tID'; end
+% %         
+% % 
+% %         tmpM = [tnbItem; tMixed; tFull; tLL; tLR; tLW ];  
+% %         [~,order] = sortrows(tmpM',[1,2,3,5],{'descend','ascend','descend','descend'}); 
+% % 
+% %         if ~isrow(order), order=order'; end
+% %         
+% %         % 2 基于1的摆放顺序, 给定最终STRIP顺序到torder
+% %         while any(SIDorder==0)
+% %             [~,o]=find(SIDorder(order) == 0,1,'first');
+% %             SIDorder(order(o)) = priority;  
+% %             priority=priority+1;
+% %             
+% %             % 2.2 找出给order(o)位置tLID对应的相邻Strip.
+% %             tnbItem = celltID{:,order(o)};
+% %             [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tnbItem);
+% %         end
+% %     end
+% %     itemPriority(idxSID) = SIDorder;
+% % end
+% % end
 
 
 % % % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）

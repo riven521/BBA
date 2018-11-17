@@ -335,31 +335,31 @@ V1104-2
 
 
 V1104-3
-1 Gpreproc增加maxHLayer初始化和判定
+1 555 增加堆垛均衡函数 HStripBalance 再获取Strip后进行非均衡且非混合的Strip均衡
+多层甩尾平铺问题 甩尾了 但平铺问题 ppt3
+isNonMixed/isMixedTile  目的：LU和Item的排序问题： 这两个计算有问题；后期需要调整（仍然需要调整）
+2 Gpreproc增加maxHLayer初始化和判定
 	if ~isfield(LU, 'maxHLayer') % 如不存在,直接以maxL指示; 如存在,以最小值取代
         LU.maxHLayer = LU.maxL(3,:); 
     else
         LU.maxHLayer = min( [LU.maxHLayer',LU.maxL(3,:)'], [], 2 )';  % 同步更新对应LU的maxHLayer    
     end
-2 
 
 
-2 增加堆垛均衡函数 TODO
-多层甩尾平铺问题 甩尾了 但平铺问题 ppt3
-isNonMixed/isMixedTile ITEM AND LU
-目的：LU和Item的排序问题： 这两个计算有问题；后期需要调整
 
 
-3 SID/LID问题
 
-TODO:
+TODO
+1 SID/LID问题测试
+2 nbLuarray单个问题 Stripbalance中
+3 MR的增加和测定（甩尾到车的中部）
+
 477行错误；1个bin有两个BINID的错.
 MAXL等确实属性的调整；
 OPID OSID等属性的注意
 平铺和车型在最后一车的更改，只能以某个为准，目前是平铺 LASTVEHICLE 测验
-返回值准确性的确定???
-PLOT的修改???
-返回数据的简单CHECK
+返回值准确性的确定??? 核验函数的增加
+PLOT的修改??? 步骤顺序 暂停等
 甩尾排序还有问题, 可能.
 展示顺序还有问题, 即相邻Strip,前后相同LID,可能
 对方崩溃问题

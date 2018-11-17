@@ -78,108 +78,114 @@ global  ISisGpreprocLU1
 
     
     %% 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
-% % %     % 区分为相同高度（依据层数判断） 或 多种高度（依据高度判断 TODO 增加层数判断）两种类型
-% % %      LU.isNonMixed = ones(1,length(LU.Weight))*-1;    %1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
-% % %      LU.isMixedTile = zeros(1,length(LU.Weight));          %1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
-% % %     % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
-% % %     % 循环: ID个数
-% % %     tLU = getTableLU(LU);
-% % %     [tLUsorted,torder] = sortrows(tLU,{'SID','ID','LID','H'},{'ascend','ascend','ascend','descend'});
-% % %     %     CateOrder = tLUsorted(:,{'SID','ID','LID','H'});  %增加maxHLayer?
-% % %     %     [GID,g] = findgroups(CateOrder)
-% % %     VehHeight = Veh.LWH(3,1);  % 车辆高度
-% % %     VehWidth = Veh.LWH(1,1);  % 车辆宽度
-% % %     uniID = unique(tLUsorted.ID);
-% % %     for iLu=1:length(uniID)
-% % %         % Item i 对于的LU flag标记
-% % %         flagLU = tLUsorted.ID == uniID(iLu);
-% % %         idxLU = find(flagLU);
-% % %         maxHLayerLUID = unique(tLUsorted.maxHLayer(flagLU));
-% % %         if isscalar(maxHLayerLUID) %似乎即使单个用非单的也可以,但对于混合高度的也是可以用的; 但还是以层数为重心,特别是考虑平铺
-% % %             nb = sum(flagLU);
-% % %             nbmod = mod(nb,maxHLayerLUID);       if nb ==0 || nbmod>nb, error('Gpreproc中计算isNonMixed错误'); end            
-% % %             % 判断isNonMixed
-% % %             if nbmod == 0 %mod为0表明此ID的托盘LU可以完美的放到高度满垛,不会有有高度不满的Item出现. 不需要混合 不混合的提前在order中提前
-% % %                 tLUsorted.isNonMixed(flagLU) = 1;
-% % %             else
-% % %                 tLUsorted.isNonMixed(flagLU)= 0;
-% % %                 % 更新tLUsorted.isMixedTile
-% % %                 idxMod = idxLU(end-nbmod+1:end);        %因为已经排序,所以可以按这个替换        
-% % %                 tLUsorted.isMixedTile(idxMod)=1;
-% % %             end
-% % %         else            
-% % %             nbLU = length(idxLU);
-% % %             idxVeh = zeros(nbLU,1);
-% % %             tmpsum = 0;
-% % %             tmpidx = 1;
-% % %             for idx=1:nbLU
-% % %                 tmpsum = tmpsum + tLUsorted.H(idxLU(idx));
-% % %                 if tmpsum > VehHeight
-% % %                     tmpsum = tLUsorted.H(idxLU(idx));
-% % %                     tmpidx=tmpidx+1;
-% % %                 end
-% % %                 idxVeh(idx) =tmpidx;
-% % %             end
-% % %             % 判断isNonMixed
-% % %             if ( VehHeight - tmpsum ) > min(tLUsorted.H)  %如高度间隙 > 最小LU高度
-% % %                 
-% % %                 
-% % %                 % ???? 如果该LU的宽度可以放2层以上, 且目前能生成的也是2个以上,把最后几个进行高度均衡设置,
-% % %                 maxWLayerLUID = unique(tLUsorted.maxL(flagLU,1));   if ~isscalar(maxWLayerLUID), error('Gpreproc中计算maxWLayerLUID错误'); end
-% % %                 if ISisGpreprocLU1==1 && maxWLayerLUID>1 && max(idxVeh) >1 && mod(max(idxVeh),maxWLayerLUID)~=1 %不能余1个Item单独放1层                    
-% % %                     tLUsorted.isNonMixed(flagLU)= 1;          
-% % %                 else
-% % %                     tLUsorted.isNonMixed(flagLU)= 0;
-% % %                     idxMod = idxLU(idxVeh==max(idxVeh));
-% % %                     tLUsorted.isMixedTile(idxMod)=1;
-% % %                 end
-% % %             else
-% % %                 tLUsorted.isNonMixed(flagLU)= 1;
-% % %             end
-% % %         end
-% % %     end
-% % %     [~,sorder] = sort(torder);
-% % %     LU.isNonMixed = tLUsorted.isNonMixed(sorder)';
-% % %     LU.isMixedTile = tLUsorted.isMixedTile(sorder)';
-    
-    %% 7 V1: BUG MAYBE 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序
-     LU.isNonMixed = ones(1,length(LU.Weight))*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
-     LU.isMixedTile = zeros(1,length(LU.Weight));          %Item混合,找出奇数个混合Item的尾托赋值为1
+    % 区分为相同高度（依据层数判断） 或 多种高度（依据高度判断 TODO 增加层数判断）两种类型
+     LU.isNonMixed = ones(1,length(LU.Weight))*-1;     %1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
+     LU.isMixedTile = zeros(1,length(LU.Weight));          %1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
     % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
-    % 循环: LID个数
-    uniLID = unique(LU.LID);
-%     uniLID = unique(LU.ID);
-    for iLu=1:length(uniLID)
+    % 循环: ID个数
+    tLU = getTableLU(LU);
+    [tLUsorted,torder] = sortrows(tLU,{'SID','ID','LID','H'},{'ascend','ascend','ascend','descend'});
+    %     CateOrder = tLUsorted(:,{'SID','ID','LID','H'});  %增加maxHLayer?
+    %     [GID,g] = findgroups(CateOrder)
+    VehHeight = Veh.LWH(3,1);  % 车辆高度
+    VehWidth = Veh.LWH(1,1);  % 车辆宽度
+    uniID = unique(tLUsorted.ID);
+    for iLu=1:length(uniID)
         % Item i 对于的LU flag标记
-        VehHeight = Veh.LWH(3,1);  % 车辆高度
-        
-        flagLU = LU.LID(:) == uniLID(iLu);
-%         flagLU = LU.ID(:) == uniLID(iLu);
-        LUHeight = unique(LU.LWH(3,flagLU));     % 同样LULID时的 LU高度
-            if length(unique(LUHeight)) > 2, warning('同样LULID时的LU高度值>2,非预期错误'); end %但对于随机生成的可能有这个错误
-        if length(unique(LUHeight)) >= 2, LUHeight = max(LUHeight); end % 用LU最大值作为堆垛判断值
-
-        LU.maxL(3,flagLU)
-        LU.maxHLayer(flagLU)
-        maxHeightLayer= floor(VehHeight/LUHeight); %LU高度层数
-        
-        nb = sum(flagLU);
-        nbmod = mod(nb,maxHeightLayer);
-            if nb ==0 || nbmod>nb, error('Gpreproc中计算isNonMixed错误'); end
-            
-        if nbmod == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
-            LU.isNonMixed(flagLU) = 1;
-        else
-            LU.isNonMixed(flagLU)= 0;            
-            % 计算LU的isMixedTile
-            tmpSort=[LU.SID; LU.LWH(3,:); LU.PID; ]; %LU.Weight LU.maxL;            
-            [~, order]=sortrows(tmpSort(:,flagLU)', [1,2,3],{'ascend','ascend','ascend'});
-            flagLUIdx = find(flagLU);
-            flagmodIdx = flagLUIdx(order(1:nbmod));
-            LU.isMixedTile(flagmodIdx)=1;
+        flagLU = tLUsorted.ID == uniID(iLu);
+        idxLU = find(flagLU);
+        maxHLayerLUID = unique(tLUsorted.maxHLayer(flagLU));
+        if isscalar(maxHLayerLUID) %似乎即使单个用非单的也可以,但对于混合高度的也是可以用的; 但还是以层数为重心,特别是考虑平铺
+            nb = sum(flagLU);
+            nbmod = mod(nb,maxHLayerLUID);       if nb ==0 || nbmod>nb, error('Gpreproc中计算isNonMixed错误'); end            
+            % 判断isNonMixed
+            if nbmod == 0 %mod为0表明此ID的托盘LU可以完美的放到高度满垛,不会有有高度不满的Item出现. 不需要混合 不混合的提前在order中提前
+                tLUsorted.isNonMixed(flagLU) = 1;
+            else
+                tLUsorted.isNonMixed(flagLU)= 0;
+                % 更新tLUsorted.isMixedTile
+                idxMod = idxLU(end-nbmod+1:end);        %因为已经排序,所以可以按这个替换        
+                tLUsorted.isMixedTile(idxMod)=1;
+            end
+        else            
+            nbLU = length(idxLU);
+            idxVeh = zeros(nbLU,1);
+            tmpsum = 0;
+            tmpidx = 1;
+            for idx=1:nbLU
+                tmpsum = tmpsum + tLUsorted.H(idxLU(idx));
+                if tmpsum > VehHeight
+                    tmpsum = tLUsorted.H(idxLU(idx));
+                    tmpidx=tmpidx+1;
+                end
+                idxVeh(idx) =tmpidx;
+            end
+            % 判断isNonMixed
+            if ( VehHeight - tmpsum ) > min(tLUsorted.H)  %如高度间隙 > 最小LU高度
+                
+                
+                % ???? 如果该LU的宽度可以放2层以上, 且目前能生成的也是2个以上,把最后几个进行高度均衡设置,
+                maxWLayerLUID = unique(tLUsorted.maxL(flagLU,1));   if ~isscalar(maxWLayerLUID), error('Gpreproc中计算maxWLayerLUID错误'); end
+                if ISisGpreprocLU1==1 && maxWLayerLUID>1 && max(idxVeh) >1 && mod(max(idxVeh),maxWLayerLUID)~=1 %不能余1个Item单独放1层                    
+                    tLUsorted.isNonMixed(flagLU)= 1;          
+                else
+                    tLUsorted.isNonMixed(flagLU)= 0;
+                    idxMod = idxLU(idxVeh==max(idxVeh));
+                    tLUsorted.isMixedTile(idxMod)=1;
+                end
+            else
+                tLUsorted.isNonMixed(flagLU)= 1;
+            end
         end
     end
+    [~,sorder] = sort(torder);
+    LU.isNonMixed = tLUsorted.isNonMixed(sorder)';
+    LU.isMixedTile = tLUsorted.isMixedTile(sorder)';
+    
+    %% 7 V1: BUG MAYBE 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序
+% % % %      LU.isNonMixed = ones(1,length(LU.Weight))*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
+% % % %      LU.isMixedTile = zeros(1,length(LU.Weight));          %Item混合,找出奇数个混合Item的尾托赋值为1
+% % % %     % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
+% % % %     % 循环: LID个数
+% % % %     uniLID = unique(LU.LID);
+% % % % %     uniLID = unique(LU.ID);
+% % % %     for iLu=1:length(uniLID)
+% % % %         % Item i 对于的LU flag标记
+% % % %         VehHeight = Veh.LWH(3,1);  % 车辆高度
+% % % %         
+% % % %         flagLU = LU.LID(:) == uniLID(iLu);
+% % % % %         flagLU = LU.ID(:) == uniLID(iLu);
+% % % %         LUHeight = unique(LU.LWH(3,flagLU));     % 同样LULID时的 LU高度
+% % % %             if length(unique(LUHeight)) > 2, warning('同样LULID时的LU高度值>2,非预期错误'); end %但对于随机生成的可能有这个错误
+% % % %         if length(unique(LUHeight)) >= 2, LUHeight = max(LUHeight); end % 用LU最大值作为堆垛判断值
+% % % % 
+% % % %         LU.maxL(3,flagLU)
+% % % %         LU.maxHLayer(flagLU)
+% % % %         maxHeightLayer= floor(VehHeight/LUHeight); %LU高度层数
+% % % %         
+% % % %         nb = sum(flagLU);
+% % % %         nbmod = mod(nb,maxHeightLayer);
+% % % %             if nb ==0 || nbmod>nb, error('Gpreproc中计算isNonMixed错误'); end
+% % % %             
+% % % %         if nbmod == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
+% % % %             LU.isNonMixed(flagLU) = 1;
+% % % %         else
+% % % %             LU.isNonMixed(flagLU)= 0;            
+% % % %             % 计算LU的isMixedTile
+% % % %             tmpSort=[LU.SID; LU.LWH(3,:); LU.PID; ]; %LU.Weight LU.maxL;            
+% % % %             [~, order]=sortrows(tmpSort(:,flagLU)', [1,2,3],{'ascend','ascend','ascend'});
+% % % %             flagLUIdx = find(flagLU);
+% % % %             flagmodIdx = flagLUIdx(order(1:nbmod));
+% % % %             LU.isMixedTile(flagmodIdx)=1;
+% % % %         end
+% % % %     end
 
+    
+    
+    
+    
+    
+    
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
 
