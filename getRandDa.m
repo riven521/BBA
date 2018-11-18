@@ -72,8 +72,8 @@ function [d] = getRandDa(n,m)
     for i=1: length(uniID)
         % 与LUID相关
         idx = find(LU.ID(:)==uniID(i));       
-        LU.LWH(1,idx) = randi([1486-100,1486+100]); %宽度 randi([1000,1300]);
-        LU.LWH(2,idx) = randi([765-100,765+100]); %长度 randi([700,850]); 
+        LU.LWH(1,idx) = randi([1486-200,1486+200]); %宽度 randi([1000,1300]);
+        LU.LWH(2,idx) = randi([765-200,765+200]); %长度 randi([700,850]); 
         LU.isRota(idx) = randi([1,1]);            %是否旋转
 %         LU.HightL(idx) = randi([1,1]);       %最大可堆垛层数
 %         LU.maxL(idx) = randi([1,4]);
@@ -83,8 +83,8 @@ function [d] = getRandDa(n,m)
         LU.margin(:,idx) = randi([50,50]);  %左上右下
         for j=1:length(idx)
             LU.LWH(3,idx(j)) = randi([852-50,852+50]); %高度250,1150
-            LU.PID(idx(j)) = randi([100,105]); %100,103
-            LU.SID(idx(j)) = randi([200, 200]); %200, 203
+            LU.PID(idx(j)) = randi([100,100]); %100,103
+            LU.SID(idx(j)) = randi([200, 201]); %200, 203
             LU.EID(idx(j)) = randi([200, 200]); %200, 203
             
             

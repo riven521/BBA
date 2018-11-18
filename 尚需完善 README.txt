@@ -378,8 +378,32 @@ V1118-01
 1:修改所有LU.DOC -> 基于table格式 -> 获取ITEM,STRIP,BIN的cell格式的LID,PID,SID,EID,ETC. （注意：LID实际是LU的ID，由于前期变量设定问题，未予以修改）
 2：HStripSW增加repairStripPlace2函数：提前判断SID/EID混合不甩尾（混合应该都在最后，不同SID）。
 3：cpuStrip种增加isMixedSID和isMixedEID的判断，判断是否该strip是SID/EID的混合类型
+4：对相同ID给与了预处理，可能导致不同SID的相同ID不能堆垛到一起！！！（TODO 在initCheck中左的，后期尝试改回来）
+
+V1118-02
+1:HLUtoItem(LU,Veh)和Gpreproc等增加对EID的排序预处理
+2:很多注释增加
+
+V1118-03
+1:BBA_MAIN函数增加对调用MR或非MR的判别
+	if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
+	    error('目前为非MilkRun版本,不允许有多家供应商编号');
+	end
+	if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
+	    error('目前为MilkRun版本,不允许只有单个供应商编号/单个EP LOCATION编号');
+	end
+2：BBA_MAIN函数中增加不同输出参数，改变全局变量verMilkRun的值，以其返回不同的输出和在主函数中开关某些子函数
+     if length(varargin) < 9
+           varargin{9} = ones(1,length(LUID));
+     else
+           verMilkRun = 1; % 9个输入参数为milkrun版本
+     end
+3：
+
 
 TODO
+
+
 1 SID/LID问题测试
 2 nbLuarray单个问题 Stripbalance中
 3 MR的增加和测定（甩尾到车的中部）

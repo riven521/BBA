@@ -139,31 +139,48 @@ end
 
 function order = getStriporder(Strip)
 %对SID排序: SID按给定顺序排序,序号小的在前面; 
-% 重点在于同一STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而单纯型非混合的；
-% 不允许由三种以上的混合（现实情况也很少）（如出现提示错误）
-        % Strip.SID
+% 1 重点:混合STRIP的排序; 混合STRIP含多个SID: 务必是小的单纯的SID在前, 混合型排除本SID的在后, 继而SID大的单纯非混合的
+% 2 提示:不允许混合STRIP出现由三种以上SID的混合（现实情况也很少）（如出现提示错误）
+% 3 目的:对STRIP依据SID给出排序
+% 4 SIDorder: 依据SID从小到大,从非混到混合,逐次给与order
 SIDorder = getOrderofSID(Strip.SID); %SID一定是从1-n的过程(因为SID的idExchange预处理)
-        if ~issorted(SIDorder), error('SID未按由小到大排序，请检查'); end
-        if any(diff(SIDorder)>1), error('SID未连续,有中断请检查'); end
+        if ~issorted(unique(SIDorder),'strictascend'), error('SID未由小到大严格递增排序，请检查'); end
 
+EIDorder = getOrderofSID(Strip.EID); %EID一定是从1-n的过程(因为EID的idExchange预处理)
+        if ~issorted(unique(EIDorder),'strictascend'), error('EID未由小到大严格递增排序，请检查'); end  
+        
 %对LID排序: 相邻摆放的重要原则 555555555555555555555555 
+% STRIP的顺序至关重要
+IDorder = getOrderofLID(SIDorder, EIDorder, Strip);
+% IDorder = getOrderofLID(SIDorder, EIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem,Strip.nbLU,Strip.nbLULID,Strip.isHeightFull,...
+%                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
+% IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem,Strip.nbLU,Strip.nbLULID,Strip.isHeightFull,...
+%                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);                                    
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
-IDorder = getOrderofLID(SIDorder, Strip.isSingleItem, Strip.isAllPured, Strip.nbItem,Strip.nbLU,Strip.nbLULID,Strip.isHeightFull,...
-                                        Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);
 
-                                    
-
-% 555 纠错语句：同一SID下,不允许有重复的LID
+% 555 纠错语句：同一SIDorder下,不允许有重复的IDorder; 因为后续 TODO: 同一SIDorder/EIDorder下,不应该有重复的IDorder
 s=[SIDorder;IDorder];
 for i=min(SIDorder):max(SIDorder)
     si = s(2,s(1,:)==i);
-    if numel(unique(si)) ~= numel(si),     error('同一SID下, 有重复的LID');   end
+    if numel(unique(si)) ~= numel(si),     
+        error('同一SIDorder下, 有重复的IDorder');   end
+    if ~issorted(unique(si),'strictascend'),     
+        error('同一SIDorder下, 有重复的IDorder,且非严格递增');   end % 可取代上面的判断
+end
+s=[ SIDorder;EIDorder; IDorder];
+for i=min(SIDorder):max(SIDorder)
+    for j=min(EIDorder):max(EIDorder)
+    si = s(3,s(1,:)==i&s(2,:)==j);
+    if ~issorted(unique(si),'strictascend'),     error('同一EIDorder下, 有重复的IDorder,且非严格递增');   end
+    end
 end
 
 % 基于Priority函数计算后的排序
-tmpSort = [SIDorder; IDorder];
-[~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
-if ~isrow(order), order=order'; end
+tmpSort = [SIDorder; EIDorder; IDorder];
+[~,order] = sortrows(tmpSort',[1,2,3],{'ascend','ascend','ascend'});  if ~isrow(order), order=order'; end
+
+% tmpSort = [SIDorder; IDorder];
+% [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});  if ~isrow(order), order=order'; end
 
 % LIDorder = getOrderofLID([Strip.SID;Strip.LID]); 
 % Strip.LID;

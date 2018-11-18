@@ -29,11 +29,11 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 %% Initialize Global Variable
 % clear;close all; format long g; format bank; %NOTE ²»±»MATLAB CODE Ö§³Ö
 % rng('default');rng(1); % NOTE ÊÇ·ñËæ»úµÄ±êÖ¾
-%close all;
+close all;
 global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
-global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1  
-global parBalance
+global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1 
+global parBalance verMilkRun
 parBalance = 8/30
 % ISisNonMixedLU    1 LU¿ÉÒÔĞÎ³ÉÂú¶â 0 ±Ø¶¨ÓĞ·ÇÂú¶âÉú³É LUÅÅĞòÒÀ¾İ
 % ISisMixTileLU         1 µ±isNonMixed=0Ê±, ½«·ÇÂú¶â¶ÔÓ¦µÄLU¸³ÖµÎª1£¨½áºÏLUÅÅĞòÉú³ÉITEMÖªÊ¶£©
@@ -69,20 +69,24 @@ ISisMixTileLU = 1      % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞ
 ISisNonMixed = 1    % 555: ÓÅÏÈ·Ç»ìºÏItemĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1
 ISisMixTile  = 1         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
 
-ISreStripToBin = 0   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
+ISreStripToBin = 1   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
 
 ISshuaiwei = 1          % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Æ½ÆÌÎŞ·¨½øĞĞ*******
-ISpingpu = 0            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
-ISpingpuAll = 0       %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
+ISpingpu = 1            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
+ISpingpuAll = 1      %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
 
 ISlastVehType = 0   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
 
+verMilkRun  = 1  % 555: Ä¬ÈÏ²»ÊÇMilkRun°æ±¾(MilkRunÊÇ9¸ö²ÎÊıµÄ°æ±¾)
 %% Initialize Data Structure
 if nargin ~= 0
-    % MRµÄEP LOCATIONÔö¼Ó
+    % MRµÄEP LOCATIONÔö¼Ó, ¶àµÄ±äÁ¿µÄ×Ô¶¯Ôö¼Ó
      if length(varargin) < 9
            varargin{9} = ones(1,length(LUID));
+     else
+           verMilkRun = 1; % 9¸öÊäÈë²ÎÊıÎªmilkrun°æ±¾
      end
+     
     d = DataInitialize( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
@@ -98,7 +102,7 @@ if nargin ~= 0
             'LUINDEX',varargin{8},...
             'LUEID',varargin{9});
 else
-    n=5; m=1;  % 16ĞèÒª×¢Òâ 250 srng1
+    n=32; m=1;  % 16ĞèÒª×¢Òâ 250 srng1
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
     
     filename = strcat('GoodIns',num2str(n));
@@ -109,7 +113,7 @@ else
 end
 % printstruct(d);
 % TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
+% % TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
 % TLUIN.Properties.VariableNames{'PID'} = 'OPID'; TLUIN.Properties.VariableNames{'SID'} = 'OSID';
 % s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
@@ -117,6 +121,17 @@ TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
 % t.ID
 % t = [d.LU.ID;d.LU.LWH]
 % sortrows(t',[1,4],{'ascend','descend'})
+
+if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
+    error('Ä¿Ç°Îª·ÇMilkRun°æ±¾,²»ÔÊĞíÓĞ¶à¼Ò¹©Ó¦ÉÌ±àºÅ');
+end
+if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
+    error('Ä¿Ç°ÎªMilkRun°æ±¾,²»ÔÊĞíÖ»ÓĞµ¥¸ö¹©Ó¦ÉÌ±àºÅ/µ¥¸öEP LOCATION±àºÅ');
+end
+if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID)))
+    error('Ä¿Ç°ÎªMilkRun²âÊÔ°æ±¾,Ö»ÔÊĞí¶à¸ö¹©Ó¦ÉÌ±àºÅ »ò ¶à¸öEP LOCATION±àºÅ,²»ÄÜÍ¬Ê±´æÔÚ');
+end
+
 
 %% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó
     n = numel(d.LU.Weight);
@@ -654,8 +669,12 @@ T = sortrows(T,'ttt');
 output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
 % output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'
-% ITEMIDÒâÒå²»´ó, ÇÒ
+% ITEMIDÒâÒå²»´ó 
+if verMilkRun == 1 
+output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index','OEID'}}'; %Ôö¼Ó·µ»ØĞĞ10: LuIndexÀ´×ÔÁõÇ¿Ö»ÒªÊÇÊı×Ö¾Í¿ÉÒÔ
+else
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %Ôö¼Ó·µ»ØĞĞ10: LuIndexÀ´×ÔÁõÇ¿Ö»ÒªÊÇÊı×Ö¾Í¿ÉÒÔ
+end
 % output_LU_Seq([2,3,5,8],:)
 
 if ISplotBBA

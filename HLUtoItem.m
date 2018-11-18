@@ -179,7 +179,7 @@ tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weigh
 % V2: ********** 考虑isNonMixed
 global ISisNonMixedLU ISisMixTileLU % TODO 考虑不满托盘,同样LULID下
 tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; ...
-                           LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; LU.EID];
+                           LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; LU.EID]; %NEW EID
 if ISisNonMixedLU==1    
     if ISisMixTileLU==1
         % V3: 修改增jLU的EID排序

@@ -14,7 +14,7 @@ if ~ismember('LWH_V', T.Properties.VariableNames),  T = join(T,V,'Keys','LU_VehT
 
 % 1 获取含 颜色 属性的T  LID/SID/OPID etc   % 作图所需 1 LU的bin序号; 2 LWH 3 COORDLUBIN 4 LID 排序
 if ISplotShowType == 1
-    tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile
+    tmpT = unique(T(:,{'SID'})); %LID/ID/isNonMixed/isMixTile
 elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
 elseif ISplotShowType == 3
@@ -26,7 +26,7 @@ T = join(T,tmpT);
 
 
 % 仅作图LU,按给定顺序作图
-plotLU = 1;
+plotLU = 0;
 if plotLU
     subT = T(1:end,:);
 
