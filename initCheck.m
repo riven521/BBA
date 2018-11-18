@@ -48,6 +48,33 @@ for idx = 1:length(fields)
         error('Veh数据存在列数不等于车辆数情况,输入错误2');
     end
 end 
+
+
+
+%% *************** LU的号码不重复判断 *************** 
+     % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
+    done = false;
+    while ~done
+    flag = 0;
+    uniID = unique(LU.ID);                  %不同的ID号
+    for iID = 1:length(uniID)
+        fID = LU.ID==uniID(iID);
+        uniSID = unique(LU.SID(fID));
+        if length(uniSID) > 1                %如果存在，改变ID号（ID+SID号）
+            for iSID = 1:length(uniSID)
+                fSID = LU.SID==uniSID(iSID);
+                f = fSID & fID;
+                LU.ID(f) = LU.ID(f) + LU.SID(f);               
+            end
+            flag = 1;                                   % 如果flag==1，表明有修改，但还要while循环，直到不循环
+        end
+    end
+    if flag==0, done=true; end
+    end
+    
+    
+    
+    
 %% *************** LU向量判断 ***************
 % 判断LU向量是否行向量; 矩阵列是否一致; 不一致进行旋转
 fields  = fieldnames(LU);

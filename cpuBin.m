@@ -22,14 +22,30 @@ function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
 % % %     LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
 % % % end
 
-LU.DOC=[LU.DOC; LU.LU_Bin];
-nBin = size(Bin.LW,2);
-for iBin=1:nBin
-    tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
-    Bin.PID(:,iBin) = num2cell(unique(tmp(1,:))',1);
-    Bin.LID(:,iBin) = num2cell(unique(tmp(2,:))',1);
-    Bin.SID(:,iBin) = num2cell(unique(tmp(3,:))',1);
-end
+%% V2
+    %% SECTION 0 计算BIN的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
+    t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+    
+    nBin = size(Bin.LW,2);
+    for iBin=1:nBin
+        f = t.LU_Bin(:,1) == iBin;   
+        Bin.LID(:,iBin) = {unique(t.ID(f))};           % NOTE: Bin里的LID是LU的ID
+        %         Item.LID(:,iItem) = {unique(t.LID(f))};
+        Bin.SID(:,iBin) = {unique(t.SID(f))};
+        Bin.EID(:,iBin) = {unique(t.EID(f))};
+        Bin.PID(:,iBin) = {unique(t.PID(f))};
+    end
+    %  t2 = struct2table(structfun(@(x) x',Strip,'UniformOutput',false));
+    
+%% V1
+% % LU.DOC=[LU.DOC; LU.LU_Bin];
+% % nBin = size(Bin.LW,2);
+% % for iBin=1:nBin
+% %     tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
+% %     Bin.PID(:,iBin) = num2cell(unique(tmp(1,:))',1);
+% %     Bin.LID(:,iBin) = num2cell(unique(tmp(2,:))',1);
+% %     Bin.SID(:,iBin) = num2cell(unique(tmp(3,:))',1);
+% % end
     
 %% 1: 计算bin装载率
 % ItemloadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积

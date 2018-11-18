@@ -86,6 +86,8 @@ else
                 d.LU.PID                     = varargin{k+1};      
             case 'LUINDEX'      %LUINDEX 刘强专用返回系数
                 d.LU.Index              = varargin{k+1};                
+            case 'LUEID'            %LUEID MR的LU的EID参数
+                d.LU.EID              = varargin{k+1};
             case 'VEHID'
                 d.Veh.ID                    = varargin{k+1};                
             case 'VEHLWH'
@@ -99,6 +101,9 @@ else
         end
     end
     printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',0)
+    
+    
+    
     % 首先做initCheck
     [d.LU, d.Veh] = initCheck(d.LU,d.Veh);
     

@@ -345,9 +345,39 @@ isNonMixed/isMixedTile  目的：LU和Item的排序问题： 这两个计算有�
         LU.maxHLayer = min( [LU.maxHLayer',LU.maxL(3,:)'], [], 2 )';  % 同步更新对应LU的maxHLayer    
     end
 
+----------------------------------------------------------------------------------------------------------
+MILKRUN - VERSION
+V1117-01
+1 针对托盘摆放位置的BUG 测试(无法修改，因甩尾的和非混合的属于同一类型，不能分车，为了方便点检，所以不是BUG)
+2 针对MILKRUN版本，增加输入参数，内部自动判断是MILKRUN或非MR的数据，输入和输出都不一样。（输入搞定，TODO输出增加EPLOCATION）
+3 增加initcheck判断 *************** LU的ID号码在不同SID下不重复判断 *************** 
+     % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
+    done = false;
+    while ~done
+    flag = 0;
+    uniID = unique(LU.ID);                  %不同的ID号
+    for iID = 1:length(uniID)
+        fID = LU.ID==uniID(iID);
+        uniSID = unique(LU.SID(fID));
+        if length(uniSID) > 1                %如果存在，改变ID号（ID+SID号）
+            for iSID = 1:length(uniSID)
+                fSID = LU.SID==uniSID(iSID);
+                f = fSID & fID;
+                LU.ID(f) = LU.ID(f) + LU.SID(f);               
+            end
+            flag = 1;                                   % 如果flag==1，表明有修改，但还要while循环，直到不循环
+        end
+    end
+    if flag==0, done=true; end
+    end
+4 MR不甩尾，或甩尾不能超过下一个SID层；MR不平铺，或平铺也不超过上一个SID；MR不整车平铺，即使整车平铺也不超过上一个SID和车辆
+5 MR不甩尾：看看效果（可能出现夹杂在中间？也可能没有）
+5 如果有MR，ISreStripToBin = 0  % 车头优先LU数量排序不可以，必须是SID的顺序排序，当然，在同一SID下，还是LU数量多的在车头    
 
-
-
+V1118-01
+1:修改所有LU.DOC -> 基于table格式 -> 获取ITEM,STRIP,BIN的cell格式的LID,PID,SID,EID,ETC. （注意：LID实际是LU的ID，由于前期变量设定问题，未予以修改）
+2：HStripSW增加repairStripPlace2函数：提前判断SID/EID混合不甩尾（混合应该都在最后，不同SID）。
+3：cpuStrip种增加isMixedSID和isMixedEID的判断，判断是否该strip是SID/EID的混合类型
 
 TODO
 1 SID/LID问题测试

@@ -40,18 +40,18 @@ parBalance = 8/30
 % ISisGpreprocLU1    1 ÓëISisNonMixedLUÈ¡ÖµÓĞ¹Ø
 % ISstripbalance       1 µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø
 
-%% ºóÆÚ´ò¿ªÕâ¸ö¿ª¹Ø + Gpreproc µÄV2°æ±¾ ÔÙ ĞŞ¸´ÒµÎñ3ÎÊÌâ
+%% ¿ª¹Ø + Gpreproc µÄV2°æ±¾ ĞŞ¸´ÒµÎñ3ÎÊÌâ(¼´ITEM·ÇÂú¶âÇÒÒ»²ãµÄ¾ùºâÎÊÌâ)
 ISstripbalance = 1     % 555£ºÓĞÁËÍ¼ĞÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊı²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊıµİ¼õ; ÈçÎŞ·¨£©
 ISisGpreprocLU1 = 1 % ±ØĞë1; ÅäºÏISstripbalanceÊ¹ÓÃ 1±íÊ¾¶ÔÍ¬Ò»Ë®Æ½stripÄÚITEM¿ÉÄÜÓĞ2¸öÒÔÉÏµÄÅĞ¶ÏÎªISisNonMixedLU=1->¶Ñ¶â¾ùºâÊ¹ÓÃ 0 ±íÊ¾Õı³£ÅĞ¶Ï
-% ISstripbalance=0¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
+% ISstripbalance=0 ¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
 
 %% 
 % DEL ISisMixedStrip = 1 ¿ÉÒÔÉ¾³ıÁË % 1±íÊ¾ÒÀ¾İLU.IDÅĞ¶ÏÊÇ·ñ»ìºÏ 0ÒÀ¾İLU.LIDÅĞ¶Ï NOTE: ËùÓĞSTRIP
 % ITEM¾ùÎªIDÌæ»»LID
-% ISsItemAdjust = 1  % ÔİÊ±²»ÓÃ ÓÃÍ¾Íü¼ÇÁË
-% ISreStripToBinMixed = 1 %³µÍ·ÓÅÏÈ·ÇAllPureÀàĞÍ, ÔÙ¿¼ÂÇÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 Ó¦¸Ã¿ÉÒÔÉ¾³ıµÄ²ÎÊı
+% ISsItemAdjust = 1              % ÔİÊ±²»ÓÃ ÓÃÍ¾Íü¼ÇÁË
+% ISreStripToBinMixed = 1   %³µÍ·ÓÅÏÈ·ÇAllPureÀàĞÍ, ÔÙ¿¼ÂÇÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 Ó¦¸Ã¿ÉÒÔÉ¾³ıµÄ²ÎÊı
 
-ISplotBBA = 0
+ISplotBBA = 1
 ISplotShowType = 1 % 1 LID 2 PID 3 ID
         % ISplotSolu = 0
 
@@ -69,17 +69,20 @@ ISisMixTileLU = 1      % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞ
 ISisNonMixed = 1    % 555: ÓÅÏÈ·Ç»ìºÏItemĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1
 ISisMixTile  = 1         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
 
-ISreStripToBin = 1  % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
+ISreStripToBin = 0   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
 
 ISshuaiwei = 1          % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Æ½ÆÌÎŞ·¨½øĞĞ*******
-ISpingpu = 1            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
-ISpingpuAll = 1       %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
+ISpingpu = 0            % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, ÇÒ²ãÊı>1, Æ½ÆÌ. ¿ÉÄÜÓĞÎÊÌâ (ÔÚÓÚÆ½ÆÌºóÓëISisNonMixedÃ¬¶Ü)
+ISpingpuAll = 0       %555: ËùÓĞ¾ùÆ½ÆÌ, Ö»Òª¸Ã³µÁ¾·ÅµÃÏÂ; Èô·Å²»ÏÂ, ¿¼ÂÇÉÏÃæË¦Î²Æ½ÆÌÎÊÌâ
 
 ISlastVehType = 0   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
 
-%% BUG
 %% Initialize Data Structure
 if nargin ~= 0
+    % MRµÄEP LOCATIONÔö¼Ó
+     if length(varargin) < 9
+           varargin{9} = ones(1,length(LUID));
+     end
     d = DataInitialize( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
@@ -92,7 +95,8 @@ if nargin ~= 0
             'LUWEIGHT',varargin{5},...
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7},...
-            'LUINDEX',varargin{8});
+            'LUINDEX',varargin{8},...
+            'LUEID',varargin{9});
 else
     n=5; m=1;  % 16ĞèÒª×¢Òâ 250 srng1
     d = DataInitialize(n,m);  %0 Ä¬ÈÏÖµ; >0 Ëæ»ú²úÉúÍĞÅÌn¸öËãÀı ½öÔÚÖ±½ÓÔÊĞíBBAÊ±²ÉÓÃ
@@ -105,6 +109,7 @@ else
 end
 % printstruct(d);
 % TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
 % TLUIN.Properties.VariableNames{'PID'} = 'OPID'; TLUIN.Properties.VariableNames{'SID'} = 'OSID';
 % s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
@@ -183,7 +188,7 @@ for iAlg = 1:nAlg
     checktLU(do.LU);
     
 %      plotSolutionT(do.LU,do.Veh);
-    1
+
    % plotSolution(do,pA(iAlg)); %¾¡Á¿²»ÓÃ
     
     %% 2 ÔËĞĞ³µĞÍµ÷ÕûËã·¨,²»¸Ä±äd »ñÈ¡d1ºÍdo1, flaggetSmallVeh : 
@@ -554,7 +559,7 @@ if ISpingpu==1
 %        T.LU_Item
 %        T{flagTileLUIdx,{'CoordLUBin','BINSEQ'}} = T23{:,{'CoordLUBin','BINSEQ'}};    
         T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %²¹³äÔö¼ÓLU_ItemÊı¾İÇĞ»»,ËäÈ»ÓÃÍ¾²»´ó,µ«²»»á±¨checktLU´íÁË.
-            T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};    
+            T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
 %        T.LU_Item
 %        sortrows(T.LU_Item)'
 %        checktLU(T) %ÈÔÓĞÎŞ·¨Í¨¹ıµÄ¿ÉÄÜĞÔ; ÈçLU_ItemÓ°Ïì²»´ó,½¨ÒéÏÈ×¢ÊÍ TODO
@@ -701,7 +706,7 @@ function checkLU(TIN,TOUT)
         error('LWH');
     end
     %% 1.2 Weight CHECK
-    if any(TOUT.Weight ~= TIN.Weight) || any(TOUT.OPID ~= TIN.PID) || any(TOUT.OSID ~= TIN.SID)
+    if any(TOUT.Weight ~= TIN.Weight) || any(TOUT.OPID ~= TIN.PID) || any(TOUT.OSID ~= TIN.SID)  || any(TOUT.OEID ~= TIN.EID)
         any(TOUT.Weight ~= TIN.Weight),
         error('other');
     end

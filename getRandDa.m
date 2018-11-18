@@ -85,7 +85,9 @@ function [d] = getRandDa(n,m)
             LU.LWH(3,idx(j)) = randi([852-50,852+50]); %¸ß¶È250,1150
             LU.PID(idx(j)) = randi([100,105]); %100,103
             LU.SID(idx(j)) = randi([200, 200]); %200, 203
-
+            LU.EID(idx(j)) = randi([200, 200]); %200, 203
+            
+            
             LU.Weight(idx(j)) = randi([10,50]);
             
 %             if LU.Weight(idx(j)) >= Par.maxHeavey

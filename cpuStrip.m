@@ -20,6 +20,9 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
 
 %% 初始化
     Strip.isMixed = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个LID 
+    Strip.isMixedSID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个SID 
+    Strip.isMixedEID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个EID 
+    
     Strip.isHeightFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
     Strip.isHeightBalance = ones(size(Strip.Weight))*-1;   %是否Item的高度差异不大
     Strip.nbItem = ones(size(Strip.Weight))*-1;   %单STRIP内部ITEM类型个数, 混合型默认为-1
@@ -37,7 +40,7 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
     Strip.loadingrate = ones(size(Strip.Weight))*-1; % 每个strip的装载比率
     Strip.loadingrateLimit = ones(size(Strip.Weight))*-1;     % 每个strip的有限装载比率
 
-%% 0.0 计算LU.LU_Strip, LU.CoordLUStrip, Strip内的PID,LID,SID
+%% 0.0 计算LU.LU_Strip, LU.CoordLUStrip
 % 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
 nbLU = size(LU.LWH,2);
 LU.LU_Strip = zeros(2,nbLU);
@@ -60,15 +63,30 @@ for iLU=1:nbLU
     LU.CoordLUStrip(3,iLU) = sum(LU.LWH(3,fLU));
 end
 
-
-LU.DOC=[LU.DOC; LU.LU_Strip];
-nStrip = size(Strip.LW,2);
-for iStrip=1:nStrip
-    tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
-    Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
-    Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
-    Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
-end
+%% V2
+    %% SECTION 0 计算STRIP的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
+    t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+    
+    nStrip = size(Strip.LW,2);
+    for iStrip=1:nStrip
+        f = t.LU_Strip(:,1) == iStrip;   
+        Strip.LID(:,iStrip) = {unique(t.ID(f))};           % NOTE: STRIP里的LID是LU的ID
+        %         Item.LID(:,iItem) = {unique(t.LID(f))};
+        Strip.SID(:,iStrip) = {unique(t.SID(f))};
+        Strip.EID(:,iStrip) = {unique(t.EID(f))};
+        Strip.PID(:,iStrip) = {unique(t.PID(f))};
+    end    
+    %  t2 = struct2table(structfun(@(x) x',Strip,'UniformOutput',false));
+    
+%% V1
+% % LU.DOC=[LU.DOC; LU.LU_Strip];
+% % nStrip = size(Strip.LW,2);
+% % for iStrip=1:nStrip
+% %     tmp = LU.DOC([1,2,3], LU.DOC(8,:) == iStrip);
+% %     Strip.PID(:,iStrip) = num2cell(unique(tmp(1,:))',1);
+% %     Strip.LID(:,iStrip) = num2cell(unique(tmp(2,:))',1);
+% %     Strip.SID(:,iStrip) = num2cell(unique(tmp(3,:))',1);
+% % end
     
 %% 0: 计算strip装载率
 Strip = computeLoadingRateStrip(Strip,Item,Veh); 
@@ -273,12 +291,25 @@ end
 
 %% 函数3: 判断STRIP是否混合型
 function Strip = isMixedStrip(Strip)
-    % 循环判断Strip是否为混合型
+    % 循环判断Strip是否为不同LU.ID的混合型
     for i=1:length(Strip.isMixed)
+        
          if numel(Strip.LID{i}) > 1
              Strip.isMixed(i) = 1;
          else
              Strip.isMixed(i) = 0;
+         end
+
+         if numel(Strip.SID{i}) > 1
+             Strip.isMixedSID(i) = 1;
+         else
+             Strip.isMixedSID(i) = 0;
+         end
+         
+         if numel(Strip.EID{i}) > 1
+             Strip.isMixedEID(i) = 1;
+         else
+             Strip.isMixedEID(i) = 0;
          end
     end
 end

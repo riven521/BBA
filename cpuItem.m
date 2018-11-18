@@ -16,18 +16,34 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     Item.isNonMixed = ones(sz)*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
     Item.isMixedTile = zeros(sz);    %Item混合,找出奇数个混合Item的尾托赋值为1
 
-    %% SECTION 0 计算ITEM的PID,LID,SID
+    %% V2 SECTION 0 计算ITEM的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
     % 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
-    LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
-        LU.LU_Item;];
+    t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+    
     nItem = size(Item.LWH,2);
     for iItem=1:nItem
-        tmp = LU.DOC([1,2,3], LU.DOC(6,:) == iItem);
-        Item.PID(:,iItem) = num2cell(unique(tmp(1,:))',1); %unique(tmp(1,:))';
-        Item.LID(:,iItem) = num2cell(unique(tmp(2,:))',1);
-        Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
-    end
+        f = t.LU_Item(:,1) == iItem;     %  f = logical(ones(height(t),1))
+        Item.LID(:,iItem) = {unique(t.ID(f))};           % NOTE: ITEM里的LID是LU的ID
+        %         Item.LID(:,iItem) = {unique(t.LID(f))};
+        Item.SID(:,iItem) = {unique(t.SID(f))};
+        Item.EID(:,iItem) = {unique(t.EID(f))};
+        Item.PID(:,iItem) = {unique(t.PID(f))};
+    end    
+    %  t2 = struct2table(structfun(@(x) x',Item,'UniformOutput',false));
 
+    %% V1 : 由LU.DOC计算
+% %     %% SECTION 0 计算ITEM的PID,LID,SID
+% %     % 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
+% %     LU.DOC=[LU.PID;LU.ID;LU.SID;zeros(size(LU.ID));zeros(size(LU.ID));...
+% %         LU.LU_Item;];
+% %     nItem = size(Item.LWH,2);
+% %     for iItem=1:nItem
+% %         tmp = LU.DOC([1,2,3], LU.DOC(6,:) == iItem);
+% %         Item.PID(:,iItem) = num2cell(unique(tmp(1,:))',1); %unique(tmp(1,:))';
+% %         Item.LID(:,iItem) = num2cell(unique(tmp(2,:))',1);
+% %         Item.SID(:,iItem) =num2cell(unique(tmp(3,:))',1);
+% %     end
+    
     %% SECTION 1 计算ITEM的isHeightFull
     % (对角线>=顶层间隙, 视为满层; Item内最大LU高度 >= 顶层间隙, 视为满层)
     for iItem=1:length(Item.isHeightFull)
@@ -89,8 +105,8 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         % Item i 对于的LU flag标记
         flagItem = ItemLID(:) == iItem;  % flagItem = ItemLID(:) == uniItemLID(iItem);  idExchange(LU.ID)必须有,否则改为后者，但影响巨大 
         
-        ItemWidth = unique(Item.LWH(1,flagItem));     % Item宽度    
-        VehWidth = Veh.LWH(1,1);  % 车辆宽度    
+        ItemWidth = unique(Item.LWH(1,flagItem));     % Item宽度
+        VehWidth = Veh.LWH(1,1);  % 车辆宽度
         maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放宽度层数
         nb = sum(flagItem);
         nbmod = mod(nb,maxWidthLayer);
