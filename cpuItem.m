@@ -13,8 +13,8 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 
     Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
 %     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1) 修改为直接修复每个Item
-    Item.isNonMixed = ones(sz)*-1;    %Item是否非需要混合判定,将偶数个的Item提前进行Strip生成
-    Item.isMixedTile = zeros(sz);    %Item混合,找出奇数个混合Item的尾托赋值为1
+    Item.isNonMixed = ones(sz)*-1;    %1:ITEM可以完美放到所有strip,无需和其它ITEM混合; 0: 有必要混合; 将偶数个的Item提前进行Strip生成
+    Item.isMixedTile = zeros(sz);          % 0:当isNonMixed=1,全部为0;当isNonMixed=0时,部分余下必须混的尾垛ITEM赋值值为1. 
 
     %% V2 SECTION 0 计算ITEM的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
     % 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用

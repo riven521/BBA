@@ -1364,7 +1364,7 @@ LUEID=[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
 % LUWEIGHT=[162.892];
 % LUWEIGHT=repmat(LUWEIGHT,n,1);
 %% T2: 车辆平铺算例 - 3种 30(EID/SID混合)
-n = 23;
+n = 68;
 LUID=ones(1,n);
 LUPID=ones(1,n);
 LULID=[ones(1,round((n/2-1)*1/3))*1,ones(1,round(n/2-1)-round((n/2-1)*1/3))*3,ones(1,n-round(n/2-1))*2];

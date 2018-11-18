@@ -336,7 +336,7 @@ function order = getITEMorder(Item,whichSortItemOrder)
 
 %对SID排序: SID按给定顺序排序,序号小的在前面
 szRow = cellfun(@(x)size(x,1), Item.SID);
-if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID
+if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID,即不同SID的目前不允许堆垛到一起
 SIDorder = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
 
 %对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
@@ -346,8 +346,9 @@ LIDorder = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 
 % V2: ********** 考虑isNonMixed
 global ISisNonMixed ISisMixTile
-% 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始: 3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpItem = [SIDorder; Item.isNonMixed; Item.isMixedTile; Item.LWH(2,:); Item.LWH(1,:); LIDorder; Item.LWH(3,:); ];
+% 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
+tmpItem = [SIDorder; Item.isNonMixed; Item.isMixedTile; ...
+    Item.LWH(2,:); Item.LWH(1,:); LIDorder; Item.LWH(3,:); ];
 if ISisNonMixed==1    
     if ISisMixTile==1
         [~,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','descend','descend','descend'});

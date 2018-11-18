@@ -26,7 +26,7 @@ T = join(T,tmpT);
 
 
 % 仅作图LU,按给定顺序作图
-plotLU = 0;
+plotLU = 1;
 if plotLU
     subT = T(1:end,:);
 

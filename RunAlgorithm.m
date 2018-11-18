@@ -6,9 +6,10 @@ function [d] = RunAlgorithm(d,p)
         d = GcheckInput(d);    %可以不做   printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
 
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序
-        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %必须做 含cpuLU
+        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %必须做 ******  含cpuLU  **********
 
         %% 启发式: LU到Item的算法    
+        plotSolutionT(d.LU,d.Veh)
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
                                 %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
 

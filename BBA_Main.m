@@ -174,6 +174,8 @@ for iAlg = 1:nAlg
     % 1.1 获取d: 运行主数据算法    
     maind = d; % 主要的输入数据保留
     
+    
+    
     do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体
     do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 

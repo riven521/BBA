@@ -16,6 +16,8 @@ global ISisNonMixedLU ISisMixTileLU
 %% LU排序
 % 获取LU的顺序(重点是高度递减排序)
 
+% plotSolutionT(LU,Veh)
+
 [LU.order]  = getLUorder(LU); %获取 LU排序(先ID递增,后高度递减)
 % printstruct(LU)
 % 获取按order排序后的LU:sLU
@@ -24,6 +26,9 @@ if isSameCol(LU)
 else
     error('不能使用structfun');
 end
+
+% plotSolutionT(sLU,Veh)
+
 % LU.order(:,LU.order)
 % os = sLU.order
 % printstruct(sLU)
@@ -66,6 +71,7 @@ while 1
     
     iLU = iLU + 1;
 end
+
 
 
 %% Get ITEM 务必可以放 NEXT FIT 如果非空Item，满足高度/层数,放入; 否则,换新Item放入
@@ -173,11 +179,14 @@ tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weigh
 % V2: ********** 考虑isNonMixed
 global ISisNonMixedLU ISisMixTileLU % TODO 考虑不满托盘,同样LULID下
 tmpLUMatrix = [LU.SID; LU.isNonMixed; LU.isMixedTile; ...
-                           LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; ];
+                           LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight; LU.EID];
 if ISisNonMixedLU==1    
     if ISisMixTileLU==1
+        % V3: 修改增jLU的EID排序
+        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 10, 2, 3, ...
+                                    4, 5, 6, 8, 7 ],{'ascend','ascend','descend','ascend','descend','ascend','ascend','descend','descend'}); 
         % V2: 修改为PID优先放在相同LID高度优先之后
-        [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 8, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend','descend'}); 
+        % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 8, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend','descend'}); 
                 % V1 : 问题在于LU.PID 零件号排序意义不大,无论递增或递减
                 % [~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','ascend','ascend','descend'}); 
     else
