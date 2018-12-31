@@ -9,7 +9,7 @@ function [d] = RunAlgorithm(d,p)
         [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %必须做 ******  含cpuLU  **********
 
         %% 启发式: LU到Item的算法    
-        plotSolutionT(d.LU,d.Veh)
+%         plotSolutionT(d.LU,d.Veh)
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
                                 %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
 
@@ -29,18 +29,20 @@ function [d] = RunAlgorithm(d,p)
         % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
+%         close all;   plotSolutionT(d.LU,d.Veh)
         %% 堆垛均衡设置
         %% ********* 1 5555 堆垛均衡设置 *********** 修改 d.LU.maxHLayer(luidxPP) 
          if ISstripbalance==1
              [d.Strip,d.Item,d.LU] = HStripBalance(d.Strip,d.Item,d.LU,d.Veh,p);  end
-
-        %         plotSolutionT(d.LU,d.Veh);
+        
+%            close all;  plotSolutionT(d.LU,d.Veh);
         if ISplotStrip==1,      figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %         figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
 
         %% 启发式：Strip到Bin的算法        
         %% ********* 1 Strip排序: % 1: SID 2: priorityofLID
+%         close all;  plotSolutionT(d.LU,d.Veh);
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
-        
+%         close all;  plotSolutionT(d.LU,d.Veh);
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         
@@ -55,7 +57,9 @@ function [d] = RunAlgorithm(d,p)
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
-
+        
+%         close all;  plotSolutionT(d.LU,d.Veh);
+        
                                                         %         [match, er1, er2] = comp_struct(ti,d.Strip,1);
                                                         %         [match, er1, er2] = comp_struct(tl,d.Bin,1);
                                                         %         list_struct(er1)
@@ -68,6 +72,8 @@ function [d] = RunAlgorithm(d,p)
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end
+        
+%         close all;  plotSolutionT(d.LU,d.Veh);
 
                                       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
 

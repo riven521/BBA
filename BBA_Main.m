@@ -32,14 +32,16 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 close all;
 global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
-global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1 
-global parBalance verMilkRun
-parBalance = 8/30
+global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1
+global parBalance verMilkRun parGap
+parBalance = 8/30;
 % ISisNonMixedLU    1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
-% ISisMixTileLU         1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
+% ISisMixTileLU          1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
 % ISisGpreprocLU1    1 与ISisNonMixedLU取值有关
-% ISstripbalance       1 调用高度均衡开关
+% ISstripbalance        1 调用高度均衡开关
 
+% 开关 par
+parGap = 1
 %% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
 ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
 ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
@@ -55,7 +57,7 @@ ISplotBBA = 1
 ISplotShowType = 1 % 1 LID 2 PID 3 ID
         % ISplotSolu = 0
 
-                            ISplotStrip = 0 % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
+                            ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
                             ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节 后期替换为同一
 
 ISplotPause = -0.05 % plot间隔时间
@@ -64,24 +66,25 @@ ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
 % 下面还不完整, 可能要调 目前全部为1
 ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
-ISisMixTileLU = 1      % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
+ISisMixTileLU = 1       % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
 
 ISisNonMixed = 1    % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1         % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象
 
 ISreStripToBin = 1   % 车头优先LU数量排序参数 默认为1 必须
 
-ISshuaiwei = 1          % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
-ISpingpu = 1            % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1      %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+ISshuaiwei = 1         % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
+ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 
 ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
-verMilkRun  = 1  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
+verMilkRun = 0  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
 %% Initialize Data Structure
 if nargin ~= 0
     % MR的EP LOCATION增加, 多的变量的自动增加
      if length(varargin) < 9
+          verMilkRun  = 0
            varargin{9} = ones(1,length(LUID));
      else
            verMilkRun = 1; % 9个输入参数为milkrun版本
@@ -108,7 +111,7 @@ else
     filename = strcat('GoodIns',num2str(n));
     printstruct(d.Veh);  %车辆按第一个放置,已对其按体积从大到小排序; 
     
-     save( strcat( '.\new\', filename), 'd');
+    save( strcat( '.\new\', filename), 'd');
 %     load .\new\GoodIns200.mat;
 end
 % printstruct(d);
@@ -186,9 +189,18 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     
     %% 1 运行主算法
+    % 预处理：剔除某些LU
+       fall = ones(1,length(d.LU.ID));
+       f = d.LU.ID == 1; %剔除Id=1的所有LU
+       fall(find(f,1,'first'))=0; 
+       
+       f = d.LU.ID ==  2; %剔除Id=2的所有LU
+       fall(find(f,1,'first'))=0; 
+       
+%        d.LU = structfun(@(x) x(:,logical(fall)),d.LU,'UniformOutput',false);
+
     % 1.1 获取d: 运行主数据算法    
-    maind = d; % 主要的输入数据保留
-    
+    maind = d; % 主要的输入数据保留   
     
     
     do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体
@@ -204,8 +216,8 @@ for iAlg = 1:nAlg
     checkLU(maintLU,tLU);
     checktLU(do.LU);
     
-%      plotSolutionT(do.LU,do.Veh);
-
+    
+%     plotSolutionT(do.LU,do.Veh);
    % plotSolution(do,pA(iAlg)); %尽量不用
     
     %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh : 
@@ -280,7 +292,7 @@ for iAlg = 1:nAlg
         % $1 GET d2 本ibin内待算法计算的数据
         luIdx = do.LU.LU_Bin(1,:) == ibin;
         d2 = getdinThisVeh(maind,luIdx); %修改成从maind提取IuIdx个输入,而非从运算后的d中提取
-
+%         d2 = getdinThisVeh(do,luIdx)
         %% COMMENT
 %         d2.Veh = do.Veh;
 %         d2.Veh = rmfield(d2.Veh,{'Volume','order'});
@@ -371,16 +383,21 @@ for iAlg = 1:nAlg
 
             %% 运行主算法及后处理 $5 reRunAlgorithm
             d2Array(ibin) = d2;
-            do2 = RunAlgorithm(d2,pA(iAlg)); 
+            %% %%%%%
+             do2 = RunAlgorithm(d2,pA(iAlg));    %             do2 = RunAlgorithmPP(d2,pA(iAlg)); 
             
             do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+            
+            
             [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);  % do2Array(ibin) = do2; 必须注释，因为是个循环                    
                                                                 if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
             % $6 后处理
             if max(do2.LU.LU_Bin(1,:)) == 1  %    do2.LU.LU_VehType = ones(size(do2.LU.ID))*do.Veh.order(1); 
+                
                 flagTiledArray(ibin)=2; %2代表甩尾平铺
                 do2Array(ibin) = do2;
-                % plotSolutionT(do2.LU,do2.Veh);
+%                  plotSolutionT(do2.LU,do2.Veh);
+%                  pause(0.2)
                 1
                 % do2 数据不进入d 仅在return2bba中修改
                 % do2 数据进入d???? return2bba不修改？？？                
@@ -438,11 +455,14 @@ end
 
 
     % daBest(bestOne).LU.OPID
-%% 1 ******************获取展示顺序 T=d.LU增加ShowSEQ
+%% 1 ******************获取展示顺序 do数据 T=d.LU增加ShowSEQ
 T = getTableLU(do);
         checktLU(T) 
-        1
-%%
+
+        % 作图：原始非平铺的图
+%     plotSolutionT(T,struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false)));
+%     1
+%% USELESS
 % [T_Coord,T_LWH,T_Seq] = getReturnBBA(daBest(bestOne)); %如有多个,返回第一个最优解
 % T_Seq.tblorder
 % T_Seq1 = T_Seq;
@@ -512,11 +532,11 @@ if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
         %     if sum(output_LU_Seq(i,flaglastLUIdx) ~= output_LU_Seq2(i,:) ) >0, error('不会变的变了, 错误'); end
 end
 
-%% 3 ****************** 针对平铺选择 do2/do3Array数据 获取修订的 output ******************
+%% 3 ****************** 针对平铺选择 do2（甩尾平铺）/do3Array（整车平铺）数据 获取修订的 output ******************
 if ISpingpu==1
     if ~all(flagTiledArray==0)
         flagTiledArray
-        warning('需要平铺');;end
+        warning('需要平铺');end
     for ibin=1:length(do2Array) %do*Array 包含所有BIN
         if flagTiledArray(ibin)==0  % 该ibin未平铺 继续循环
             continue;
@@ -526,13 +546,43 @@ if ISpingpu==1
         end
         
         if flagTiledArray(ibin)==1    % 该ibin整车平铺成功
-            T23 = getTableLU(do3Array(ibin));
-                    checktLU(T23) ;
+            dd = do3Array(ibin);     
+            
+            %% 新增混装间隙优化
+            if parGap==1
+                [flagGap, T23LU] = getMixedGap(dd);
+                % 如果Gap计算成功, 则进行LW和Coord以及Rotated变化
+                if flagGap               
+                    dd.LU.CoordLUBin(1,:) = T23LU.CoordLUBin(:,1);
+                    dd.LU.CoordLUBin(2,:) = T23LU.CoordLUBin(:,2);
+                    dd.LU.LWH(1,:) = T23LU.LWH(:,1);
+                    dd.LU.LWH(2,:)  =T23LU.LWH(:,2);
+                    dd.LU.Rotaed  =  T23LU.Rotaed';
+                end         
+            end
+            %% 新增混装间隙优化 END
+            
+            T23 = getTableLU(dd);   %T23 = getTableLU(do3Array(ibin));
+            checktLU(T23) ;
         end
-        if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功
-            T23 = getTableLU(do2Array(ibin));
-                    checktLU(T23) ;
-            %do2.LU.LU_Bin
+        if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功            
+            dd = do2Array(ibin);            
+            %% 新增混装间隙优化
+            if parGap==1
+                [flagGap, T23LU] = getMixedGap(dd);
+                % 如果Gap计算成功, 则进行LW和Coord以及Rotated变化
+                if flagGap               
+                    dd.LU.CoordLUBin(1,:) = T23LU.CoordLUBin(:,1);
+                    dd.LU.CoordLUBin(2,:) = T23LU.CoordLUBin(:,2);
+                    dd.LU.LWH(1,:) = T23LU.LWH(:,1);
+                    dd.LU.LWH(2,:)  =T23LU.LWH(:,2);
+                    dd.LU.Rotaed  =  T23LU.Rotaed';
+                end         
+            end
+            %% 新增混装间隙优化 END
+            
+            T23 = getTableLU(dd);   % T23 = getTableLU(do2Array(ibin));
+            checktLU(T23) ;
         end
 
        flagTileLUIdx = T{:,'BINID'}==ibin;
@@ -575,9 +625,20 @@ if ISpingpu==1
 %        sortrows(T23.LU_Item)'
 %        T.LU_Item
 %        T{flagTileLUIdx,{'CoordLUBin','BINSEQ'}} = T23{:,{'CoordLUBin','BINSEQ'}};    
+
+    % 作图：仅平铺的那个BIN的图
+%     plotSolutionT(T23,struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false)));
+%     1
+    
         T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
             T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
-%        T.LU_Item
+        % 如果考虑Gap且成功替换Gap,则本bin内的LWH和Rotaed也要替换到主数据T中
+        if parGap && flagGap
+            T{flagTileLUIdx,{'LWH','Rotaed'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
+                T23{:,{'LWH','Rotaed'}};
+        end
+
+        
 %        sortrows(T.LU_Item)'
 %        checktLU(T) %仍有无法通过的可能性; 如LU_Item影响不大,建议先注释 TODO
 
@@ -640,6 +701,11 @@ if ISpingpu==1
             %         warning('不会变的变了, 错误'); end
     end
 end
+
+%% 18-12 此处增加对混装间隙的处理 - 基于Table格式
+
+
+
 % ****************** 针对车型选择 获取修订的 output ******************
 
 T = getShowSeq(T); %增加ShowSEQ
@@ -717,6 +783,138 @@ end %END MAIN
 
 
 %% ******* 局部函数 ****************
+% dd: 需要调整Gap的Bin
+function [flagGap,T23LU] = getMixedGap(dd)
+% Initilize output
+flagGap=0;
+T23LU = struct2table(structfun(@(x) x',dd.LU,'UniformOutput',false));
+
+% find and sort 'fidx' (fidx: 有Gap的Strip的Index)
+fidx=find(dd.Strip.isGapBalance==0);  %fidx: 存在混装间隙的strip的序号
+[~,ff]=sort(dd.Strip.Strip_Bin(2,fidx)); %
+fidx=fidx(ff); %从最小（最靠近车顶）的进入顺序进行, 进入bin内是12在前,11在后
+
+for i=1:length(fidx)
+    flagGap = 0;
+    idxs = fidx(i);  % strip12 找到对应的LU LU_Strip 第12个 它的LWH和它的CoordLUBin CoordLUStrip
+    
+    %% 1: pgLUinStrip: strip对应的pg 和 pgLUinStrip: 此strip内lu对应的pg -> pgBlanksinStrip:消减后的pg
+    %pgLUinStrip: strip内的LU的多边形,可能是不规则的或是多个的
+    pgLUinStrip = pgStripLU(idxs,T23LU);    % pgLUinStrip.NumRegions
+    
+    %pgStrip: 此strip的多边形,一定是个矩阵
+    stripWidth = dd.Veh.LWH(1, unique(T23LU.LU_VehType));     %strip宽度
+    stripHeight = dd.Strip.LW(2,idxs);                                       %strip高度
+    [x,y]=boundary(pgLUinStrip);
+    pgStrip = polyshape(pgRectangle(min(x),min(y),stripWidth,stripHeight));  if size(pgStrip.Vertices,1) ~= 4, error('strip不是矩形'); end
+    
+    %pgBlanksinStrip: strip内的剩余空白区域,每个区域必须是矩阵
+    pgBlanksinStrip = regions(subtract(pgStrip,pgLUinStrip)); % 获取本strip内的剩余可用区域    
+    %pgBlanksinStrip排序, （目前: 面积小的在前面） todo: y小的在前面
+    pgBlanksinStrip = sortregions(pgBlanksinStrip,'area','ascend');
+    %                 plot(pgBlanksinStrip)
+    %                 hold on
+    %                 plot(pgLUinStrip)
+    
+    %% 2: idxLUArray：找到idxs后一个strip内的LU,依据LU的大小判定能否放下
+    % Find nextStrip
+    nextStrip = dd.Strip.Strip_Bin(2,idxs) + 1;                                 %此strip在bin内的进入顺序 + 1：即下一个strip的序号
+    nextStripIdx = find(dd.Strip.Strip_Bin(2,:) == nextStrip);
+    
+    % Get and sort idxLUArray by area of LU in nextStrip  %更新LU的顺序，从大面积到到小面积
+    idxLUArray = find(T23LU.LU_Strip(:,1)==nextStripIdx);                   %在混装间隙下一个strip内包含的LU序号 
+    
+    idxLUareaArray = T23LU.LWH(idxLUArray,1).*T23LU.LWH(idxLUArray,2);    % areas
+    [~, ord] = sort(idxLUareaArray,'descend');
+    idxLUArray=idxLUArray(ord);
+    
+    % TODO 找出能放的下的region，并用某种规则（横竖）放入.
+    % 逐个LU尝试放入pgBlandsinStrip
+    for j=1:length(idxLUArray)
+        % 从第j个LU（LU应该排序，从面积大的）开始, 尝试放入到上面的strip去
+        l = idxLUArray(j);
+        
+        for i = 1:length(pgBlanksinStrip)
+            % 2.1 get pgBlank
+            pgBlank= pgBlanksinStrip(i);
+            
+            % 2.2.1 get pgLU
+            % Find pgBlank's 顶点坐标 x and y) 
+            [originx,originy] = boundary(pgBlank);
+            originLUx=min(originx);
+            originLUy=min(originy);
+            
+            % 2.2.2 get pgLU 不旋转 基于pgBlank's Region
+            w=T23LU.LWH(l,1);
+            h=T23LU.LWH(l,2);
+            pgLU = polyshape(pgRectangle(originLUx,originLUy,w,h));
+            
+            % 2.2.3 get pgLURota 旋转 基于pgBlank's Region
+            if T23LU.isRota(l)
+                wRota = T23LU.LWH(l,2);
+                hRota = T23LU.LWH(l,1);
+                pgLURota = polyshape(pgRectangle(originLUx,originLUy,wRota,hRota));
+            end
+            
+            % 2.3 if pgLU/pgLURota can be assigned into pgBlank
+            [xLU,yLU] = boundary(pgLU);
+            [xLURota,yLURota] = boundary(pgLURota);
+            xLU
+            yLU
+            %% 判定是否可以放下的重要条件
+            % 555: if all of pgLU's boundary points belong to pgBlank
+            flagLUx =  all(isinterior(pgBlank,xLU([1,4]),yLU([1,4])));
+            flagLU =  all(isinterior(pgBlank,xLU,yLU));
+            flagLURotax =  all(isinterior(pgBlank,xLURota([1,4]),yLURota([1,4])));
+            flagLURota =  all(isinterior(pgBlank,xLURota,yLURota));
+            
+            % 3 如果可以替换,
+            if flagLU || flagLUx
+%                 [x,y]=boundary(pgBlank);
+%                 originLUx = min(xLU)
+%                 originLUy = min(yLU)
+                %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
+                T23LU.CoordLUBin(l,1) = originLUx;
+                T23LU.CoordLUBin(l,2) = originLUy;
+                T23LU.LWH(l,1)=w;
+                T23LU.LWH(l,2)=h;
+                flagGap=1;
+                break
+            end
+            
+            if flagLURota || flagLURotax
+%                 [x,y]=boundary(pgBlank);
+%                 originLUx = min(xLU);
+%                 originLUy = min(yLU);
+                %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
+                T23LU.CoordLUBin(l,1) = originLUx;
+                T23LU.CoordLUBin(l,2) = originLUy;
+                T23LU.LWH(l,1)=h;
+                T23LU.LWH(l,2)=w;
+                T23LU.Rotaed(l)=~T23LU.Rotaed(l);
+                flagGap=1;
+                break
+            end
+            
+            %     area(pgLU)                         area(pgBlank)
+            
+            %                         figure
+            %                         plot(pgLU)
+            %                         hold on
+            %                         plot(pgBlank)
+            
+            %                     area(pg12)
+            %                     area(pg1)
+            
+        end
+        if flagGap,   break;    end
+    end
+    if flagGap,   break;    end
+    
+end
+end
+
+
 % 每次RunAlgorithm后，判断d.LU在输入与输出的差距
 function checkLU(TIN,TOUT)
     TOUT.LWH(TOUT.Rotaed,1) = TIN.LWH(TOUT.Rotaed,1);

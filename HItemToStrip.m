@@ -39,6 +39,8 @@ wStrip = Veh.LWH(1,1);
     end
 %     printstruct(sItem)
 
+% plotSolutionT(sItem,Veh)
+%  1
     % 下面用途不大，主要原因在于在Gpreproc中以及做了H/V放置处理了
 % %     % 1和2以内的, sortedItemArray对应的LWHRota和Rotaed更新了->需求返回到原矩阵ItemArry中
 % %     if p.whichRotationHori == 1 % 无论哪个level,都按照horizontally方式摆放

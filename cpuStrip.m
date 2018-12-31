@@ -23,15 +23,29 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
     Strip.isMixedSID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个SID 
     Strip.isMixedEID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个EID 
     
+    Strip.nbLID = ones(size(Strip.Weight))*-1;   %STRIP内LID数量
+    Strip.nbSID= ones(size(Strip.Weight))*-1;   %SID数量
+    Strip.nbEID= ones(size(Strip.Weight))*-1;   %EID数量
+    
+    
+    Strip.GapValue = ones(size(Strip.Weight))*-1;         %混合STRIP（isMixed==1）及宽度不满STRIP（此时最小长度为0）内的GAP值
+    Strip.isGapBalance = ones(size(Strip.Weight))*-1;   %GAP值超过最长ITEM的1/3即为不balance的
+    
     Strip.isHeightFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
     Strip.isHeightBalance = ones(size(Strip.Weight))*-1;   %是否Item的高度差异不大
-    Strip.nbItem = ones(size(Strip.Weight))*-1;   %单STRIP内部ITEM类型个数, 混合型默认为-1
-    Strip.isAllPured = ones(size(Strip.Weight))*-1;   %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
+    
+    Strip.nbItem = ones(size(Strip.Weight))*-1;            %单STRIP内部ITEM类型个数, 混合型默认为-1
+    Strip.isAllPured = ones(size(Strip.Weight))*-1;       %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
     Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
-    Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item
+    Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item  若 宽度间隙 >= 本Strip包含的Item的宽度最小值， 则宽度不满，取值0
+    
     Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
     Strip.lowestHeight = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
     Strip.meanHeight = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
+    
+    Strip.maxLULength= ones(size(Strip.Weight))*-1;     %Strip的最高高度.
+    Strip.lowestLULength = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
+%     Strip.meanLUWidth = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
 %     Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的??? 暂未用
 
     Strip.Stripvolume = ones(size(Strip.Weight))*-1;  %每个strip的可用体积 = 高度*宽度(车辆的宽度)
@@ -101,16 +115,40 @@ Strip = isFullStrip(Strip,Item);
 %% 3: STRIP.isWidthFull : STRIP增加判断是否包含宽度width非Full的Item. 
 Strip = isWidthFullStrip(Strip,Item);
 
-%% 4: STRIP.maxHeight : 计算Strip的最大高度
+%% 4: STRIP.maxHeight/maxLULength : 计算Strip的高度和宽度
 for i=1:length(Strip.maxHeight)
-    % 计算最大值
+    % 计算内部高度
     % Item.Item_Strip(1,:) == i) : Strip i 内部的Item flag
     Strip.maxHeight(i) = max(Item.LWH(3, Item.Item_Strip(1,:) == i));
     Strip.lowestHeight(i) = min(Item.LWH(3, Item.Item_Strip(1,:) == i));
     Strip.meanHeight(i) = Strip.maxHeight(i) - Strip.lowestHeight(i); 
+    Strip.meanHeight(i) = (Strip.maxHeight(i) + Strip.lowestHeight(i))/2; 
     if any(Strip.meanHeight(i)<0), error('负值不可能;'); end
+    % 计算内部LU宽度
+    Strip.maxLULength(i) = max(Item.LWH(2, Item.Item_Strip(1,:) == i));
+    Strip.lowestLULength(i) = min(Item.LWH(2, Item.Item_Strip(1,:) == i));
 end
 
+%% 4.1 STRIP.GapValue 和 isGAPBalance的计算
+
+fmix = Strip.isMixed==1;
+fwid = Strip.isWidthFull==0;
+
+% StripCheck 可多次调用
+checkStrip(Strip);
+
+% Calc GapValue
+Strip.GapValue(~fmix) =0;
+Strip.GapValue(fmix) = Strip.maxLULength(fmix) - Strip.lowestLULength(fmix);
+Strip.GapValue(fwid) = Strip.maxLULength(fwid) - 0;
+
+% Calc isGapBalance
+Strip.isGapBalance = Strip.GapValue < 0.33*Strip.maxLULength;
+
+% fgap=Strip.isGapBalance ==0;
+% Strip.LID
+% printstruct(Strip)
+1
 %% 5,6
 %Strip.isAllPured：混合:-1; 单纯: 1 (混合strip内没有改ID) ; 0 (混合strip内含有该单纯strip的ID)
 %Strip.isSingleItem: 混合: -1; 单纯: Strip内仅有一个Item,必定是单纯的.
@@ -295,22 +333,25 @@ function Strip = isMixedStrip(Strip)
     for i=1:length(Strip.isMixed)
         
          if numel(Strip.LID{i}) > 1
-             Strip.isMixed(i) = 1;
+             Strip.isMixed(i) = 1;             
          else
              Strip.isMixed(i) = 0;
          end
+         Strip.nbLID(i) = numel(Strip.LID{i});
 
          if numel(Strip.SID{i}) > 1
              Strip.isMixedSID(i) = 1;
          else
              Strip.isMixedSID(i) = 0;
          end
+         Strip.nbSID(i) = numel(Strip.LID{i});
          
          if numel(Strip.EID{i}) > 1
              Strip.isMixedEID(i) = 1;
          else
              Strip.isMixedEID(i) = 0;
          end
+         Strip.nbEID(i) = numel(Strip.LID{i});
     end
 end
 

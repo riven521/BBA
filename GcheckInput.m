@@ -63,7 +63,7 @@ function deepCheck(LU,Veh)
 % %     end
     
 
-    %% V1 : 测试LU：存在托盘ID类型相同 但其长宽不同数据 (通过修改ID,确保不同SID下的ID是不同的)
+    %% V1 : 测试LU：存在托盘ID类型相同 但其长宽不同数据 (通过修改ID,确保不同SID下的ID是不同的)(确定：不同SID供应商下的托盘不能拼载)
     uniID = unique(LU.ID);
     % 托盘ID - 对应长宽/isRota/yID/maxL  常见555
     for iLU = 1:length(uniID)
@@ -87,6 +87,13 @@ function deepCheck(LU,Veh)
     end
     
 
+    %% INPUT CHECK: 不允许相同LID，相同SID，相同EID，却不能拼载，即ID不同。似乎没有这个问题
+% %     tlu = array2table([LU.SID;LU.EID;LU.LID]')
+% %     tluid = array2table([LU.ID]')
+% %     [a,b]=findgroups(tlu);
+% %     x = splitapply(@(x) length(unique(x)),tluid.Var1,a)
+% % %     Num = splitapply(@(w) length(unique(w)),T2.DUEDATA,GID) %取值个数计算
+% %    
 
 
 end

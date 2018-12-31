@@ -2,7 +2,7 @@
 function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
         flagBalanced = 0;
         while 1
-            % 找到strip混合的且不平衡的
+            % 找到strip不混合的且不平衡的
             fstrip = Strip.isMixed==0 & Strip.isHeightBalance==0;
             if ~any(fstrip) || flagBalanced==1, break; end
             idxstr = find(fstrip);
@@ -11,7 +11,7 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
             for idx=1:nbstrip
                 luidxPP = ismember(LU.LU_Strip(1,:), idxstr(idx));
                 
-                % FINDOUT 本strip对应Item的个数,通过Item
+                % FINDOUT 本strip对应Item的LU个数,通过Item
                 tmpItems = LU.LU_Item(1,luidxPP);
                 [~,~,ic] = unique(tmpItems);
                 nbLuArray= accumarray(ic,1);
@@ -29,14 +29,14 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
                 end
                 
                
-                if  isscalar(nbLuArray) %此strip没有balance的必要 层数差只有1个
+                if  isscalar(nbLuArray)                         %此strip没有balance的必要 只有1个Item
                     flagBalanced = 1;
                     continue;
-                elseif abs(diff(nbLuArray)) < 2         
-                                        flagBalanced = 1;
+                elseif abs(diff(nbLuArray)) < 2          %此strip没有balance的必要 层数差不到2个
+                    flagBalanced = 1;
                     continue;
                 else
-                    % 直接降到目前最大指定层数再-1
+                    % 直接降到目前最大Item堆放的层数，后续再-1
                     LU.maxHLayer(luidxPP) = max(nbLuArray);
                 end
 
@@ -49,6 +49,8 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
                     continue;
                 end
                 
+                % 555 对降低层数的LU重新获取新的Strip
+                [LU] = cpuLU(LU,Veh);
                 [LU,Item] = HLUtoItem(LU,Veh);          %Item将按ID序号排序（但下一操作将变化顺序）
                 [Item,LU] = cpuItem(Item,LU,Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
                 [LU,Item,Strip] = HItemToStrip(LU,Item,Veh,p);
