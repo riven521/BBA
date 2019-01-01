@@ -15,9 +15,12 @@ function checkStrip(Strip)
      if any(T.nbLID(~fmix) ~= 1)
          error('非混合Strip内LID数量不为1'); end
      
-     % 判断：Width Not Full 不能是Mixed
+     % 判断：Width Not Full 有可能时 Mixed
      fwid = T.isWidthFull == 0;
-     if any(fwid&fmix), error('宽度不满的Strip不能为混合Strip'); end
+     if any(fwid&fmix), 
+         fwid
+         fmix
+         warning('宽度不满的Strip不能为混合Strip'); end
 
 end
 

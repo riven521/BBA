@@ -83,6 +83,7 @@ function   [LU] = cpuLU(LU,Veh)
     [~,sorder] = sort(torder);
     LU.isNonMixed = tLUsorted.isNonMixed(sorder)';
     LU.isMixedTile = tLUsorted.isMixedTile(sorder)';
-
+    
     %% 2 计算LU的其它指
+    
 end

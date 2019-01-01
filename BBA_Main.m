@@ -60,7 +60,7 @@ ISplotShowType = 1 % 1 LID 2 PID 3 ID
                             ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
                             ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节 后期替换为同一
 
-ISplotPause = -0.05 % plot间隔时间
+ISplotPause = 0.0; %-0.05 % plot间隔时间
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
@@ -196,7 +196,7 @@ for iAlg = 1:nAlg
        
        f = d.LU.ID ==  2; %剔除Id=2的所有LU
        fall(find(f,1,'first'))=0; 
-       
+
 %        d.LU = structfun(@(x) x(:,logical(fall)),d.LU,'UniformOutput',false);
 
     % 1.1 获取d: 运行主数据算法    
@@ -458,6 +458,8 @@ end
 %% 1 ******************获取展示顺序 do数据 T=d.LU增加ShowSEQ
 T = getTableLU(do);
         checktLU(T) 
+        %% TODO 目前仅对甩尾平铺后的进行Gap调整
+        % if parGap==1,            [flagGap, dd] = getMixedGap(dd);       end
 
         % 作图：原始非平铺的图
 %     plotSolutionT(T,struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false)));
@@ -495,7 +497,7 @@ if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
        % 某个bin内调整,其BINSEQ,CoordLUBin,LU_VehType一定发生变化 （按bid和binseq排序的） 其ITEMID似乎没用 不返回了把
        % 重点是更新坐标和LU_VehType和BINSEQ，LU_VehType 这几个必定变化(PID/SID需要留意) % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
     T{flaglastLUIdx,{'CoordLUBin','BINSEQ','LU_VehType'}} = T1{:,{'CoordLUBin','BINSEQ','LU_VehType'}};
-    checktLU(T) 
+    checktLU(T)
     %%
     
         % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
@@ -548,39 +550,24 @@ if ISpingpu==1
         if flagTiledArray(ibin)==1    % 该ibin整车平铺成功
             dd = do3Array(ibin);     
             
-            %% 新增混装间隙优化
+            % 新增混装间隙优化
             if parGap==1
-                [flagGap, T23LU] = getMixedGap(dd);
-                % 如果Gap计算成功, 则进行LW和Coord以及Rotated变化
-                if flagGap               
-                    dd.LU.CoordLUBin(1,:) = T23LU.CoordLUBin(:,1);
-                    dd.LU.CoordLUBin(2,:) = T23LU.CoordLUBin(:,2);
-                    dd.LU.LWH(1,:) = T23LU.LWH(:,1);
-                    dd.LU.LWH(2,:)  =T23LU.LWH(:,2);
-                    dd.LU.Rotaed  =  T23LU.Rotaed';
-                end         
+                [dd.LU] = getMixedGap(dd.LU, dd.Veh);
             end
-            %% 新增混装间隙优化 END
             
+            % 获取LU的Table格式
             T23 = getTableLU(dd);   %T23 = getTableLU(do3Array(ibin));
             checktLU(T23) ;
         end
         if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功            
             dd = do2Array(ibin);            
-            %% 新增混装间隙优化
-            if parGap==1
-                [flagGap, T23LU] = getMixedGap(dd);
-                % 如果Gap计算成功, 则进行LW和Coord以及Rotated变化
-                if flagGap               
-                    dd.LU.CoordLUBin(1,:) = T23LU.CoordLUBin(:,1);
-                    dd.LU.CoordLUBin(2,:) = T23LU.CoordLUBin(:,2);
-                    dd.LU.LWH(1,:) = T23LU.LWH(:,1);
-                    dd.LU.LWH(2,:)  =T23LU.LWH(:,2);
-                    dd.LU.Rotaed  =  T23LU.Rotaed';
-                end         
-            end
-            %% 新增混装间隙优化 END
             
+            % 新增混装间隙优化
+            if parGap==1
+                [dd.LU] = getMixedGap(dd.LU, dd.Veh);
+            end
+            
+            % 获取LU的Table格式
             T23 = getTableLU(dd);   % T23 = getTableLU(do2Array(ibin));
             checktLU(T23) ;
         end
@@ -633,7 +620,7 @@ if ISpingpu==1
         T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
             T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
         % 如果考虑Gap且成功替换Gap,则本bin内的LWH和Rotaed也要替换到主数据T中
-        if parGap && flagGap
+        if parGap % && flagGap Gap调整是必须
             T{flagTileLUIdx,{'LWH','Rotaed'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
                 T23{:,{'LWH','Rotaed'}};
         end
@@ -703,8 +690,6 @@ if ISpingpu==1
 end
 
 %% 18-12 此处增加对混装间隙的处理 - 基于Table格式
-
-
 
 % ****************** 针对车型选择 获取修订的 output ******************
 
@@ -779,140 +764,352 @@ end %END MAIN
 
 
 
-
-
-
 %% ******* 局部函数 ****************
-% dd: 需要调整Gap的Bin
-function [flagGap,T23LU] = getMixedGap(dd)
-% Initilize output
-flagGap=0;
-T23LU = struct2table(structfun(@(x) x',dd.LU,'UniformOutput',false));
+% Gap Adjust for Each Veh
+function [LU] = getMixedGap(LU,VEH)
 
-% find and sort 'fidx' (fidx: 有Gap的Strip的Index)
-fidx=find(dd.Strip.isGapBalance==0);  %fidx: 存在混装间隙的strip的序号
-[~,ff]=sort(dd.Strip.Strip_Bin(2,fidx)); %
-fidx=fidx(ff); %从最小（最靠近车顶）的进入顺序进行, 进入bin内是12在前,11在后
+TLU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+TVEH = struct2table(structfun(@(x) x',VEH,'UniformOutput',false));
 
-for i=1:length(fidx)
-    flagGap = 0;
-    idxs = fidx(i);  % strip12 找到对应的LU LU_Strip 第12个 它的LWH和它的CoordLUBin CoordLUStrip
-    
-    %% 1: pgLUinStrip: strip对应的pg 和 pgLUinStrip: 此strip内lu对应的pg -> pgBlanksinStrip:消减后的pg
-    %pgLUinStrip: strip内的LU的多边形,可能是不规则的或是多个的
-    pgLUinStrip = pgStripLU(idxs,T23LU);    % pgLUinStrip.NumRegions
-    
-    %pgStrip: 此strip的多边形,一定是个矩阵
-    stripWidth = dd.Veh.LWH(1, unique(T23LU.LU_VehType));     %strip宽度
-    stripHeight = dd.Strip.LW(2,idxs);                                       %strip高度
-    [x,y]=boundary(pgLUinStrip);
-    pgStrip = polyshape(pgRectangle(min(x),min(y),stripWidth,stripHeight));  if size(pgStrip.Vertices,1) ~= 4, error('strip不是矩形'); end
-    
-    %pgBlanksinStrip: strip内的剩余空白区域,每个区域必须是矩阵
-    pgBlanksinStrip = regions(subtract(pgStrip,pgLUinStrip)); % 获取本strip内的剩余可用区域    
-    %pgBlanksinStrip排序, （目前: 面积小的在前面） todo: y小的在前面
-    pgBlanksinStrip = sortregions(pgBlanksinStrip,'area','ascend');
-    %                 plot(pgBlanksinStrip)
-    %                 hold on
-    %                 plot(pgLUinStrip)
-    
-    %% 2: idxLUArray：找到idxs后一个strip内的LU,依据LU的大小判定能否放下
-    % Find nextStrip
-    nextStrip = dd.Strip.Strip_Bin(2,idxs) + 1;                                 %此strip在bin内的进入顺序 + 1：即下一个strip的序号
-    nextStripIdx = find(dd.Strip.Strip_Bin(2,:) == nextStrip);
-    
-    % Get and sort idxLUArray by area of LU in nextStrip  %更新LU的顺序，从大面积到到小面积
-    idxLUArray = find(T23LU.LU_Strip(:,1)==nextStripIdx);                   %在混装间隙下一个strip内包含的LU序号 
-    
-    idxLUareaArray = T23LU.LWH(idxLUArray,1).*T23LU.LWH(idxLUArray,2);    % areas
-    [~, ord] = sort(idxLUareaArray,'descend');
-    idxLUArray=idxLUArray(ord);
-    
-    % TODO 找出能放的下的region，并用某种规则（横竖）放入.
-    % 逐个LU尝试放入pgBlandsinStrip
-    for j=1:length(idxLUArray)
-        % 从第j个LU（LU应该排序，从面积大的）开始, 尝试放入到上面的strip去
-        l = idxLUArray(j);
+typeVeh = unique(TLU.LU_Bin(:,1));
+numVeh = length(typeVeh);      if numVeh>1, error('多个车辆需要调整Gap'); end
+% 循环每个VEH，找到对应子托盘subTLU和子车辆subVeh
+for idxVeh = 1:numVeh
+    subTLU = TLU(TLU.LU_Bin(:,1) == typeVeh(idxVeh), : );    
+    subVeh = TVEH(unique(subTLU.LU_VehType), :); %TODO CHECK 是否LU_VehType就是车辆排序的第一个?
+        if height(subVeh)>1,  error('NOT LU in the same Veh type'); end
         
-        for i = 1:length(pgBlanksinStrip)
-            % 2.1 get pgBlank
-            pgBlank= pgBlanksinStrip(i);
+    % 555  子托盘调整重要函数
+    subTLUNew = HGapAdjust(subTLU,subVeh);   
+    TLU(TLU.LU_Bin(:,1) == typeVeh(idxVeh), : ) = subTLUNew;    
+end
+
+% TLU to LU
+LU = table2struct(TLU,'ToScalar',true); % struct2table(structfun(@(x) x',dd.LU,'UniformOutput',false));
+LU = (structfun(@(x) x',LU,'UniformOutput',false));
+end
+
+% 通用函数 ： 获取托盘（集）的多边形 
+%   TLU：托盘（集合）
+%   isRota : 是否需要旋转，改变长宽
+%   varargin：是否采用固定坐标（即LU的起始位置）
+function [pgon] = getPgLU(TLU,isRota,varargin)
+% polygon of LUs ( Note: only get polyshape whose hight = 0 )
+TLU = sortrows(TLU,'CoordLUBin');
+P = [];
+for idxl=1:height(TLU)
+    % 采用固定坐标, 若有可变输入参数
+    if nargin>2
+        x = varargin{1};
+        y = varargin{2};
+    else
+        x=TLU.CoordLUBin(idxl,1)-TLU.margin(idxl,1);
+        y=TLU.CoordLUBin(idxl,2)-TLU.margin(idxl,4);
+    end
+    
+    w = TLU.LWH(idxl,1) + TLU.margin(idxl,1 ) + TLU.margin(idxl,2 );
+     l = TLU.LWH(idxl,2) + TLU.margin(idxl,3 ) + TLU.margin(idxl,4 );
+    
+    % 旋转宽长, 若isRota==1
+    if isRota
+        P =  [P;pgRectangle(x,y,l,w);[NaN,NaN]];
+    else
+        P =  [P;pgRectangle(x,y,w,l);[NaN,NaN]];
+    end
+end
+pgon = polyshape(P);
+end
+
+% 获取待判断的内点, 由Boundary和Centroid共同构成
+function [P] = getBoundaryCentroid(pgon)
+[x,y] = boundary(pgon);
+[xcenter,ycenter] = centroid(pgon);
+P = [[x;xcenter],[y;ycenter]];
+end
+
+%% 555  子托盘调整重要函数
+% 均在同一bin内的LU, VEH是一个车
+function [LU] = HGapAdjust(LU,VEH)
+
+% INITILIZE
+flagGap=0; % 1: 调整 0: 未调整
+
+bottomLU = LU(LU.CoordLUBin(:,3)==0, : );  % 底层的托盘 % plotSolutionT(LU,VEH);
+
+% Get pgGap: VEH内的剩余空白区域  
+pgLU = getPgLU(bottomLU,0);  % plot(pgLU);
+pgVEH = polyshape(pgRectangle(0,0,VEH.LWH(1,1),VEH.LWH(1,2)));	    
+pgGap = subtract(pgVEH,pgLU);    if pgGap.NumRegions  > 1,  warning('Exsit %d Regions in this pgon', pgGap.NumRegions);  end
+                        % TODO pgGap排序? ,gBlanks = sortregions(pgBlanks,'area','ascend');
+
+% CoordGap : pgGap 的 坐标 先X后Y 
+[XBound,YBound]=boundary(pgGap);
+coordGapArray = fliplr(sortrows([YBound,XBound]));  % 先Y后X排序, 继而左右改变顺序
+
+% 循环每个Boundary顶点
+for iVertex=1:size(coordGapArray,1)
+    % Get Each GapBound Coord X and Y
+    % 每个边界顶点的坐标值
+    coordX = coordGapArray(iVertex,1);
+    coordY = coordGapArray(iVertex,2);
             
-            % 2.2.1 get pgLU
-            % Find pgBlank's 顶点坐标 x and y) 
-            [originx,originy] = boundary(pgBlank);
-            originLUx=min(originx);
-            originLUy=min(originy);
+    % 获取: 满足条件托盘序号 Get idxLUs i.e. Y of LU is larger than coordY of bound vertex 
+    flagLeqLU = bottomLU.CoordLUBin(:,2) - bottomLU.margin(:,3) > coordY;
+    idxLUs = find(flagLeqLU);         % 找出比yPoint值 高的且是bottom的LU索引号    
+    
+    % 如果没有该类型托盘，继续.
+    if isempty(idxLUs), continue; end       
+           
+    % 节约时间: 如果该Boundary的顶点不能放下最小的LU边, 则跳出该Boundary到下一个
+    minLW = min(min(LU.LWH(idxLUs,[1,2])));
+    if ~isinterior(pgGap,coordX+minLW,coordY) || ~isinterior(pgGap,coordX,coordY+minLW) ...
+            || ~isinterior(pgGap,coordX+minLW/2, coordY+minLW/2),    continue;    end
+    
+    % 循环每个Boundary顶点下每个符合条件的LU    
+    %   排序: 托盘排序
+    [~,ff] = sortrows([bottomLU.CoordLUBin(idxLUs,[2,1])]);  idxLUs = idxLUs(ff);
+    for ii=1:length(idxLUs)
+        idxLU = idxLUs(ii); % bottomLU的序号
+        thisLU = bottomLU(idxLU,:);
+        
+        % pgLU1 待合并的LU pgGapNew 合并后的新Gap
+        pgLU1 = getPgLU(thisLU, 0);        
+        pgGapNew = union(pgGap,pgLU1);
+        
+        % pgLU2 待新摆放的LU位置
+        pgLU2 = getPgLU(thisLU, 0, coordX,coordY);        %         pgLU2 =  polyshape(pgRectangle(coordX,coordY,wLU,lLU));  
+        flagLU = all(isinterior(pgGapNew, getBoundaryCentroid(pgLU2)));        
+        
+        pgIntersect = intersect(pgLU2,subtract(pgVEH,pgGapNew));
+        if pgIntersect.NumRegions ~= 0, flagLU = 0; end
+        
+        % pgLU2Rota 待新摆放的旋转后LU位置
+        flagLURota=0;
+        if thisLU.isRota     %bottomLU.isRota(idxLU)
+            pgLU2Rota =  getPgLU(thisLU, 1, coordX,coordY); %polyshape(pgRectangle(coordX,coordY,lLU,wLU));
+            flagLURota = all(isinterior(pgGapNew, getBoundaryCentroid(pgLU2Rota))); 
             
-            % 2.2.2 get pgLU 不旋转 基于pgBlank's Region
-            w=T23LU.LWH(l,1);
-            h=T23LU.LWH(l,2);
-            pgLU = polyshape(pgRectangle(originLUx,originLUy,w,h));
-            
-            % 2.2.3 get pgLURota 旋转 基于pgBlank's Region
-            if T23LU.isRota(l)
-                wRota = T23LU.LWH(l,2);
-                hRota = T23LU.LWH(l,1);
-                pgLURota = polyshape(pgRectangle(originLUx,originLUy,wRota,hRota));
+            pgIntersectRota = intersect(pgLU2Rota,subtract(pgVEH,pgGapNew));
+            if pgIntersectRota.NumRegions ~= 0, flagLURota = 0; end
+        end        
+        
+        % 若都可放下, 二者选择一个，横放优先
+        if flagLU && flagLURota
+            if thisLU.LWH(1) > thisLU.LWH(2) %wLU>lLU
+                flagLURota=0;
+            else
+                flagLU=0;
             end
+        end
             
-            % 2.3 if pgLU/pgLURota can be assigned into pgBlank
-            [xLU,yLU] = boundary(pgLU);
-            [xLURota,yLURota] = boundary(pgLURota);
-            xLU
-            yLU
-            %% 判定是否可以放下的重要条件
-            % 555: if all of pgLU's boundary points belong to pgBlank
-            flagLUx =  all(isinterior(pgBlank,xLU([1,4]),yLU([1,4])));
-            flagLU =  all(isinterior(pgBlank,xLU,yLU));
-            flagLURotax =  all(isinterior(pgBlank,xLURota([1,4]),yLURota([1,4])));
-            flagLURota =  all(isinterior(pgBlank,xLURota,yLURota));
-            
-            % 3 如果可以替换,
-            if flagLU || flagLUx
-%                 [x,y]=boundary(pgBlank);
-%                 originLUx = min(xLU)
-%                 originLUy = min(yLU)
-                %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
-                T23LU.CoordLUBin(l,1) = originLUx;
-                T23LU.CoordLUBin(l,2) = originLUy;
-                T23LU.LWH(l,1)=w;
-                T23LU.LWH(l,2)=h;
-                flagGap=1;
-                break
+        
+        pausetime = 0.0;   
+        % plot 某些vertex的尝试过程
+        plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(coordX,coordY,'.', 'MarkerSize', 20);
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(pgLU1,'FaceColor','green','FaceAlpha',0.5)
+        %         plot(pgGapNew,'FaceColor','green','FaceAlpha',0.8)
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(pgLU2Rota,'FaceColor','red','FaceAlpha',0.5)
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(pgLU2,'FaceColor','red','FaceAlpha',0.5)
+            if flagLU || flagLURota
+                axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*6);  hold off;
+            else                
+        axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold off;
             end
-            
-            if flagLURota || flagLURotax
-%                 [x,y]=boundary(pgBlank);
-%                 originLUx = min(xLU);
-%                 originLUy = min(yLU);
-                %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
-                T23LU.CoordLUBin(l,1) = originLUx;
-                T23LU.CoordLUBin(l,2) = originLUy;
-                T23LU.LWH(l,1)=h;
-                T23LU.LWH(l,2)=w;
-                T23LU.Rotaed(l)=~T23LU.Rotaed(l);
-                flagGap=1;
-                break
+        
+             plot(pgGapNew,'FaceColor','green','FaceAlpha',0.8)
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+
+        if flagLU || flagLURota
+            % plot 仅调整的vertex的过程
+            plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)            
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);     pause(pausetime/100);
+            plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(coordX,coordY,'.', 'MarkerSize', 20);
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            plot(pgLU1,'FaceColor','green','FaceAlpha',0.5)
+            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+            if flagLURota
+                plot(pgLU2Rota,'FaceColor','red','FaceAlpha',0.5)
+            else
+                plot(pgLU2,'FaceColor','red','FaceAlpha',0.5)
             end
+            axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*6);  hold off;            
             
-            %     area(pgLU)                         area(pgBlank)
+            % fLU: 需要调整的LU标记  从botttomLU计算, 但需返回到LU替换, 即非底部LU也要调整
+            fLU = LU.CoordLUBin(:,1) == thisLU.CoordLUBin(1) & LU.CoordLUBin(:,2) == thisLU.CoordLUBin(2);
             
-            %                         figure
-            %                         plot(pgLU)
-            %                         hold on
-            %                         plot(pgBlank)
-            
-            %                     area(pg12)
-            %                     area(pg1)
-            
+            LU.CoordLUBin(fLU,1) = coordX + LU.margin(idxLU,1);
+            LU.CoordLUBin(fLU,2) = coordY + LU.margin(idxLU,4);
+            if flagLURota
+                tmpLWH = LU.LWH(fLU,1);
+                LU.LWH(fLU,1) = LU.LWH(fLU,2);
+                LU.LWH(fLU,2) = tmpLWH;
+                LU.Rotaed(fLU)=~LU.Rotaed(fLU);
+            end
+            flagGap=1;            
         end
         if flagGap,   break;    end
     end
     if flagGap,   break;    end
-    
 end
+
+% 如果本次调整Gap成功，则需要递归, 重新对该bin进行调整
+if flagGap
+    [LU] = HGapAdjust(LU,VEH);
 end
+
+end
+
+
+
+
+
+%% dd: 需要调整Gap的Bin
+% function [flagGap,T23LU] = getMixedGap1(dd)
+% % Initilize output
+% flagGap=0;
+% T23LU = struct2table(structfun(@(x) x',dd.LU,'UniformOutput',false));
+% 
+% % find and sort 'fidx' (fidx: 有Gap的Strip的Index)
+% fidx=find(dd.Strip.isGapBalance==0);  %fidx: 存在混装间隙的strip的序号
+% [~,ff]=sort(dd.Strip.Strip_Bin(2,fidx)); %
+% fidx=fidx(ff); %从最小（最靠近车顶）的进入顺序进行, 进入bin内是12在前,11在后
+% 
+% for i=1:length(fidx)
+%     flagGap = 0;
+%     idxs = fidx(i);  % strip12 找到对应的LU LU_Strip 第12个 它的LWH和它的CoordLUBin CoordLUStrip
+%     
+%     %% 1: pgLUinStrip: strip对应的pg 和 pgLUinStrip: 此strip内lu对应的pg -> pgBlanksinStrip:消减后的pg
+%     %pgLUinStrip: strip内的LU的多边形,可能是不规则的或是多个的
+%     pgLUinStrip = pgStripLU(idxs,T23LU);    % pgLUinStrip.NumRegions
+%     
+%     %pgStrip: 此strip的多边形,一定是个矩阵
+%     stripWidth = dd.Veh.LWH(1, unique(T23LU.LU_VehType));     %strip宽度
+%     stripHeight = dd.Strip.LW(2,idxs);                                       %strip高度
+%     [x,y]=boundary(pgLUinStrip);
+%     pgStrip = polyshape(pgRectangle(min(x),min(y),stripWidth,stripHeight));  if size(pgStrip.Vertices,1) ~= 4, error('strip不是矩形'); end
+%     
+%     %pgBlanksinStrip: strip内的剩余空白区域,每个区域必须是矩阵
+%     pgBlanksinStrip = regions(subtract(pgStrip,pgLUinStrip)); % 获取本strip内的剩余可用区域    
+%     %pgBlanksinStrip排序, （目前: 面积小的在前面） todo: y小的在前面
+%     pgBlanksinStrip = sortregions(pgBlanksinStrip,'area','ascend');
+%     %                 plot(pgBlanksinStrip)
+%     %                 hold on
+%     %                 plot(pgLUinStrip)
+%     
+%     %% 2: idxLUArray：找到idxs后一个strip内的LU,依据LU的大小判定能否放下
+%     % Find nextStrip
+%     nextStrip = dd.Strip.Strip_Bin(2,idxs) + 1;                                 %此strip在bin内的进入顺序 + 1：即下一个strip的序号
+%     nextStripIdx = find(dd.Strip.Strip_Bin(2,:) == nextStrip);
+%     
+%     % Get and sort idxLUArray by area of LU in nextStrip  %更新LU的顺序，从大面积到到小面积
+%     idxLUArray = find(T23LU.LU_Strip(:,1)==nextStripIdx);                   %在混装间隙下一个strip内包含的LU序号 
+%     
+%     idxLUareaArray = T23LU.LWH(idxLUArray,1).*T23LU.LWH(idxLUArray,2);    % areas
+%     [~, ord] = sort(idxLUareaArray,'descend');
+%     idxLUArray=idxLUArray(ord);
+%     
+%     % TODO 找出能放的下的region，并用某种规则（横竖）放入.
+%     % 逐个LU尝试放入pgBlandsinStrip
+%     for j=1:length(idxLUArray)
+%         % 从第j个LU（LU应该排序，从面积大的）开始, 尝试放入到上面的strip去
+%         l = idxLUArray(j);
+%         
+%         for i = 1:length(pgBlanksinStrip)
+%             % 2.1 get pgBlank
+%             pgBlank= pgBlanksinStrip(i);
+%             
+%             % 2.2.1 get pgLU
+%             % Find pgBlank's 顶点坐标 x and y) 
+%             [originx,originy] = boundary(pgBlank);
+%             originLUx=min(originx);
+%             originLUy=min(originy);
+%             
+%             % 2.2.2 get pgLU 不旋转 基于pgBlank's Region
+%             w=T23LU.LWH(l,1);
+%             h=T23LU.LWH(l,2);
+%             pgLU = polyshape(pgRectangle(originLUx,originLUy,w,h));
+%             
+%             % 2.2.3 get pgLURota 旋转 基于pgBlank's Region
+%             if T23LU.isRota(l)
+%                 wRota = T23LU.LWH(l,2);
+%                 hRota = T23LU.LWH(l,1);
+%                 pgLURota = polyshape(pgRectangle(originLUx,originLUy,wRota,hRota));
+%             end
+%             
+%             % 2.3 if pgLU/pgLURota can be assigned into pgBlank
+%             [xLU,yLU] = boundary(pgLU);
+%             [xLURota,yLURota] = boundary(pgLURota);
+%             xLU
+%             yLU
+%             %% 判定是否可以放下的重要条件
+%             % 555: if all of pgLU's boundary points belong to pgBlank
+%             flagLUx =  all(isinterior(pgBlank,xLU([1,4]),yLU([1,4])));
+%             flagLU =  all(isinterior(pgBlank,xLU,yLU));
+%             flagLURotax =  all(isinterior(pgBlank,xLURota([1,4]),yLURota([1,4])));
+%             flagLURota =  all(isinterior(pgBlank,xLURota,yLURota));
+%             
+%             % 3 如果可以替换,
+%             if flagLU || flagLUx
+% %                 [x,y]=boundary(pgBlank);
+% %                 originLUx = min(xLU)
+% %                 originLUy = min(yLU)
+%                 %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
+%                 T23LU.CoordLUBin(l,1) = originLUx;
+%                 T23LU.CoordLUBin(l,2) = originLUy;
+%                 T23LU.LWH(l,1)=w;
+%                 T23LU.LWH(l,2)=h;
+%                 flagGap=1;
+%                 break
+%             end
+%             
+%             if flagLURota || flagLURotax
+% %                 [x,y]=boundary(pgBlank);
+% %                 originLUx = min(xLU);
+% %                 originLUy = min(yLU);
+%                 %TODO : update 第l个LU的strip序号/进入顺序.CoordLUStrip坐标等
+%                 T23LU.CoordLUBin(l,1) = originLUx;
+%                 T23LU.CoordLUBin(l,2) = originLUy;
+%                 T23LU.LWH(l,1)=h;
+%                 T23LU.LWH(l,2)=w;
+%                 T23LU.Rotaed(l)=~T23LU.Rotaed(l);
+%                 flagGap=1;
+%                 break
+%             end
+%             
+%             %     area(pgLU)                         area(pgBlank)
+%             
+%             %                         figure
+%             %                         plot(pgLU)
+%             %                         hold on
+%             %                         plot(pgBlank)
+%             
+%             %                     area(pg12)
+%             %                     area(pg1)
+%             
+%         end
+%         if flagGap,   break;    end
+%     end
+%     if flagGap,   break;    end
+%     
+% end
+% end
 
 
 % 每次RunAlgorithm后，判断d.LU在输入与输出的差距

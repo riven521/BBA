@@ -398,8 +398,49 @@ V1118-03
      else
            verMilkRun = 1; % 9个输入参数为milkrun版本
      end
-3：
+3：修改getOrderofSID(SID)函数 555
+4：HItem2Strip：增加EID在SID后。
+5：HStrip2Bin: 增加EIDorder = getOrderofSID(Strip.EID); 
+6：HStrip2Bin: 修改IDorder = getOrderofLID(SIDorder, EIDorder, Strip);
+7：HStrip2Bin: 增加对EID判断
++tmpSort = [SIDorder; EIDorder; IDorder];
++[~,order] = sortrows(tmpSort',[1,2,3],{'ascend','ascend','ascend'});  if ~isrow(order), order=order'; end
+8：getOrderofLID 新增 V4版 : 含EID且数据结构基本重写
+	重要变化：特别容易出现单一strip相邻的混合strip有多个情况，TODO: 排除该情况或随意找个作为相邻或怎么办?
+9：getOrderofSID 新增 V4版 : 功能基本不变，重写写的容易读取
 
+---------------------------------------------------------------------------------------------------------
+V1128-01
+1：plotSolutionT增加对Item和LU在Strip的作图
+2：LU2Item的排序增加对LU的maxLayer考虑，在相同LU的ID下按maxLayer由高到低的排序
+3：在Strip均衡函数中，增加对LU.isNonMixed的重计算，不含Gpreproc中其它函数
+
+V1130-1
+1: 新增[LU] = cpuLU(LU,Veh)，其实为Gpreproc中的计算LU的isnonmixed等函数，提取出来。因为在stripbalance中需要使用。
+
+4：对10中的BUG进行审阅，解决量大车头偶尔不满足问题
+5：给出每个步骤的示意逻辑动图
+
+平铺改为:（删除）
+do2 = RunAlgorithmPP(d2,pA(iAlg)); 
+RunAlgorithmPP 
+
+
+V1221-1
+1: 修改plotSolutionT的图标题。可做LU,STRIP,BIN的图
+2: cpuStrip增加isGapBalance和GapValue计算 增加maxLUWidth lowestLUWidth属性
+3: cpuStrip增加nbEID nbSID nbLID属性	
+
+V1223-1
+1: main函数新增getMixedGap:当parGap为1时,计算是否成功移动间隙和替换
+2: 新增小函数： pg开头 pgon polyshape 等
+3: 增加对LWH的替换：T{flagTileLUIdx,{'LWH','Rotaed'}} = T23{:,{'LWH','Rotaed'}};     
+
+
+里程碑：V0101-1
+完成混合间隙优化算法
+给对方不那么完美的，仅能一次优化的版本
+1： 
 
 TODO
 

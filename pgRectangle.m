@@ -1,4 +1,4 @@
-function [P] = pgRectangle(x,y,w,h ) 
+function [P] = pgRectangle(x,y,w,h) 
 %由四要素获取四个顶点
 % pgon = polyshape(p) plot(pgon)
 P = zeros(4,2);

@@ -13,6 +13,7 @@ Item.Item_Bin=zeros(2,nItem);
 Item.CoordItemBin=zeros(2,nItem);
 LU.LU_Bin=zeros(2,nLU);
 LU.CoordLUBin=zeros(2,nLU); % LU.LU_Strip=zeros(2,nLU); %% NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
+[LU.leftA,LU.bottomA,LU.rightA,LU.topA] = deal(zeros(1,nLU));
 
 iiStrip = 0;
 % 循环每个bin 5555555555 非常重要的函数 55555555555555
@@ -103,11 +104,19 @@ for iBin=1:max(Strip.Strip_Bin(1,:))
                 LU.LU_Bin(1,thisLU)=iBin;
                 LU.LU_Bin(2,thisLU)=tmpLUSeq;
                 tmpLUSeq=tmpLUSeq+1;
+                
                 % 更新CoordLUBin 555 HAVE checked
                 LU.CoordLUBin(1,thisLU) = Item.CoordItemBin(1,thisItem);
                 LU.CoordLUBin(2,thisLU) = Item.CoordItemBin(2,thisItem);                
                 LU.CoordLUBin(3,thisLU) = sum(LU.LWH(3,tmpLU));  %555 错误原因同上% LU.CoordLUBin(3,thisLU) = sum(tmpLWLU(3,1:iLU-1));
                 tmpLU = [tmpLU thisLU];
+                
+                % 新增：LU的四个坐标
+                LU.leftA(thisLU) = LU.CoordLUBin(1,thisLU);
+                LU.bottomA(thisLU) = LU.CoordLUBin(2,thisLU);
+                LU.rightA(thisLU) = LU.leftA(thisLU) + LU.LWH(1,thisLU);
+                LU.topA(thisLU) = LU.bottomA(thisLU) + LU.LWH(2,thisLU);        
+                
             end
         end
         tmpStrip = [tmpStrip thisStrip];
