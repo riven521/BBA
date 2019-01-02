@@ -31,9 +31,9 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all;
 global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
-global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType % plotStrip
+global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType ISplotShowGapAdjust % plotStrip
 global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1
-global parBalance verMilkRun parGap
+global parBalance verMilkRun parGap parMulipleGap
 parBalance = 8/30;
 % ISisNonMixedLU    1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
 % ISisMixTileLU          1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
@@ -41,7 +41,8 @@ parBalance = 8/30;
 % ISstripbalance        1 调用高度均衡开关
 
 % 开关 par
-parGap = 1
+parGap = 1  % 是否允许主函数的间隙调整
+parMulipleGap = 0 % 是否允许间隙递归多次调整
 %% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
 ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
 ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
@@ -53,14 +54,16 @@ ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可
 % ISsItemAdjust = 1              % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1   %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 1
-ISplotShowType = 1 % 1 LID 2 PID 3 ID
+ISplotBBA = 0 % 是否显示LU/Strip/Bin的结果（均已排序）
+ISplotShowGapAdjust = 0 % 是否显示Gap调整过程
+
+ISplotShowType = 3 % 1 LID 2 PID 3 ID 作图的颜色标记选项
         % ISplotSolu = 0
 
                             ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
                             ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节 后期替换为同一
 
-ISplotPause = 0.0; %-0.05 % plot间隔时间
+ISplotPause = 0.0;  %-0.05 % plot间隔时间
 
 ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
@@ -830,6 +833,7 @@ end
 %% 555  子托盘调整重要函数
 % 均在同一bin内的LU, VEH是一个车
 function [LU] = HGapAdjust(LU,VEH)
+global parMulipleGap ISplotShowGapAdjust
 
 % INITILIZE
 flagGap=0; % 1: 调整 0: 未调整
@@ -860,10 +864,9 @@ for iVertex=1:size(coordGapArray,1)
     % 如果没有该类型托盘，继续.
     if isempty(idxLUs), continue; end       
            
-    % 节约时间: 如果该Boundary的顶点不能放下最小的LU边, 则跳出该Boundary到下一个
+    % 节约时间: 如果该Boundary的顶点不能放下最小的LU边(即超出车辆的边界), 则跳出该Boundary到下一个
     minLW = min(min(LU.LWH(idxLUs,[1,2])));
-    if ~isinterior(pgGap,coordX+minLW,coordY) || ~isinterior(pgGap,coordX,coordY+minLW) ...
-            || ~isinterior(pgGap,coordX+minLW/2, coordY+minLW/2),    continue;    end
+    if ~isinterior(pgVEH,coordX+minLW,coordY) || ~isinterior(pgVEH,coordX,coordY+minLW) || ~isinterior(pgVEH,coordX+minLW/2, coordY+minLW/2),    continue;    end
     
     % 循环每个Boundary顶点下每个符合条件的LU    
     %   排序: 托盘排序
@@ -902,7 +905,7 @@ for iVertex=1:size(coordGapArray,1)
             end
         end
             
-        
+        if ISplotShowGapAdjust
         pausetime = 0.0;   
         % plot 某些vertex的尝试过程
         plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
@@ -927,29 +930,32 @@ for iVertex=1:size(coordGapArray,1)
         axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold off;
             end
         
-             plot(pgGapNew,'FaceColor','green','FaceAlpha',0.8)
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-
+%              plot(pgGapNew,'FaceColor','green','FaceAlpha',0.8)
+%             hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        end
+        
         if flagLU || flagLURota
-            % plot 仅调整的vertex的过程
-            plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-            plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-            plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)            
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);     pause(pausetime/100);
-            plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-            plot(coordX,coordY,'.', 'MarkerSize', 20);
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-            plot(pgLU1,'FaceColor','green','FaceAlpha',0.5)
-            hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-            if flagLURota
-                plot(pgLU2Rota,'FaceColor','red','FaceAlpha',0.5)
-            else
-                plot(pgLU2,'FaceColor','red','FaceAlpha',0.5)
+            if ISplotShowGapAdjust
+                % plot 仅调整的vertex的过程
+                plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+                plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+                plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);     pause(pausetime/100);
+                plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+                plot(coordX,coordY,'.', 'MarkerSize', 20);
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+                plot(pgLU1,'FaceColor','green','FaceAlpha',0.5)
+                hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+                if flagLURota
+                    plot(pgLU2Rota,'FaceColor','red','FaceAlpha',0.5)
+                else
+                    plot(pgLU2,'FaceColor','red','FaceAlpha',0.5)
+                end
+                axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*6);  hold off;
             end
-            axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*6);  hold off;            
             
             % fLU: 需要调整的LU标记  从botttomLU计算, 但需返回到LU替换, 即非底部LU也要调整
             fLU = LU.CoordLUBin(:,1) == thisLU.CoordLUBin(1) & LU.CoordLUBin(:,2) == thisLU.CoordLUBin(2);
@@ -970,8 +976,8 @@ for iVertex=1:size(coordGapArray,1)
 end
 
 % 如果本次调整Gap成功，则需要递归, 重新对该bin进行调整
-if flagGap
-    [LU] = HGapAdjust(LU,VEH);
+if flagGap && parMulipleGap
+     [LU] = HGapAdjust(LU,VEH);
 end
 
 end

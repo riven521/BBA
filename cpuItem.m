@@ -95,7 +95,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 % %     checktLU(LU)
 % %     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
-    %% SECTION 3 计算ITEM的isNonMixed/isMixedTile是否为不需要混拼/混拼排序找甩尾计算
+    %% 	
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
     ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
@@ -107,20 +107,46 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
         
         ItemWidth = unique(Item.LWH(1,flagItem));     % Item宽度
         VehWidth = Veh.LWH(1,1);  % 车辆宽度
-        maxWidthLayer= floor(VehWidth/ItemWidth); %Item可放宽度层数
-        nb = sum(flagItem);
-        nbmod = mod(nb,maxWidthLayer);
-        if nb ==0 || nbmod>nb, error('cpuItem种计算isNonMixed错误'); end
-        if nbmod == 0 %mod为0表明 不需要混合 不混合的提前在order中提前
-            Item.isNonMixed(flagItem) = 1;
+        
+        nbmaxItem= floor(VehWidth/ItemWidth);     % Item可放最大宽度层数
+        nbItem = sum(flagItem);
+        
+        % GapWidth 车辆安排最多个数后，剩余Item后的Gap宽度
+        GapWidth = VehWidth - nbmaxItem*ItemWidth;
+        
+        % nbmod: 自身宽度数量 对 最大宽度数 取余 
+        nbmod = mod(nbItem,nbmaxItem);        if nbItem ==0 || nbmod>nbItem, error('cpuItem种计算isNonMixed错误'); end
+        
+        % 计算：flagNonMixedItem（1 ：该类型Item不允许混合的，优先排序；0：非优先排序，与其它混合堆垛可能性大
+        % 余数不为0，则一定表明可以有空，必须和其它Item混合；
+        if nbmod~=0 
+            flagNonMixedItem = 0;
         else
+            % 若余数为0，且只有一层Strip，剩余Gap宽度又较大，则指定为允许和其它Item混合；
+            if nbItem==nbmaxItem && GapWidth > ItemWidth*0.5
+                flagNonMixedItem = 0;
+            else % 否则指定为不允许和其它Item混合
+                flagNonMixedItem = 1;
+            end
+        end
+        
+        % 赋值：依据flagNonMixedItem，赋值Item的isNonMixed/isMixedTile （Item排序的重要依据）
+        if   flagNonMixedItem 
+            Item.isNonMixed(flagItem) = 1;  % 如果Item为无需混合的, 则混合甩尾的标记均为0
+            Item.isMixedTile(flagItem) = 0;
+        else  
             Item.isNonMixed(flagItem)= 0;
-            % 计算Item的isMixedTile
-            tmpSort=[Item.isHeightFull;Item.HLayer;Item.LWH(3,:)];
-            [~, order]=sortrows(tmpSort(:,flagItem)', [1,2,3],{'ascend','ascend','ascend'});
-            flagItemIdx = find(flagItem);
-            flagmodIdx = flagItemIdx(order(1:nbmod));
-            Item.isMixedTile(flagmodIdx)=1;
+            
+            % Item.isMixedTile  计算Item的isMixedTile ，即找出不允许混合的Items，并予以标记
+            if nbmod == 0 % 即 nbItem==nbmaxItem && GapWidth > ItemWidth*0.5 其实不允许mix，但Gap太大，且只有一层
+                Item.isMixedTile(flagItem)=1;  %NOTE: flagItem所有的Item都标记
+            else            
+                tmpSort=[Item.isHeightFull;Item.HLayer;Item.LWH(3,:)];
+                [~, order]=sortrows(tmpSort(:,flagItem)', [1,2,3],{'ascend','ascend','ascend'});
+                flagItemIdx = find(flagItem);
+                flagmodIdx = flagItemIdx(order(1:nbmod));
+                Item.isMixedTile(flagmodIdx)=1;  %NOTE: flagmodIdx 部分Item标记
+            end
         end
     end
     

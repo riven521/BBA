@@ -440,7 +440,36 @@ V1223-1
 里程碑：V0101-1
 完成混合间隙优化算法
 给对方不那么完美的，仅能一次优化的版本
-1： 
+
+在甩尾，平铺后Main函数进行Case by Case间隙调整操作，对平铺（整车/甩尾）后的进行Gap调整。
+主函数 ：[dd.LU] = getMixedGap(dd.LU, dd.Veh);  （parGap=1）
+输入结构体LU和VEH，输出结构体LU（修改其坐标，旋转状态，和长宽）
+对每个VEH的LU分别进行调整
+	  subTLUNew = HGapAdjust(subTLU,subVeh);
+找出最底层的Lus：bottomLU
+获取该车辆的间隙多边形：pgGap
+先获取该车辆的多边形（矩形）pgVEH；
+再获取该车辆内俯视堆垛的组合多边形 pgLU；（浅绿色）
+二者的差集（Substract），即间隙多边形。（浅蓝色）
+       5. 获取间隙多边形的所有顶点 coordGapArray（coordGapArray）
+       6. 从车头开始循环每个间隙顶点
+       7. 以堆垛距该间隙顶点距离作为优先级，尝试旋转/不旋转堆垛移动到该间隙多边形顶点 （thisLU，属于bottomLU）
+       8. 若允许移动 flagLU flagLURota (即不与其它堆垛交叉)，优先横向移动（比较W和L）, 递归（多次）调用本间隙调整算法；否则，尝试下一个堆垛。
+       9. 若该间隙顶点全不允许移动，则转步骤6，选择下个间隙顶点。直到所有间隙多边形顶点循环结束。
+
+
+V0102 
+1: cpuItem函数修改： SECTION 3 计算ITEM的isNonMixed/isMixedTile排序是否为不需要混拼/混拼排序找甩尾计算
+1: cpuItem函数修改：对nbItem==nbmaxItem && GapWidth > ItemWidth*0.5（只有一层，按道理不需要混合的，增加GapWidth判断，也可能允许和其它混合，并挑出这些Item进行标记。
+	特别适合1/2/3个Item，本层只能放1/2/3个；剩余Gap宽度多的Case
+
+2：修改HGapAdjust
+	解决：节约时间，跳出部分间隙顶点循环BUG
+	方法：pgGap->pgVEH, pgGap面积不包含待移走的LU，以车辆pgVEH取代。
+
+3：增加全局变量 ISplotShowGapAdjust = 0 % 是否显示Gap调整过程
+				parGap = 1  % 是否允许主函数的间隙调整
+				parMulipleGap = 0 % 是否允许间隙递归多次调整
 
 TODO
 

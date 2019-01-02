@@ -23,9 +23,9 @@ if iscell(T.LID)
 % 1 获取含 颜色 属性的T  LID/SID/OPID etc   % 作图所需 1 LU的bin序号; 2 LWH 3 COORDLUBIN 4 LID 排序
 if ISplotShowType == 1
     if ismember('isShuaiWei', T.Properties.VariableNames)
-    tmpT = unique(T(:,{'ID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+    tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
     else
-        tmpT = unique(T(:,{'ID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+        tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
     end
 elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
