@@ -42,7 +42,7 @@ parBalance = 8/30;
 
 % 开关 par
 parGap = 1  % 是否允许主函数的间隙调整
-parMulipleGap = 0 % 是否允许间隙递归多次调整
+parMulipleGap = 1 % 是否允许间隙递归多次调整
 %% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
 ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
 ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
@@ -979,6 +979,47 @@ end
 if flagGap && parMulipleGap
      [LU] = HGapAdjust(LU,VEH);
 end
+
+% 如果调整Gap不成功, 则做些后处理
+
+        if ISplotShowGapAdjust
+        pausetime = 0.0;   
+        % plot 某些vertex的尝试过程
+        plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
+        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+        axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold off;
+        end
+
+% 190108 优化        
+%  1 ：去除整层间隔间隙
+gapY=sort(pgGap.Vertices(:,2)); 
+gapY=unique(gapY);
+for g=1:length(gapY)-1
+    pgRect=polyshape([0 gapY(g);  VEH.LWH(1,1) gapY(g); VEH.LWH(1,1) gapY(g+1); 0 gapY(g+1)]); % 矩阵
+    %     plot(pgRect,'FaceColor','red','FaceAlpha',0.2)
+    %     axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold on;
+    % 如果存在整层间隔且后面有堆垛，就往前移动
+    if all(isinterior(pgGap, getBoundaryCentroid(pgRect)))
+        warning('车内存在整层间隔');
+        fYLU = LU.CoordLUBin(:,2)>gapY(g);
+        if any(fYLU)
+            LU.CoordLUBin(fYLU,2) =  LU.CoordLUBin(fYLU,2) - (gapY(g+1) - gapY(g));  %向前移动一定距离
+        end
+    end
+end
+    
+% n1=fliplr(sortrows(n))
+
+% LU.CoordLUBin(:,1)
+% LU.CoordLUBin(:,2)
+% sLU = sortrows(LU,{'LU_Bin'},{'ascend'})
+% 1
 
 end
 

@@ -169,25 +169,75 @@ end
     
     %% 嵌套函数        
     function insertItemToStrip(thisLevel,iItem)       
-        % 1 更新Item相关Sort数据
-        %  1.1 更新CoordItemStripSort
-        sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %更新x坐标
-        sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
+   
+        % V2 按照Item的高度，高的优先进入Strip
+        % 判定本Strip(thisLevel)是否已有堆垛且是否有比当前堆垛低的堆垛, 如有，进行本strip的数据更新
+        if tmpStrip_Item(1,thisLevel) > 0 && any(sItem.LWH(3,sItem.Item_Strip(1,:) == thisLevel) < sItem.LWH(3,iItem))
+            % 找出并排序本strip内的堆垛
+            idxItem = find(sItem.Item_Strip(1,:) == thisLevel);    if tmpStrip_Item(1,thisLevel) ~= length(idxItem), error('本level包含堆垛数量与指定数量不一致'); end
+            warning('存在高度顺序不一致的strip，需要调整');
+            idxIteminThisLevel = [idxItem,iItem];  % sItem.LWH(3,[idxItem])
+            [~,ordItem] = sort(sItem.LWH(3,idxIteminThisLevel),'descend');            
+            idxItemOrdinThisLevel = idxIteminThisLevel(ordItem);
+            
+            %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item    (相比V1不变)
+            tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
+            %  1.3 更新item归属strip信息itemBeStripMatrixSort      (相比V1 改变)
+            sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level  sItem.Item_Strip(1,idxItem) = thisLevel;
+            sItem.Item_Strip(2,idxIteminThisLevel) = ordItem; %本level下第几次安置重计算
+            %  2.1 更新LWStrip   (相比V1 改变)
+            Strip.LW(1,thisLevel) = wStrip - sum(sItem.LWH(1,idxIteminThisLevel)); %更新wleft (摆放方向前面一定)  555
+            Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); % 也可  % Strip.LW(2,thisLevel) = max(sItem.LWH(2,[idxItem])); %更新strip高度lleft(取最大值) 改为取strip内所有Item的最大值
+            %  1.1 更新CoordItemStripSort     (相比V1 改变)
+            for i=1:length(idxItemOrdinThisLevel)
+                sItem.CoordItemStrip(1,idxItemOrdinThisLevel(i)) = sum(sItem.LWH(1,idxItemOrdinThisLevel(1:i-1))); % wStrip - Strip.LW(1,thisLevel);         %更新x坐标 5555555555
+                sItem.CoordItemStrip(2,idxItemOrdinThisLevel(i)) = sum(Strip.LW(2,1:thisLevel-1)); %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
+            end
+            %  2.3 更新本level对应的StripWeight:   (相比V1不变)
+            Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
+            
+        else
+            %  1.1 更新CoordItemStripSort     (相比V1改变)
+            sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %更新x坐标
+            sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
+            
+            % 2 更新Strip相关数据（非排序） (相比V1不变)
+            %  2.1 更新LWStrip
+            Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
+            Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %更新strip高度lleft(取最大值)
+            
+            %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item    (相比V1不变)
+            tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
+            
+            %  2.3 更新本level对应的StripWeight:   (相比V1不变)
+            Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
+            
+            %         %  1.3 更新item归属strip信息itemBeStripMatrixSort      (相比V1改变)
+            sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level
+            sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %本level下第几次安置
+        end
         
-        % 2 更新Strip相关数据（非排序）
-        %  2.1 更新LWStrip
-        Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
-        Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %更新strip高度lleft(取最大值)
         
-        %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item
-        tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
-        
-        %  2.3 更新本level对应的StripWeight: 
-        Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
-        
-        %  1.3 更新item归属strip信息itemBeStripMatrixSort
-        sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level
-        sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %本level下第几次安置
+% %         % V1 传统按照Item的顺序进入Strip        
+% %         % 1 更新Item相关Sort数据
+% %         %  1.1 更新CoordItemStripSort
+% %         sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %更新x坐标
+% %         sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %更新y坐标 %如果iLevel=1,长（高）坐标为0；否则为求和
+% %         
+% %         % 2 更新Strip相关数据（非排序）
+% %         %  2.1 更新LWStrip
+% %         Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %更新wleft (摆放方向前面一定)
+% %         Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %更新strip高度lleft(取最大值)
+% %         
+% %         %  2.2 更新Strip.Strip_Item 行1 本strip内包含几个Item
+% %         tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %只要该level安放一个item,数量就增加1
+% %         
+% %         %  2.3 更新本level对应的StripWeight: 
+% %         Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
+% %         
+% %         %  1.3 更新item归属strip信息itemBeStripMatrixSort
+% %         sItem.Item_Strip(1,iItem) = thisLevel;    %第几个level
+% %         sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %本level下第几次安置
         
         
         
