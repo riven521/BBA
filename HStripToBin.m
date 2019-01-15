@@ -158,15 +158,17 @@ IDorder = getOrderofLID(SIDorder, EIDorder, Strip);
 %                                         Strip.isMixed, Strip.LID, Strip.LW(1:2,:), Strip.loadingrateLimit, Strip.loadingrate);                                    
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
 
-% 555 纠错语句：同一SIDorder下,不允许有重复的IDorder; 因为后续 TODO: 同一SIDorder/EIDorder下,不应该有重复的IDorder
-s=[SIDorder;IDorder];
-for i=min(SIDorder):max(SIDorder)
-    si = s(2,s(1,:)==i);
-    if numel(unique(si)) ~= numel(si),     
-        error('同一SIDorder下, 有重复的IDorder');   end
-    if ~issorted(unique(si),'strictascend'),     
-        error('同一SIDorder下, 有重复的IDorder,且非严格递增');   end % 可取代上面的判断
-end
+% 555 纠错语句 Single版本：V1: 同一SIDorder下,不允许有重复的 IDorder 即同一供应商下，必须有不同的顺序，不考虑EID
+% s=[SIDorder;IDorder];
+% for i=min(SIDorder):max(SIDorder)
+%     si = s(2,s(1,:)==i);
+%     if numel(unique(si)) ~= numel(si),     
+%         error('同一SIDorder下, 有重复的IDorder');   end
+%     if ~issorted(unique(si),'strictascend'),     
+%         error('同一SIDorder下, 有重复的IDorder,且非严格递增');   end % 可取代上面的判断
+% end
+
+% 555 纠错语句MILKRUN VERSION：同一SIDorder/EIDorder下,不应该有重复的IDorde 即同一供应商且同一卸货口下，必须有不同的顺序
 s=[ SIDorder;EIDorder; IDorder];
 for i=min(SIDorder):max(SIDorder)
     for j=min(EIDorder):max(EIDorder)

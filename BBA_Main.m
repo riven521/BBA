@@ -48,16 +48,16 @@ ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不
 ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
 % ISstripbalance=0 即不均衡时,可以ISisGpreprocLU1=0; 表示LU使劲高度堆,更多的ISisNonMixedLU=0.
 
-%% 
+%%
 % DEL ISisMixedStrip = 1 可以删除了 % 1表示依据LU.ID判断是否混合 0依据LU.LID判断 NOTE: 所有STRIP
 % ITEM均为ID替换LID
 % ISsItemAdjust = 1              % 暂时不用 用途忘记了
 % ISreStripToBinMixed = 1   %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
-ISplotBBA = 0 % 是否显示LU/Strip/Bin的结果（均已排序）
-ISplotShowGapAdjust = 0 % 是否显示Gap调整过程
+ISplotBBA = 1 % 是否显示LU/Strip/Bin的结果（均已排序）
+ISplotShowGapAdjust = 1 % 是否显示Gap调整过程
 
-ISplotShowType = 3 % 1 LID 2 PID 3 ID 作图的颜色标记选项
+ISplotShowType = 5 % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
         % ISplotSolu = 0
 
                             ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
@@ -77,8 +77,14 @@ ISisMixTile  = 1         % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许
 ISreStripToBin = 1   % 车头优先LU数量排序参数 默认为1 必须
 
 ISshuaiwei = 1         % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
+
+if verMilkRun == 1
+ISpingpu = 0         % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+ISpingpuAll = 0       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+else
 ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
 ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+end
 
 ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
@@ -981,29 +987,35 @@ if flagGap && parMulipleGap
 end
 
 % 如果调整Gap不成功, 则做些后处理
+if ISplotShowGapAdjust
+    pausetime = 0.0;
+    % plot 某些vertex的尝试过程
+    plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
+    hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+    plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
+    hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+    plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)
+    hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+    plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
+    hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
+    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);
+    hold on;
+end
 
-        if ISplotShowGapAdjust
-        pausetime = 0.0;   
-        % plot 某些vertex的尝试过程
-        plot(pgVEH,'FaceColor','white','FaceAlpha',0.01);
-        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-        plot(pgLU,'FaceColor','green','FaceAlpha',0.2)
-        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-        plot(pgGap,'FaceColor','blue','FaceAlpha',0.2)
-        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-        plot(coordGapArray(:,1),coordGapArray(:,2),'.', 'MarkerSize', 8);
-        hold on;    axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime/100);
-        axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold off;
-        end
-
-% 190108 优化        
+% 190108 优化
 %  1 ：去除整层间隔间隙
-gapY=sort(pgGap.Vertices(:,2)); 
+gapY=sort(pgGap.Vertices(:,2));
 gapY=unique(gapY);
+% 当多个pgon时,会出现NaN值, 需要排除
+gapY = gapY(~isnan(gapY));
 for g=1:length(gapY)-1
     pgRect=polyshape([0 gapY(g);  VEH.LWH(1,1) gapY(g); VEH.LWH(1,1) gapY(g+1); 0 gapY(g+1)]); % 矩阵
-    %     plot(pgRect,'FaceColor','red','FaceAlpha',0.2)
-    %     axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold on;
+    
+    if ISplotShowGapAdjust
+        plot(pgRect,'FaceColor','red','FaceAlpha',0.2)
+        axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*1.5);  hold on;
+    end
+    
     % 如果存在整层间隔且后面有堆垛，就往前移动
     if all(isinterior(pgGap, getBoundaryCentroid(pgRect)))
         warning('车内存在整层间隔');
@@ -1013,7 +1025,12 @@ for g=1:length(gapY)-1
         end
     end
 end
-    
+
+if ISplotShowGapAdjust
+    hold off;
+end
+
+
 % n1=fliplr(sortrows(n))
 
 % LU.CoordLUBin(:,1)

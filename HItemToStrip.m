@@ -165,7 +165,6 @@ end
 
 %% 测试script
 %     printscript();
-
     
     %% 嵌套函数        
     function insertItemToStrip(thisLevel,iItem)       
@@ -386,12 +385,20 @@ end
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
 function order = getITEMorder(Item,whichSortItemOrder)
 
-%对SID排序: SID按给定顺序排序,序号小的在前面
-szRow = cellfun(@(x)size(x,1), Item.SID);   if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID,即不同SID的目前不允许堆垛到一起
-ItemSID = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+%对SID/EID 排序: SID/EID 按给定顺序排序,序号小的在前面
+% V1 : 仅同一堆垛 不混合SID/EID CASE
+% szRow = cellfun(@(x)size(x,1), Item.SID);   if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个SID');  end %同一Item应该只有一个SID,即不同SID的目前不允许堆垛到一起
+% ItemSID = cell2mat(Item.SID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
 
-szRow = cellfun(@(x)size(x,1), Item.EID);   if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个EID');  end %同一Item应该只有一个EID,即不同SID的目前不允许堆垛到一起
-ItemEID = cell2mat(Item.EID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+% szRow = cellfun(@(x)size(x,1), Item.EID);   if (max(szRow)~=min(szRow)),  warning('同一ITEM不应该有多个EID');  end %同一Item应该只有一个EID,即不同SID的目前不允许堆垛到一起
+% ItemEID = cell2mat(Item.EID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
+
+% V2: 同一堆垛 可混合SID/EID CASE  end;  MILKRUN VERSION 应该single版本也可用
+[ItemSID,~]=padcat(Item.SID{:});  if iscolumn(ItemSID), ItemSID = ItemSID'; end; if size(ItemSID,1)>1,  warning('同一ITEM不应该有多个SID');  end 
+ItemSIDord = getItemOrd(ItemSID);
+
+[ItemEID,~]=padcat(Item.EID{:});  if iscolumn(ItemEID), ItemEID = ItemEID'; end; if size(ItemEID,1)>1,  warning('同一ITEM不应该有多个EID');  end %同一Item应该只有一个EID,即不同SID的目前不允许堆垛到一起
+ItemEIDord = getItemOrd(ItemEID);
 
 %对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
 szRow = cellfun(@(x)size(x,1), Item.LID);  if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个LID');  end %同一Item应该只有一个ID 必然的
@@ -400,8 +407,11 @@ ItemLID = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % V2: ********** 考虑isNonMixed
 global ISisNonMixed ISisMixTile
 % 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpItem = [ItemSID; Item.isNonMixed; Item.isMixedTile; ...
-    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEID; ];
+tmpItem = [ItemSID; Item.isNonMixed; Item.isMixedTile; ...      % SINGLE VERSION
+    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+tmpItem = [ItemSIDord; Item.isNonMixed; Item.isMixedTile; ...  % MILKRUN VERSION
+    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+
 if ISisNonMixed==1    
     if ISisMixTile==1
         [~,order] = sortrows(tmpItem',[1, 8, 2, 3, 4, 5, 6, 7 ],{'ascend','ascend','descend','ascend','descend','descend','descend','descend'}); %增加EID
@@ -667,3 +677,22 @@ elseif p.whichStripH == 3 % nextfit
 end
 end
 
+
+function ItemEIDord = getItemOrd(ItemID)
+
+priority = 1;
+ItemEIDord = zeros(1,size(ItemID,2));
+
+fmix        = sum(~isnan(ItemID),1)   >  1;     % ITEM混合多个EID的逻辑判定
+fnonmix = sum(~isnan(ItemID),1) == 1;     % ITEM非混合多个EID的逻辑判定
+uniEID = unique(ItemID(~isnan(ItemID)));
+
+for u=1:length(uniEID)
+    feid = any(ItemID == uniEID(u),1);
+    if any(feid&~ItemEIDord&fnonmix),
+        ItemEIDord(feid&~ItemEIDord&fnonmix) = priority;   priority=priority+1; end
+    if any(feid&~ItemEIDord&fmix),
+        ItemEIDord(feid&~ItemEIDord&fmix) = priority;  priority=priority+1; end
+end
+
+end

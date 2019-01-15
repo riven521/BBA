@@ -31,6 +31,10 @@ elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
 elseif ISplotShowType == 3
     tmpT = unique(T(:,{'ID'}));
+elseif ISplotShowType == 4
+    tmpT = unique(T(:,{'SID'}));
+elseif ISplotShowType == 5
+    tmpT = unique(T(:,{'EID'}));
 end
 
 tmpT.LUcolor = 0.8*hsv(height(tmpT));

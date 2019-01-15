@@ -409,6 +409,28 @@ V1118-03
 	重要变化：特别容易出现单一strip相邻的混合strip有多个情况，TODO: 排除该情况或随意找个作为相邻或怎么办?
 9：getOrderofSID 新增 V4版 : 功能基本不变，重写写的容易读取
 
+V090115-01
+1: 多的参数EID在Single版也有增加，全部为1 
+2: 修改堆垛ITEM的SID和EID计算及排序（改用ItemSIDord/ItemEIDord对同一车既包含不同供应商，每个供应商又有不同卸货口EP的考虑）
+% V2: 同一堆垛 可混合SID/EID CASE  end;  MILKRUN VERSION 应该single版本也可用
+[ItemSID,~]=padcat(Item.SID{:});  if iscolumn(ItemSID), ItemSID = ItemSID'; end; if size(ItemSID,1)>1,  warning('同一ITEM不应该有多个SID');  end 
+ItemSIDord = getItemOrd(ItemSID);
+
+[ItemEID,~]=padcat(Item.EID{:});  if iscolumn(ItemEID), ItemEID = ItemEID'; end; if size(ItemEID,1)>1,  warning('同一ITEM不应该有多个EID');  end %同一Item应该只有一个EID,即不同SID的目前不允许堆垛到一起
+ItemEIDord = getItemOrd(ItemEID);
+
+tmpItem = [ItemSIDord; Item.isNonMixed; Item.isMixedTile; ...  % MILKRUN VERSION
+    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+3: 修改MILKRUN的纠错语句 单机应该也可运行
+% 555 纠错语句MILKRUN VERSION：同一SIDorder/EIDorder下,不应该有重复的IDorde 即同一供应商且同一卸货口下，必须有不同的顺序
+s=[ SIDorder;EIDorder; IDorder];
+for i=min(SIDorder):max(SIDorder)
+    for j=min(EIDorder):max(EIDorder)
+    si = s(3,s(1,:)==i&s(2,:)==j);
+    if ~issorted(unique(si),'strictascend'),     error('同一EIDorder下, 有重复的IDorder,且非严格递增');   end
+    end
+end
+
 ---------------------------------------------------------------------------------------------------------
 V1128-01
 1：plotSolutionT增加对Item和LU在Strip的作图
@@ -522,6 +544,8 @@ function insertItemToStrip(thisLevel,iItem)
             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
 
 
+V190111
+1: 修改多个polygon的，包含NAN的strip向上问题
 
 
 TODO
