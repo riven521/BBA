@@ -55,9 +55,9 @@ ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可
 % ISreStripToBinMixed = 1   %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
 
 ISplotBBA = 1 % 是否显示LU/Strip/Bin的结果（均已排序）
-ISplotShowGapAdjust = 1 % 是否显示Gap调整过程
+ISplotShowGapAdjust = 0 % 是否显示Gap调整过程
 
-ISplotShowType = 5 % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
+ISplotShowType = 3 % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
         % ISplotSolu = 0
 
                             ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
@@ -765,6 +765,8 @@ clearvars -except output*
 fprintf(1,'Simulation done.\n');
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
+% mcc -W 'java:BBA_MR_Main,Class1,1.0' -T link:lib BBA_MR_Main.m -d '.\new'
+
 % printstruct(do,'sortfields',1,'PRINTCONTENTS',0);    printstruct(do.Veh);
 % do = rmfield(do, {'Veh', 'LU'});
 % pcode 'H*.m'

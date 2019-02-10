@@ -544,8 +544,10 @@ function insertItemToStrip(thisLevel,iItem)
             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
 
 
-V190111
+V190115
 1: 修改多个polygon的，包含NAN的strip向上问题
+2: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
+
 
 
 TODO
