@@ -1,30 +1,24 @@
-%% BBA_MAIN demo
-%% Form
-%    [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ... 
-%    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin)
-%        
-%% Inputs (varargin) LUID: 种类少 ; LULID: 种类多
+function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
+    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin)  %前4个必须
+% Inputs：LUID: 种类少 ; LULID: 种类多
 %   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
 %   LULWH                (3,n)   托盘宽长高
 %   VEHID                 (1,m)  车型编号
 %   VEHLWH              (3,m)   车型宽长高（考虑多车型）
 %   ------------------------------------------------------
-%   LUSID                  (1,n)   托盘供应商编号
-%   LUPID                  (1,n)   托盘零部件编号
+%   LUSID                   (1,n)   托盘供应商编号
+%   LUPID                   (1,n)   托盘零部件编号
 %   LUISROTA            (1,n)  托盘是否允许旋转
-%   LUMARGIN         (1,n)   托盘间margin(1-4左右上下)  可用托盘长宽高=每个托盘的实际长宽高+增加的margin
+%   LUMARGIN          (4,n)   托盘间margin(1-4左右上下)  可用托盘长宽高=每个托盘的实际长宽高+增加的margin
 %   LUWEIGHT           (1,n)  托盘重量
-%   BINWEIGHT         (1,m)  车型最大承载重量
-%   LULID                  (1,n)   托盘类型编号
-%% Outputs
+%   VEHWEIGHT        (1,m)  车型最大承载重量
+%   LUID                   (1,n)   托盘类型编号
+%   LUINDEX            (1,n） 托盘索引号-刘强专用
+%   LUEID                  (1,n） 托盘EP LOCATION - Milkrun版本参数
+% Outputs
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
 %   output_LU_LWH            (3,n)    每个LU的宽长高（旋转后的：实际值）
 %   output_LU_Seq             (8,n)    行1: LU在某个BIN内；行2: LU在该BIN内的安放顺序 。。。
-%
-
-%%
-function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
-    BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin) %前4个必须
 
 %% Initialize Global Variable
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
@@ -43,12 +37,12 @@ parBalance = 8/30;
 % 开关 par
 parGap = 1  % 是否允许主函数的间隙调整
 parMulipleGap = 1 % 是否允许间隙递归多次调整
-%% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
+% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
 ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
-ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
+% ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
 % ISstripbalance=0 即不均衡时,可以ISisGpreprocLU1=0; 表示LU使劲高度堆,更多的ISisNonMixedLU=0.
 
-%%
+%
 % DEL ISisMixedStrip = 1 可以删除了 % 1表示依据LU.ID判断是否混合 0依据LU.LID判断 NOTE: 所有STRIP
 % ITEM均为ID替换LID
 % ISsItemAdjust = 1              % 暂时不用 用途忘记了
@@ -78,6 +72,19 @@ ISreStripToBin = 1   % 车头优先LU数量排序参数 默认为1 必须
 
 ISshuaiwei = 1         % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
 
+
+ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
+
+% Milkrun版本 特殊全局变量
+verMilkRun = 0  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
+
+    % MR的参数9: EP LOCATION增加, 多的变量的自动增加
+     if nargin > 1 && length(varargin) < 9 %'LUEID',varargin{9});
+          verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));
+     elseif nargin > 1
+           verMilkRun = 1; % 9个输入参数为milkrun版本
+     end
+     
 if verMilkRun == 1
 ISpingpu = 0         % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
 ISpingpuAll = 0       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
@@ -86,19 +93,12 @@ ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平
 ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 end
 
-ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
-
-verMilkRun = 0  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
-%% Initialize Data Structure
-if nargin ~= 0
-    % MR的EP LOCATION增加, 多的变量的自动增加
-     if length(varargin) < 9
-          verMilkRun  = 0
-           varargin{9} = ones(1,length(LUID));
-     else
-           verMilkRun = 1; % 9个输入参数为milkrun版本
-     end
-     
+%% Initialize Data Structure  - d
+if nargin < 1 % Randome Generate
+    n=32; m=1;                                          % 16需要注意 250 srng1
+    d = DataRandomInitialize(n,m);        % 0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    save( strcat( '.\useless\', strcat('GoodIns',num2str(n))), 'd');          %     load .\new\GoodIns200.mat;
+else
     d = DataInitialize( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
@@ -112,55 +112,9 @@ if nargin ~= 0
             'VEHWEIGHT',varargin{6},...
             'LULID',varargin{7},...
             'LUINDEX',varargin{8},...
-            'LUEID',varargin{9});
-else
-    n=32; m=1;  % 16需要注意 250 srng1
-    d = DataInitialize(n,m);  %0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
-    
-    filename = strcat('GoodIns',num2str(n));
-    printstruct(d.Veh);  %车辆按第一个放置,已对其按体积从大到小排序; 
-    
-    save( strcat( '.\new\', filename), 'd');
-%     load .\new\GoodIns200.mat;
-end
-% printstruct(d);
-% TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-% % TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
-% TLUIN.Properties.VariableNames{'PID'} = 'OPID'; TLUIN.Properties.VariableNames{'SID'} = 'OSID';
-% s = table2struct(TLUIN,'ToScalar',true)
-% t = struct2table(l,'AsArray',true)
-%%
-% t.ID
-% t = [d.LU.ID;d.LU.LWH]
-% sortrows(t',[1,4],{'ascend','descend'})
-
-if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
-    error('目前为非MilkRun版本,不允许有多家供应商编号');
-end
-if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
-    error('目前为MilkRun版本,不允许只有单个供应商编号/单个EP LOCATION编号');
-end
-if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID)))
-    error('目前为MilkRun测试版本,只允许多个供应商编号 或 多个EP LOCATION编号,不能同时存在');
+            'LUEID',varargin{9}); 
 end
 
-
-%% 没有属性的临时增加
-    n = numel(d.LU.Weight);
-    % 给个初始进入顺序 暂时没有用
-    if ~isfield(d.LU, 'Index') %等同刘强所需index参数
-        d.LU.Index = 1:n;
-    end
-    
-    % 平铺使用属性
-    if ~isfield(d.LU, 'maxL')
-        d.LU.maxL(1,:) =  floor(d.Veh.LWH(1,1)./d.LU.LWH(1,:));
-        d.LU.maxL(2,:) =  floor(d.Veh.LWH(2,1)./d.LU.LWH(2,:));
-        d.LU.maxL(3,:) =  floor(d.Veh.LWH(3,1)./d.LU.LWH(3,:));   %具体每个托盘LU的高度的最大层数
-    end
-    
-    if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = d.LU.maxL(3,:); end% maximum given height layer
-    
 %% Initialize Parameter
 nAlg = 1;
 pA(nAlg) = ParameterInitialize('whichStripH', 3,...
@@ -168,28 +122,44 @@ pA(nAlg) = ParameterInitialize('whichStripH', 3,...
                              'whichSortItemOrder',3, ... 
                              'whichRotation',2, ...
                              'whichRotationHori', 1);
-                  
-% % nAlg = 1;
-% % for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西 因为一旦允许, 会大概率违背相邻约束
-% %     for j=3:3 %0-3 排序: 0: Vert；1: Hori; 2:error  3:按缝隙最小排序   Gpreproc 此处替代HItemToStrip函数中的物品摆放
-% %         for k=2:2 %0-2 默认0 不可旋转 1全部可旋转 2: 按人为设置是否允许Rotation 
-% %             for TLUl=1:1 % 已无用 :  % 0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
-% %                 for m=3:3 %1-3 best first next均可 选用的best fit 是否改位NEXT FIT 1002日改为m=3
-% %                 % pA nAlg 
-% %                 pA(nAlg) = ParameterInitialize( ...
-% %                              'whichStripH', i,...
-% %                              'whichBinH',m, ...
-% %                              'whichSortItemOrder',j, ... 
-% %                              'whichRotation',k, ...
-% %                              'whichRotationHori', TLUl);
-% %                  nAlg=nAlg+1;
-% %                 end
-% %             end
-% %         end
-% %     end
-% % end
-% % nAlg = nAlg - 1;
+                         
+% GcheckInput: 车辆按第一个放置,已对其按体积从大到小排序;
+list_struct(d)
+d = GcheckInput(d);
 
+[d.LU,d.Veh] = Gpreproc(d.LU,d.Veh);
+
+printstruct(d.LU)
+
+d = GcheckInput(d);
+
+if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
+%     error('目前为非MilkRun版本,不允许有多家供应商编号');
+end
+if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
+%     error('目前为MilkRun版本,不允许只有单个供应商编号/单个EP LOCATION编号');
+end
+% if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID)))
+%     error('目前为MilkRun测试版本,只允许多个供应商编号 或 多个EP LOCATION编号,不能同时存在');
+% end
+%% 没有属性的临时增加
+    n = numel(d.LU.Weight);
+    
+%     if ~isfield(d.LU, 'Index') %% 给个初始进入顺序 暂时没有用 等同刘强所需index参数
+%         error('No index of LU');  %d.LU.Index = 1:n;
+%     end
+    
+%     % 平铺使用属性
+%     if ~isfield(d.LU, 'maxL')
+%         d.LU.maxL(1,:) =  floor(d.Veh.LWH(1,1)./d.LU.LWH(1,:));
+%         d.LU.maxL(2,:) =  floor(d.Veh.LWH(2,1)./d.LU.LWH(2,:));
+%         d.LU.maxL(3,:) =  floor(d.Veh.LWH(3,1)./d.LU.LWH(3,:));   %具体每个托盘LU的高度的最大层数
+%     end
+    
+%     if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = d.LU.maxL(3,:); end% maximum given height layer
+    
+
+                  
 %% Simulate - All ALGORITHM
 
 fprintf(1,'\nRunning the simulation...\n');
@@ -199,13 +169,12 @@ for iAlg = 1:nAlg
     
     %% 1 运行主算法
     % 预处理：剔除某些LU
-       fall = ones(1,length(d.LU.ID));
-       f = d.LU.ID == 1; %剔除Id=1的所有LU
-       fall(find(f,1,'first'))=0; 
-       
-       f = d.LU.ID ==  2; %剔除Id=2的所有LU
-       fall(find(f,1,'first'))=0; 
-
+%        fall = ones(1,length(d.LU.ID));
+%        f = d.LU.ID == 1; %剔除Id=1的所有LU
+%        fall(find(f,1,'first'))=0; 
+%        
+%        f = d.LU.ID ==  2; %剔除Id=2的所有LU
+%        fall(find(f,1,'first'))=0; 
 %        d.LU = structfun(@(x) x(:,logical(fall)),d.LU,'UniformOutput',false);
 
     % 1.1 获取d: 运行主数据算法    
@@ -1956,3 +1925,24 @@ end
 %     'whichRotation',1,'whichRotationHori',0,'timeLimit',100,'ub0',10);
 % % ParaArray = struct('whichStripH',1,'whichBinH',1,'whichSortItemOrder',2,...
 % %     'whichRotation',1,'whichRotationHori',0,'whichRotationAll',1,'whichRotationBin',1,'timeLimit',100,'ub0',10);
+
+% % nAlg = 1;
+% % for i = 3:3 %1-3 best first next均可 设为3: 不允许前面小间隙放其它东西 因为一旦允许, 会大概率违背相邻约束
+% %     for j=3:3 %0-3 排序: 0: Vert；1: Hori; 2:error  3:按缝隙最小排序   Gpreproc 此处替代HItemToStrip函数中的物品摆放
+% %         for k=2:2 %0-2 默认0 不可旋转 1全部可旋转 2: 按人为设置是否允许Rotation 
+% %             for TLUl=1:1 % 已无用 :  % 0-2 0已取消 保留1-2 RotaHori 1hori 2 vert 555 横放不了会纵放，不允许；纵放后不会横放（放不下）；
+% %                 for m=3:3 %1-3 best first next均可 选用的best fit 是否改位NEXT FIT 1002日改为m=3
+% %                 % pA nAlg 
+% %                 pA(nAlg) = ParameterInitialize( ...
+% %                              'whichStripH', i,...
+% %                              'whichBinH',m, ...
+% %                              'whichSortItemOrder',j, ... 
+% %                              'whichRotation',k, ...
+% %                              'whichRotationHori', TLUl);
+% %                  nAlg=nAlg+1;
+% %                 end
+% %             end
+% %         end
+% %     end
+% % end
+% % nAlg = nAlg - 1;

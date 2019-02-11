@@ -3,10 +3,10 @@ function [d] = RunAlgorithm(d,p)
                 
         %% 预处理:检验Input输入数据
 
-        d = GcheckInput(d);    %可以不做   printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
+        d = GcheckInput(d);    %可以不做    数据核验
 
-        % 数据预处理：重点：获取LU.Rotaed,托盘是否排序
-        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh,p.whichSortItemOrder); %必须做 ******  含cpuLU  **********
+        % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性
+        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh); %必须做 ******  含cpuLU  含cpuVeh **********
 
         %% 启发式: LU到Item的算法    
 %         plotSolutionT(d.LU,d.Veh)

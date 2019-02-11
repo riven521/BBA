@@ -1,18 +1,7 @@
-%% GPREPROC 重要函数:输入数据da转换+输入数据da核对
-%% Form
-%    [d] = Gpreproc(d)
-%% Descripttion
-%    输入数据预处理
-%
-%% Inputs
-%    d                      (1,1)    结构体：用户输入数据
-%
-%% Outputs
-%    d                     (1,1)
-%
+function [LU,Veh] = Gpreproc(LU,Veh)
+% GPREPROC 重要函数:输入数据da转换+输入数据da核对
+% global  ISisGpreprocLU1
 
-function [LU,Veh] = Gpreproc(LU,Veh,pwhichSortItemOrder)
-global  ISisGpreprocLU1
     % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息    
     if isfield(LU, 'ID'),  [LU.ID,LU.OID] = idExchange(LU.ID); end
     if isfield(LU, 'PID'),  [LU.PID,LU.OPID] = idExchange(LU.PID); end
@@ -20,61 +9,36 @@ global  ISisGpreprocLU1
     if isfield(LU, 'EID'),  [LU.EID,LU.OEID] = idExchange(LU.EID); end
 
     % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
-    done = false;
-    while ~done
-    flag = 0;
-    uniID = unique(LU.ID);                  %不同的ID号
-    for iID = 1:length(uniID)
-        fID = LU.ID==uniID(iID);
-        uniSID = unique(LU.SID(fID));
-        if length(uniSID) > 1                %如果存在，改变ID号（ID+SID号）
-            for iSID = 1:length(uniSID)
-                fSID = LU.SID==uniSID(iSID);
-                f = fSID & fID;
-                LU.ID(f) = LU.ID(f) + LU.SID(f);               
-            end
-            flag = 1;                                   % 如果flag==1，表明有修改，但还要while循环，直到不循环
-        end
-    end
-    if flag==0, done=true; end
-    end
-
-       
+     if isrepeated(LU.ID,LU.SID), 
+        error('存在ID号重复, 应该在check时已调整'); 
+     end
     
-    
-    
+    % GET LU's LWH with margin and Rotaed or not
     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
-    %     Veh.LWH = Veh.LWH - Veh.buff;  %Veh的buff无用，输入直接给可用内径长宽高
-                %         LU.margin([2],:) = 2 %测试增加不同margin的效果
-                %         LU.margin([3],:) = 3
     LU.LWH(1,:) =  LU.LWH(1,:) +  LU.margin(1,: ) + LU.margin(2,: ); %宽度（左右）
     LU.LWH(2,:) =  LU.LWH(2,:) +  LU.margin(3,: ) + LU.margin(4,: ); %长度（上下）
     
-    % V1 : buff: 托盘间的间隙
-    %     LU.buff = [LU.buff; 0]; %用户给定的Buff为每个托盘增加的尺寸(总间隙)
-    %     LU.buff = repmat(LU.buff,1,numel(LU.ID));
-    %     LU.LWH = LU.LWH + LU.buff;
-    % TODO: 此处增加间隙为权宜之际，未考虑rotation后的变化；后期考虑在算法中增加间隙
-
     % 3 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）
     % NOTE: 此处将获得1: Horizontal方向的LWH和是否Rotaed标记
     % NOTE : 直接替换了原始ORIGINAL 的 LWH
     % LU.LWH
 
-    if pwhichSortItemOrder ==1
-        [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动        
-    elseif pwhichSortItemOrder ==2
-        [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,0); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-    elseif pwhichSortItemOrder ==3 %默认此选项
-        [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
-    end
+%     if pwhichSortItemOrder ==1
+%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动        
+%     elseif pwhichSortItemOrder ==2
+%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,0); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+%     elseif pwhichSortItemOrder ==3 %默认此选项
+%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
+%     end
+
+    [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
     LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
         
     % 4 Veh从体积大->小   默认顺序
     Veh.Volume = prod(Veh.LWH);
     [~,order] = sortrows(Veh.Volume', [1],{'descend'});    
     Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
-    if ~isrow(order),
+    if ~isrow(order)
         order = order';
     end
     Veh.order = order;
