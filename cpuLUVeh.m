@@ -1,40 +1,12 @@
-function [LU,Veh] = Gpreproc(LU,Veh)
-% GPREPROC 重要函数:输入数据da转换+输入数据da核对
-% global  ISisGpreprocLU1
-
-    % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息    
-    if isfield(LU, 'ID'),  [LU.ID,LU.OID] = idExchange(LU.ID); end
-    if isfield(LU, 'PID'),  [LU.PID,LU.OPID] = idExchange(LU.PID); end
-    if isfield(LU, 'SID'),  [LU.SID,LU.OSID] = idExchange(LU.SID); end
-    if isfield(LU, 'EID'),  [LU.EID,LU.OEID] = idExchange(LU.EID); end
-
-    % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
-     if isrepeated(LU.ID,LU.SID), 
-        error('存在ID号重复, 应该在check时已调整'); 
-     end
-    
-    % GET LU's LWH with margin and Rotaed or not
-    % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
-    LU.LWH(1,:) =  LU.LWH(1,:) +  LU.margin(1,: ) + LU.margin(2,: ); %宽度（左右）
-    LU.LWH(2,:) =  LU.LWH(2,:) +  LU.margin(3,: ) + LU.margin(4,: ); %长度（上下）
-    
-    % 3 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）
-    % NOTE: 此处将获得1: Horizontal方向的LWH和是否Rotaed标记
-    % NOTE : 直接替换了原始ORIGINAL 的 LWH
-    % LU.LWH
-
-%     if pwhichSortItemOrder ==1
-%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动        
-%     elseif pwhichSortItemOrder ==2
-%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,0); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
-%     elseif pwhichSortItemOrder ==3 %默认此选项
-%         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
-%     end
-
-    [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
-    LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
+function [LU,Veh] = cpuLUVeh(LU,Veh)
+% cpuLUVeh 重要函数:
+% 更新 Veh 的Volume/order
+% 更新 LU 的ID/LU的LWH/LU的maxL/LU的maxHLayer/LU的nbID/LU的isNonMixed/isMixedTile
         
-    % 4 Veh从体积大->小   默认顺序
+     % global  ISisGpreprocLU1
+
+    %% 1 更新车辆Veh顺序 增加order
+    % Veh从体积大->小   默认顺序
     Veh.Volume = prod(Veh.LWH);
     [~,order] = sortrows(Veh.Volume', [1],{'descend'});    
     Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
@@ -43,34 +15,111 @@ function [LU,Veh] = Gpreproc(LU,Veh)
     end
     Veh.order = order;
     
-    % 5 计算LU在当前车型下的最大长宽高层数 TODO 考虑margin
-    for i=1:length(LU.Weight)
-        LU.maxL(1,i) =  floor(Veh.LWH(1,1)/LU.LWH(1,i));
-        LU.maxL(2,i) =  floor(Veh.LWH(2,1)/LU.LWH(2,i));
-        LU.maxL(3,i) =  floor(Veh.LWH(3,1)/LU.LWH(3,i));   %具体每个托盘LU的高度的最大层数
+     %% 2 更新LU：的ID号（保留Old）
+     % 1 如果相同ID号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
+     % TODO : 增加不同SID/不同EID下的ID号不可重复
+     if isrepeated(LU.ID,LU.SID)
+        warning('存在托盘ID号在不同 SID下重复, 需要更正'); 
+        LU.ID = reviseID(LU.ID,LU.SID);
+     end
+
+     if isrepeated(LU.EID,LU.SID)
+         warning('存在托盘EP LOCATION ID号在不同SID下重复, 需要更正');
+         LU.EID = reviseID(LU.EID,LU.SID);
+     end
+     
+     if isrepeated(LU.PID,LU.SID)
+         warning('存在托盘PID ID号在不同SID下重复, 需要更正');
+         LU.PID = reviseID(LU.PID,LU.SID);
+     end
+     
+     % 是否需要？fixme 
+      if isrepeated(LU.LID,LU.SID)
+         warning('存在托盘LID ID号在不同SID下重复, 需要更正');
+         LU.LID = reviseID(LU.LID,LU.SID);
+      end    
+     
+     if isrepeated(LU.ID,LU.EID)
+         error('存在托盘ID号在不同 EID下重复, 需要更正');
+     end
+     
+    % 1 ID 转换为从1开始的类序号 方便刘工输入ID类信息    TODO 增加LID的OLID？
+    if isfield(LU, 'ID'),    [LU.ID,LU.OID]      = idExchange(LU.ID);    end
+    if isfield(LU, 'PID'),  [LU.PID,LU.OPID]  = idExchange(LU.PID); end
+    if isfield(LU, 'EID'),  [LU.EID,LU.OEID]  = idExchange(LU.EID);  end
+    if isfield(LU, 'SID'),  [LU.SID,LU.OSID]  = idExchange(LU.SID);  end
+    
+    % 1 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
+    if isrepeated(LU.ID,LU.SID),  error('存在ID号重复, 应该在check时已调整');   end
+    
+    %% 3 更新LU：含margin的LU的LWH；更新LU的Rotaed标记
+% %     % GET LU's LWH with margin and Rotaed or not
+% %     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
+% %     LU.OLWH = LU.LWH;
+% %     LU.LWH(1,:) =  LU.LWH(1,:) +  LU.margin(1,: ) + LU.margin(2,: ); %宽度（左右）
+% %     LU.LWH(2,:) =  LU.LWH(2,:) +  LU.margin(3,: ) + LU.margin(4,: ); %长度（上下）
+% %     
+% %     [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1));  %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
+% %     LU.LWH = getRotaedLWH(LU.LWH, LU.Rotaed, LU.margin);
+% %     
+% %     % 3 默认将LU全部采用Horizontal方向旋转（前提：该LU允许旋转）
+% %     % NOTE: 此处将获得1: Horizontal方向的LWH和是否Rotaed标记
+% %     % NOTE : 直接替换了原始ORIGINAL 的 LWH
+% %     % LU.LWH
+% % 
+% % %     if pwhichSortItemOrder ==1
+% % %         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,1); %第二个参数：1: Hori; 0: Vert；其它: 原封不动        
+% % %     elseif pwhichSortItemOrder ==2
+% % %         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,0); %第二个参数：1: Hori; 0: Vert；其它: 原封不动
+% % %     elseif pwhichSortItemOrder ==3 %默认此选项
+% % %         [LU.Rotaed]= placeItemHori(LU.LWH,LU.isRota,Veh.LWH(1,1)); %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
+% % %     end
+        
+    %% 4 计算LU：在当前车型下的最大长宽高层数 包含margin
+    if ~isfield(LU, 'maxL') 
+        LU.maxL(1,:) =  floor(Veh.LWH(1,1)./LU.LWH(1,:));
+        LU.maxL(2,:) =  floor(Veh.LWH(2,1)./LU.LWH(2,:));
+        LU.maxL(3,:) =  floor(Veh.LWH(3,1)./LU.LWH(3,:));   %具体每个托盘LU的高度的最大层数
     end
+
     if ~isfield(LU, 'maxHLayer') % 如不存在,直接以maxL指示; 如存在,以最小值取代
         LU.maxHLayer = LU.maxL(3,:); 
     else
         LU.maxHLayer = min( [LU.maxHLayer',LU.maxL(3,:)'], [], 2 )';  % 同步更新对应LU的maxHLayer    
     end
 
-    % 6 计算LU同样ID/可堆垛ID下的个数
+    %% 5 计算LU同样ID/可堆垛ID下的个数
     % V1"
-    for i=1:length(LU.Weight)
-        LU.nbID(i) = sum(LU.ID == LU.ID(i));
-    end
+    %     for i=1:length(LU.Weight)
+    %         LU.nbID(i) = sum(LU.ID == LU.ID(i));
+    %     end
     % V2: 直接计算
     LU.nbID = sum(LU.ID==LU.ID');
     LU.nbLID = sum(LU.LID==LU.LID');
-
     
-    %% 555 ITEMBALANCE必须 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
+    %% 6：555 ITEMBALANCE必须 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
     % 555 区分为LU相同高度（依据层数判断） 或 LU多种高度（依据高度判断 TODO 增加层数判断）两种类型
     [LU] = cpuLU(LU,Veh);
     
-% % %     
-% % %     
+  end
+
+function [exID,ID] = idExchange(ID)
+        uniID = unique(ID);
+        exID=ID; %中间变量
+        for i=1:length(uniID)
+            exID(ID(:)==uniID(i)) = i;
+        end
+end
+
+
+
+
+
+
+
+
+
+%%
 % % %      LU.isNonMixed = ones(1,length(LU.Weight))*-1;     %1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据之一(不会形成非满垛的LU提前获取堆垛,目的尽量减少混合堆垛的情形)
 % % %      LU.isMixedTile = zeros(1,length(LU.Weight));          %1 当isNonMixed=1时,都是满垛,isMixedTile都为0; 当isNonMixed=0时, 有非满垛,将余下的将称为非满垛的LU的isMixedTile赋值为1
 % % %     % GET LU.isNonMixed: 计算每个LU是否为不需要混拼的可能
@@ -184,50 +233,34 @@ function [LU,Veh] = Gpreproc(LU,Veh)
 % % % %             LU.isMixedTile(flagmodIdx)=1;
 % % % %         end
 % % % %     end
-
-    
-    
-    
-    
-    
     
     
 %     LUID = getLUIDArray(LU); %% 计算：LU类型相关数据 暂时无用
-
 %      printInput();
 %% 嵌套函数:
-function printInput()
-    fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(Veh.LWH','rows')');
-    fprintf('本算例只有一个箱型 宽间隙=%1.0f 长间隙=%1.0f 高间隙=%1.0f \n', unique(Veh.buff','rows')');
-    fprintf('本算例有 %d 个物品,其宽长高分别为 \n',numel(LU.ID(:)));
-    fprintf('%1.1f %1.1f %1.1f \n',LU.LWH);
-end
-
-end
-
-
-function [exID,ID] = idExchange(ID)
-        uniID = unique(ID);
-        exID=ID; %中间变量
-        for i=1:length(uniID)
-            exID(ID(:)==uniID(i)) = i;
-        end
-end
+% function printInput()
+%     fprintf('本算例只有一个箱型 宽=%1.0f 长=%1.0f 高=%1.0f \n', unique(Veh.LWH','rows')');
+%     fprintf('本算例只有一个箱型 宽间隙=%1.0f 长间隙=%1.0f 高间隙=%1.0f \n', unique(Veh.buff','rows')');
+%     fprintf('本算例有 %d 个物品,其宽长高分别为 \n',numel(LU.ID(:)));
+%     fprintf('%1.1f %1.1f %1.1f \n',LU.LWH);
+% end
 
 
 
-%%  获取LUID类型相关数据(同类型ID的体积，重量，是否可旋转)
-function LUID = getLUIDArray(LU)
-LUID.ID = unique(LU.ID);
-for iID = 1:length(LUID.ID)
-    LUID.Weight(iID) = sum(LU.Weight .* (LU.ID == LUID.ID(iID)) );
-    LUID.Volume(iID) = sum(prod(LU.LWH) .* (LU.ID == LUID.ID(iID)) );
-    LUID.isRota(iID) =  unique(LU.isRota(LU.ID == LUID.ID(iID)));
-    LUID.maxL(iID) =  unique(LU.maxL(LU.ID == LUID.ID(iID)));
-    LUID.yID(iID) =  unique(LU.yID(LU.ID == LUID.ID(iID)));
-    if ~isscalar(LUID.isRota(iID))||~isscalar(LUID.maxL(iID))||~isscalar(LUID.yID(iID)), error('致命错误'); end
-end
-end
+
+
+% % %%  获取LUID类型相关数据(同类型ID的体积，重量，是否可旋转)
+% % function LUID = getLUIDArray(LU)
+% % LUID.ID = unique(LU.ID);
+% % for iID = 1:length(LUID.ID)
+% %     LUID.Weight(iID) = sum(LU.Weight .* (LU.ID == LUID.ID(iID)) );
+% %     LUID.Volume(iID) = sum(prod(LU.LWH) .* (LU.ID == LUID.ID(iID)) );
+% %     LUID.isRota(iID) =  unique(LU.isRota(LU.ID == LUID.ID(iID)));
+% %     LUID.maxL(iID) =  unique(LU.maxL(LU.ID == LUID.ID(iID)));
+% %     LUID.yID(iID) =  unique(LU.yID(LU.ID == LUID.ID(iID)));
+% %     if ~isscalar(LUID.isRota(iID))||~isscalar(LUID.maxL(iID))||~isscalar(LUID.yID(iID)), error('致命错误'); end
+% % end
+% % end
         
 
     %% 

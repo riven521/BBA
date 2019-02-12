@@ -514,10 +514,10 @@ for g=1:length(gapY)-1
 end
     
 V0109
-1:增加修订前低后高问题
+1:增加修订前低后高问题（存在bug）
 function insertItemToStrip(thisLevel,iItem)       
    
-        % V2 按照Item的高度，高的优先进入Strip
+        % V2 按照Item的高度，高的优先进入Strip（）
         % 判定本Strip(thisLevel)是否已有堆垛且是否有比当前堆垛低的堆垛, 如有，进行本strip的数据更新
         if tmpStrip_Item(1,thisLevel) > 0 && any(sItem.LWH(3,sItem.Item_Strip(1,:) == thisLevel) < sItem.LWH(3,iItem))
             % 找出并排序本strip内的堆垛

@@ -1,20 +1,25 @@
 function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
     BBA_Main(LUID,LULWH,VEHID,VEHLWH,varargin)  %前4个必须
 % Inputs：LUID: 种类少 ; LULID: 种类多
-%   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛 
+%   LUID	                (1,n)   托盘类型 相同数字表明同一类型,允许堆垛
+%   cpuLUVeh后其unique后必须是从1开始严格递增
 %   LULWH                (3,n)   托盘宽长高
 %   VEHID                 (1,m)  车型编号
 %   VEHLWH              (3,m)   车型宽长高（考虑多车型）
 %   ------------------------------------------------------
 %   LUSID                   (1,n)   托盘供应商编号
+%   cpuLUVeh后其unique后必须是从1开始严格递增
 %   LUPID                   (1,n)   托盘零部件编号
+%   cpuLUVeh后其unique后必须是从1开始严格递增
 %   LUISROTA            (1,n)  托盘是否允许旋转
 %   LUMARGIN          (4,n)   托盘间margin(1-4左右上下)  可用托盘长宽高=每个托盘的实际长宽高+增加的margin
 %   LUWEIGHT           (1,n)  托盘重量
 %   VEHWEIGHT        (1,m)  车型最大承载重量
-%   LUID                   (1,n)   托盘类型编号
+%   LULID                   (1,n)   托盘类型编号 暂无规定？
 %   LUINDEX            (1,n） 托盘索引号-刘强专用
+%   sort后必须是从1开始严格递增
 %   LUEID                  (1,n） 托盘EP LOCATION - Milkrun版本参数
+%   cpuLUVeh后其unique后必须是从1开始严格递增
 % Outputs
 %   output_CoordLUBin      (3,n)    每个LU的X,Y,Z
 %   output_LU_LWH            (3,n)    每个LU的宽长高（旋转后的：实际值）
@@ -34,7 +39,7 @@ parBalance = 8/30;
 % ISisGpreprocLU1    1 与ISisNonMixedLU取值有关
 % ISstripbalance        1 调用高度均衡开关
 
-% 开关 par
+% 开关 par + 混装间隙开关
 parGap = 1  % 是否允许主函数的间隙调整
 parMulipleGap = 1 % 是否允许间隙递归多次调整
 % 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
@@ -93,6 +98,14 @@ ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平
 ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
 end
 
+%% Initialize Parameter Variable
+nAlg = 1;
+pA(nAlg) = ParameterInitialize('whichStripH', 3,...
+                             'whichBinH',3, ...
+                             'whichSortItemOrder',3, ... 
+                             'whichRotation',2, ...
+                             'whichRotationHori', 1);
+                         
 %% Initialize Data Structure  - d
 if nargin < 1 % Randome Generate
     n=32; m=1;                                          % 16需要注意 250 srng1
@@ -115,24 +128,25 @@ else
             'LUEID',varargin{9}); 
 end
 
-%% Initialize Parameter
-nAlg = 1;
-pA(nAlg) = ParameterInitialize('whichStripH', 3,...
-                             'whichBinH',3, ...
-                             'whichSortItemOrder',3, ... 
-                             'whichRotation',2, ...
-                             'whichRotationHori', 1);
-                         
-% GcheckInput: 车辆按第一个放置,已对其按体积从大到小排序;
-list_struct(d)
-d = GcheckInput(d);
+%% 1：确保LU/Veh结构体的列数相同 且 非负的矩阵
+if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
+    warning('LU或Veh的列数不同');
+end
+structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), d.LU, 'UniformOutput', false);
+structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), d.Veh, 'UniformOutput', false);
 
-[d.LU,d.Veh] = Gpreproc(d.LU,d.Veh);
+%% 2:  在此基础上进行数据行列调整，数据修改（LWH, ID号等）
+fprintf(1,'check and preprocessing Lu and Veh processing ... ');
+
+d = GcheckInput(d);
+if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
+    errorr('LU或Veh的列数不同');
+end
+%% 3：对新增后将进行运算的数据进行check Gpreproc=cpuLUVeh d是需要保留的
+[d.LU,d.Veh] = cpuLUVeh(d.LU,d.Veh);
+d = GcheckInput(d);
 
 printstruct(d.LU)
-
-d = GcheckInput(d);
-
 if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
 %     error('目前为非MilkRun版本,不允许有多家供应商编号');
 end
@@ -142,9 +156,9 @@ end
 % if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID)))
 %     error('目前为MilkRun测试版本,只允许多个供应商编号 或 多个EP LOCATION编号,不能同时存在');
 % end
-%% 没有属性的临时增加
-    n = numel(d.LU.Weight);
-    
+%% 没有属性的临时增加 - CAN DEL
+%     n = numel(d.LU.Weight);
+
 %     if ~isfield(d.LU, 'Index') %% 给个初始进入顺序 暂时没有用 等同刘强所需index参数
 %         error('No index of LU');  %d.LU.Index = 1:n;
 %     end
@@ -157,9 +171,7 @@ end
 %     end
     
 %     if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = d.LU.maxL(3,:); end% maximum given height layer
-    
-
-                  
+                     
 %% Simulate - All ALGORITHM
 
 fprintf(1,'\nRunning the simulation...\n');
@@ -168,34 +180,27 @@ fprintf(1,'\nRunning the simulation...\n');
 for iAlg = 1:nAlg
     
     %% 1 运行主算法
-    % 预处理：剔除某些LU
-%        fall = ones(1,length(d.LU.ID));
-%        f = d.LU.ID == 1; %剔除Id=1的所有LU
-%        fall(find(f,1,'first'))=0; 
-%        
-%        f = d.LU.ID ==  2; %剔除Id=2的所有LU
-%        fall(find(f,1,'first'))=0; 
-%        d.LU = structfun(@(x) x(:,logical(fall)),d.LU,'UniformOutput',false);
 
     % 1.1 获取d: 运行主数据算法    
-    maind = d; % 主要的输入数据保留   
-    
-    
+    maind = d; % 主要的输入数据保留 （maind的LWH必须为不含margin的）
+    list_struct(d.LU)
     do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体
-    do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+    list_struct(do.LU)
+    % 可删 - 已在RunAlgorithm中声明 do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
-    % 1.2 修订d内的LU和Veh的LWH数据 % 返回之前计算不含margin的LU和Item的LWH+Coord.
+    % 1.2 修订LU和Item的LWH/Coord数据( 之前不含margin的LU和Item
     [do.LU,do.Item] = updateItemMargin(do.LU,do.Item);
     dA(iAlg)=do;
     
     % 1.3 CHECK 输入和输出的LU
     maintLU = struct2table(structfun(@(x) x',maind.LU,'UniformOutput',false));
-    tLU = struct2table(structfun(@(x) x',do.LU,'UniformOutput',false));    
-    checkLU(maintLU,tLU);
-    checktLU(do.LU);
+    tLU = struct2table(structfun(@(x) x',do.LU,'UniformOutput',false));   
+    
+    checkLU(maintLU,tLU);  %新老数据对比
+    checktLU(do.LU); %核验是否数据是上轻下重；是否Z高度与ItemSEQ一致；是否ITEMID与XY坐标一致;等
     
     
-%     plotSolutionT(do.LU,do.Veh);
+   %     plotSolutionT(do.LU,do.Veh);
    % plotSolution(do,pA(iAlg)); %尽量不用
     
     %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh : 

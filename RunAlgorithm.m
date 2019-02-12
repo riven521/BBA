@@ -3,10 +3,13 @@ function [d] = RunAlgorithm(d,p)
                 
         %% 预处理:检验Input输入数据
 
-        d = GcheckInput(d);    %可以不做    数据核验
+%         d = GcheckInput(d);    %可以不做   因为首次做一下应该即可
 
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性
-        [d.LU, d.Veh] = Gpreproc(d.LU, d.Veh); %必须做 ******  含cpuLU  含cpuVeh **********
+        % NOTE: 调研下面函数前：确保输入LU的LWH是不含margin的
+        % 555 新增对LU的LWH改变（包含Rotaed属性）
+        [d.LU, d.Veh] = cpuLULWH(d.LU, d.Veh); 
+        [d.LU, d.Veh] = cpuLUVeh(d.LU, d.Veh); %必须做 ******  含cpuLU  含cpuVeh **********
 
         %% 启发式: LU到Item的算法    
 %         plotSolutionT(d.LU,d.Veh)
@@ -328,6 +331,15 @@ function [Strip,Bin] = HreStripToBin(Bin,Strip,Item,LU,Veh,p)
                 % 8 ibin自增
                 ibin = ibin+1;
             end
+        end
+end
+
+
+function [exID,ID] = idExchange(ID)
+        uniID = unique(ID);
+        exID=ID; %中间变量
+        for i=1:length(uniID)
+            exID(ID(:)==uniID(i)) = i;
         end
 end
 

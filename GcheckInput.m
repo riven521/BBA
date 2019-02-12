@@ -3,14 +3,12 @@ function [d] = GcheckInput(d)
 % 函数1：initCheck
 %   1：确保LU和Veh均为数值型矩阵
 %   2：对颠倒的Veh进行转置
-%   3：对不同SID下有相同ID的进行ID修改
+%   3：对不同SID下有相同ID的进行ID修改（REMOVE)
 %   4：对颠倒的LU进行转置
 % 函数2：deepCheck
 %   1：LU高度约束
 %   2：LU长宽约束
 %   3：LU可堆垛的一致性约束
-
-     fprintf(1,'GcheckInput processing ... ');
      
      %  Check if INPUT is legal with minor modification
      [d.LU, d.Veh] = initCheck(d.LU,d.Veh); 
@@ -118,12 +116,12 @@ for idx = 1:length(fields)
     end
 end
 
-%% *************** 3 LU的ID号不可在不同SID下重复(Milkrun环境) *************** 
+%% *************** 3 LU的ID号不可在不同SID下重复(Milkrun环境) - 改变ID号 放到预处理函数Gpreproc *************** 
      % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
-     if isrepeated(LU.ID,LU.SID)
-        warning('存在托盘ID号重复, 需要更正'); 
-        LU.ID = reviseID(LU.ID,LU.SID);
-     end
+%      if isrepeated(LU.ID,LU.SID)
+%         warning('存在托盘ID号重复, 需要更正'); 
+%         LU.ID = reviseID(LU.ID,LU.SID);
+%      end
 
     % V1: 可能造成更新后ID与其它ID号相同
 %     done = false;

@@ -3,6 +3,7 @@
 
 %% 函数
 function   [LU] = cpuLU(LU,Veh)
+% 获取最新的LU.isNonMixed和LU.isMixedTile
 
 %% 1 获取最新的LU.isNonMixed和LU.isMixedTile
 

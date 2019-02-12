@@ -50,6 +50,7 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
                 end
                 
                 % 555 对降低层数的LU重新获取新的Strip
+                %   [LU,Veh] = cpuLUVeh(LU,Veh);
                 [LU] = cpuLU(LU,Veh);
                 [LU,Item] = HLUtoItem(LU,Veh);          %Item将按ID序号排序（但下一操作将变化顺序）
                 [Item,LU] = cpuItem(Item,LU,Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
