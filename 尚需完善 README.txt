@@ -547,11 +547,18 @@ V190115
 1: 修改多个polygon的，包含NAN的strip向上问题
 2: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
 
-%% 重构BBA代码
-V190212
-1：修订数据核验和数据预处理
-2：主函数的更换车型和平铺操作放入子函数HBinChange和HBinpingpu
+%% 重构BBA代码 1
+V190212 V1
+1：修订数据核验和数据预处理 拆分cpuLUVeh -> setLULWHwithbuff and cpuLUVeh 
+2：增加/修改函数 setLCwithoutbuff 修订LWHbuffer和LWHunbuffer
+3：修订核对函数chkLUnewold chktLU
+4：主函数的更换车型和平铺操作放入子函数HBinChange和HBinpingpu 独立getPartdinThisBin
 
+%% 重构BBA代码 2
+V190212 V2
+1: 独立HBinGapAdjust 车辆间隙调整算法，在平铺之后
+2：独立HBinCombine do do1 do2array do3array等整合到table格式T中
+3: 精简HBinCombine
 
 TODO
 

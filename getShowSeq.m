@@ -1,4 +1,5 @@
 function [TLU] = getShowSeq(d)
+
 if ~istable(d)
     TLU = getTableLU(d);
 else
@@ -24,55 +25,102 @@ end
                     LUShowSeq(i) = LUShowSeq(i-1)+1;
                 end
             end            
-        end
-        
-% %          tmpThreeRows = TLUsorted(:,{'BINID','SID','LID'});
-% %         LUShowSeq=zeros(height(tmpThreeRows),1);
-% %         LUShowSeq(1)=1;
-% %         for i =2:length(LUShowSeq)
-% %             tmpThreeRows{i,'LID'}
-% %             tmpThreeRows{i-1,'LID'}
-% %             if tmpThreeRows{i,'BINID'}==tmpThreeRows{i-1,'BINID'} && ...
-% %                     tmpThreeRows{i,'SID'}==tmpThreeRows{i-1,'SID'}  && ...
-% %                     tmpThreeRows{i,'LID'}==tmpThreeRows{i-1,'LID'} 
-% %                     LUShowSeq(i) = LUShowSeq(i-1) ;
-% %                 else
-% %                     LUShowSeq(i) = LUShowSeq(i-1)+1;
-% %                 end
-% %         end
+        end        
 
-%         TLUsorted.ShowSEQ = LUShowSeq;
-%         TLUsorted.tblorder = tblorder;
+%% 返回TLU
+       %         TLUsorted.ShowSEQ = LUShowSeq;        %         TLUsorted.tblorder = tblorder;
        [~,x] = sort(tblorder);
-%        TLU.ShowSEQ = LUShowSeq(tblorder);
-       TLU.ShowSEQ = LUShowSeq(x);
+       TLU.ShowSEQ = LUShowSeq(x);  %        TLU.ShowSEQ = LUShowSeq(tblorder);
        TLU.tblorder = tblorder;
        
-%        TLUsorted.Weight
-%        TLU.Weight
-%        
-% TLUsorted.ShowSEQ
-%        TLU.ShowSEQ
-%        1
-
-%% 3 精简为返回的数据表
+%% 4 精简为返回的数据表
 % T1=TLUsorted(:,'CoordLUBin');
 % T2=TLUsorted(:,'LWH');
 % T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','ITEMID','ShowSEQ','Rotaed','tblorder','Weight'}); %删除固定值,从TLUIN获取
 % % T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','SID','LID','ITEMID','PID','ShowSEQ','Weight','tblorder'});
 
-%% 4 似乎无用 后期可删
-% % s1= table2array(T1)';
-% % s2= table2array(T2)';
-% % s3= table2array(T3,'ToScalar',true)';
-% % % if ~isequal(output_CoordLUBin,s1) || ~isequal(output_LU_LWH,s2) || ~isequal(output_LU_Seq(1:7,:),s3(1:7,:))
-% % %     error('V1 and V2不相同');
-% % % end
-% % output_CoordLUBin=s1;
-% % output_LU_LWH=s2;
-% % output_LU_Seq=s3;
-
 end
+
+
+
+
+%% V2 : V3 准备删除不需要的注释
+% % function [TLU] = getShowSeq(d)
+% % 
+% % if ~istable(d)
+% %     TLU = getTableLU(d);
+% % else
+% %     TLU=d;
+% % end
+% % 
+% % %% 1 Table排序 : TLUsorted %基本前两行排序就已经定了 BINSEQ一定固定的，只是ShowSEQ分步骤而已
+% % [TLUsorted,tblorder]= sortrows(TLU,{'BINID','BINSEQ','SID','LID','PID','ITEMID','ITEMSEQ','H','LU_VehType'},...
+% %                                          {'ascend','ascend','ascend','ascend','ascend','ascend','ascend','descend','ascend'});
+% % %% 2 计算托盘展示顺序ShowSEQ并赋值到TLUsorted
+% %         % 计算LUShowSeq : 最后一行: REAL托盘展示顺序(含甩尾等)
+% %         % 目前按照LU_Bin(1,:)分车, SID分供应商, LID分托盘种类 三个区分  TODO 后期增加其它需要判断步骤的依据 % [2 4 5]        
+% %         tmpThreeRows = TLUsorted(:,{'BINID','SID','LID'});
+% %         LUShowSeq=zeros(height(tmpThreeRows),1);
+% %         LUShowSeq(1)=1;
+% %         for i =2:length(LUShowSeq)
+% %             if tmpThreeRows{i,'BINID'}~=tmpThreeRows{i-1,'BINID'} %如果分车,步骤初始化1
+% %                 LUShowSeq(i) = 1;
+% %             else %如果车内SID与LID均不同,步骤号增加
+% %                 if isequal(tmpThreeRows(i,{'SID','LID'}),tmpThreeRows(i-1,{'SID','LID'}))
+% %                     LUShowSeq(i) = LUShowSeq(i-1) ;
+% %                 else
+% %                     LUShowSeq(i) = LUShowSeq(i-1)+1;
+% %                 end
+% %             end            
+% %         end
+% %         
+% % % %          tmpThreeRows = TLUsorted(:,{'BINID','SID','LID'});
+% % % %         LUShowSeq=zeros(height(tmpThreeRows),1);
+% % % %         LUShowSeq(1)=1;
+% % % %         for i =2:length(LUShowSeq)
+% % % %             tmpThreeRows{i,'LID'}
+% % % %             tmpThreeRows{i-1,'LID'}
+% % % %             if tmpThreeRows{i,'BINID'}==tmpThreeRows{i-1,'BINID'} && ...
+% % % %                     tmpThreeRows{i,'SID'}==tmpThreeRows{i-1,'SID'}  && ...
+% % % %                     tmpThreeRows{i,'LID'}==tmpThreeRows{i-1,'LID'} 
+% % % %                     LUShowSeq(i) = LUShowSeq(i-1) ;
+% % % %                 else
+% % % %                     LUShowSeq(i) = LUShowSeq(i-1)+1;
+% % % %                 end
+% % % %         end
+% % 
+% % %         TLUsorted.ShowSEQ = LUShowSeq;
+% % %         TLUsorted.tblorder = tblorder;
+% %        [~,x] = sort(tblorder);
+% % %        TLU.ShowSEQ = LUShowSeq(tblorder);
+% %        TLU.ShowSEQ = LUShowSeq(x);
+% %        TLU.tblorder = tblorder;
+% %        
+% % %        TLUsorted.Weight
+% % %        TLU.Weight
+% % %        
+% % % TLUsorted.ShowSEQ
+% % %        TLU.ShowSEQ
+% % %        1
+% % 
+% % %% 3 精简为返回的数据表
+% % % T1=TLUsorted(:,'CoordLUBin');
+% % % T2=TLUsorted(:,'LWH');
+% % % T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','ITEMID','ShowSEQ','Rotaed','tblorder','Weight'}); %删除固定值,从TLUIN获取
+% % % % T3= TLUsorted(:,{'LU_VehType','BINID','BINSEQ','SID','LID','ITEMID','PID','ShowSEQ','Weight','tblorder'});
+% % 
+% % %% 4 似乎无用 后期可删
+% % % % s1= table2array(T1)';
+% % % % s2= table2array(T2)';
+% % % % s3= table2array(T3,'ToScalar',true)';
+% % % % % if ~isequal(output_CoordLUBin,s1) || ~isequal(output_LU_LWH,s2) || ~isequal(output_LU_Seq(1:7,:),s3(1:7,:))
+% % % % %     error('V1 and V2不相同');
+% % % % % end
+% % % % output_CoordLUBin=s1;
+% % % % output_LU_LWH=s2;
+% % % % output_LU_Seq=s3;
+% % 
+% % end
 
 
 

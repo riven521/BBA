@@ -30,15 +30,28 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all;
 
-global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
-global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType ISplotShowGapAdjust % plotStrip
-global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1
-global parBalance verMilkRun parGap parMulipleGap
+global ISshuaiwei ISdiagItem ISstripbalance ISreStripToBin ISisNonMixed ISisMixTile  
+global ISisNonMixedLU ISisMixTileLU
+global parBalance
 
 % 全局变量1： 平铺开关
 %   ISpingpu : 是否甩尾平铺 ISpingpuall：是否整车平铺  二选一 若平铺：必须甩尾平铺，可不整车平铺；但不可整车平铺，不甩尾平铺。
+global ISpingpu ISpingpuAll
 % 全局变量2： 混装间隙开关
 %   parGap ： 是否允许间隙调整（仅在甩尾平铺或整车平铺成功的车内进行）；parMulipleGap：是否在间隙调整过程中允许多次调整（必须有）
+global  parGap parMulipleGap
+% 全局变量3： 改变车型开关
+% ISlastVehType：将最后不满的一车改为更小的车型
+global ISlastVehType
+
+
+% 全局变量5： 版本控制
+% verMilkRun：1 milkrun版本（包含多一个EID输入） 0 非milkrun；
+global verMilkRun
+% 全局变量6： 作图开关
+global ISplotBBA  ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType ISplotShowGapAdjust % plotStrip
+% 全局变量7： 已删除
+% global ISisGpreprocLU1 ISsItemAdjust ISreStripToBinMixed ISplotSolu
 
 % 开关2
 parGap = 1  % 是否允许主函数的间隙调整
@@ -189,6 +202,7 @@ for iAlg = 1:nAlg
     %% 1 运行主算法 输入d 输出 do
     
     % 1.1 修订LU的LWH数据 包含margin 考虑Rotaed
+    d = maind;
     [d.LU] = setLULWHwithbuff(d.LU, d.Veh);
     
     % 1.2 主函数RunAlgorithm
@@ -270,6 +284,7 @@ elseif ~ISlastVehType && ~ISpingpu
     T = HBinCombine(do);
 end
 
+%% return必须的参数
 % 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
 % 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
 
@@ -282,8 +297,7 @@ else % 带回去OPID OSID OEID 等 其实用途也不大 %用途大的是
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 end
 % V1
-% output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'; % ITEMID意义不大 
-% output_LU_Seq([2,3,5,8],:)
+% output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'; % ITEMID意义不大    output_LU_Seq([2,3,5,8],:)
 
 % plot
 if ISplotBBA
@@ -318,7 +332,9 @@ fprintf(1,'Simulation done.\n');
 
 % printstruct(do,'sortfields',1,'PRINTCONTENTS',0);    printstruct(do.Veh);
 % do = rmfield(do, {'Veh', 'LU'});
-% pcode 'H*.m'
+% pcode 'H*.m'.
+% lu = table2struct(T,'ToScalar',true)
+% lu = (structfun(@(x) x',lu,'UniformOutput',false));
 end %END MAIN
 
 
