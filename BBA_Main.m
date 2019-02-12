@@ -29,6 +29,11 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % clear;close all; format long g; format bank; %NOTE 不被MATLAB CODE 支持
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all;
+% 全局变量1：
+%   ISpingpu : 是否甩尾平铺 ISpingpuall：是否整车平铺  二选一 若平铺：必须甩尾平铺，可不整车平铺；但不可整车平铺，不甩尾平铺。
+% 全局变量2：
+%   
+
 global ISdiagItem ISshuaiwei ISstripbalance ISpingpu ISlastVehType ISreStripToBin ISisNonMixed ISisMixTile ISsItemAdjust ISpingpuAll ISreStripToBinMixed
 global ISplotBBA ISplotSolu ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType ISplotShowGapAdjust % plotStrip
 global ISisNonMixedLU ISisMixTileLU ISisGpreprocLU1
@@ -138,24 +143,23 @@ structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), d.Veh, 'Un
 %% 2:  在此基础上进行数据行列调整，数据修改（LWH, ID号等）
 fprintf(1,'check and preprocessing Lu and Veh processing ... ');
 
-d = GcheckInput(d);
+d = chkInput(d);
 if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
     errorr('LU或Veh的列数不同');
 end
 %% 3：对新增后将进行运算的数据进行check Gpreproc=cpuLUVeh d是需要保留的
 [d.LU,d.Veh] = cpuLUVeh(d.LU,d.Veh);
-d = GcheckInput(d);
+d = chkInput(d);
 
-printstruct(d.LU)
+% ************* 保留输入且处理过后的数据 ***********
+maind = d; % 主要的输入数据保留 （NOTE : ********** maind的LWH必须为不含margin的 ********）
+
 if verMilkRun == 0 && ~isscalar(unique(d.LU.SID))
-%     error('目前为非MilkRun版本,不允许有多家供应商编号');
+    error('目前为非MilkRun版本,不允许有多家供应商编号');
 end
 if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
-%     error('目前为MilkRun版本,不允许只有单个供应商编号/单个EP LOCATION编号');
-end
-% if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID)))
-%     error('目前为MilkRun测试版本,只允许多个供应商编号 或 多个EP LOCATION编号,不能同时存在');
-% end
+    error('目前为MilkRun版本,不允许只有单个供应商编号/单个EP LOCATION编号');
+end            % if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID))),  error('目前为MilkRun测试版本,只允许多个供应商编号 或 多个EP LOCATION编号,不能同时存在');  end
 %% 没有属性的临时增加 - CAN DEL
 %     n = numel(d.LU.Weight);
 
@@ -176,250 +180,39 @@ end
 
 fprintf(1,'\nRunning the simulation...\n');
 
-% Run ALL algorithm configure
 for iAlg = 1:nAlg
+    %% 1 运行主算法 输入d 输出 do
     
-    %% 1 运行主算法
+    % 1.1 修订LU的LWH数据 包含margin 考虑Rotaed
+    [d.LU] = setLULWHwithbuff(d.LU, d.Veh);
+    
+    % 1.2 主函数RunAlgorithm
+    do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体 ( 在此之前获取固定LU方向和固定LU大小的LWH）   % 可删 - 已在RunAlgorithm中声明 do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
-    % 1.1 获取d: 运行主数据算法    
-    maind = d; % 主要的输入数据保留 （maind的LWH必须为不含margin的）
-    list_struct(d.LU)
-    do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体
-    list_struct(do.LU)
-    % 可删 - 已在RunAlgorithm中声明 do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-
-    % 1.2 修订LU和Item的LWH/Coord数据( 之前不含margin的LU和Item
-    [do.LU,do.Item] = updateItemMargin(do.LU,do.Item);
-    dA(iAlg)=do;
+    % 1.3 修订LU和Item的LWH/Coord数据 删除margin
+    [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);   
     
-    % 1.3 CHECK 输入和输出的LU
-    maintLU = struct2table(structfun(@(x) x',maind.LU,'UniformOutput',false));
-    tLU = struct2table(structfun(@(x) x',do.LU,'UniformOutput',false));   
+    % 1.4 CHECK 输入和输出的LU
+    chkLUnewold(d.LU,do.LU);  %新老数据对比 todo 完善新老数据对比 预防算法内部错误
+    chktLU(do.LU); %核验是否数据是上轻下重；是否Z高度与ItemSEQ一致；是否ITEMID与XY坐标一致; todo :完善结果核对函数
     
-    checkLU(maintLU,tLU);  %新老数据对比
-    checktLU(do.LU); %核验是否数据是上轻下重；是否Z高度与ItemSEQ一致；是否ITEMID与XY坐标一致;等
+    % 1.5 % dA(iAlg)=do; % 仅在多算法版本使用    
+              %     plotSolutionT(do.LU,do.Veh);
+              % plotSolution(do,pA(iAlg)); %尽量不用
     
-    
-   %     plotSolutionT(do.LU,do.Veh);
-   % plotSolution(do,pA(iAlg)); %尽量不用
-    
-    %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh : 
+    %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh
     if ISlastVehType
-    % 2.1 初始化
-    allidxVehType = length(unique(do.Veh.ID)); %此算例车型数量(未排除相同车型)
-    flaggetSmallVeh = 0;
-    
-                                                                        % 准备替换d1 %  对调Lu.LWH的长宽 -< 之前是宽长 (已放入getdinLastVeh中)
-                                                                        %     d1.LU.LWH([1,2],:) = flipud(d1.LU.LWH([1,2],:)); 
-                                                                        %d1 = getdinLastVeh(do);
-    % 2.2 CHANGE 从maind中拿输入数据
-    luIdx = do.LU.LU_Bin(1,:) == max(do.LU.LU_Bin(1,:));
-    d1 = getdinThisVeh(maind,luIdx);                    
-                    
-    % 2.3 当车辆类型多于2种,才进行替换
-    while(allidxVehType>=2)
-        % 2.1 获取最后车型并运行算法 % 从最后一辆车不断往前循环; until第二辆车; 此处假设
-        d1.Veh = structfun(@(x) x(:,allidxVehType), do.Veh,'UniformOutput',false); %从最后一种车型开始考虑
-                                            %disp(d1.Veh.LWH)
-                                            %TLUIN_LAST = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
-        
-                                                                                                                            %d1 = RunAlgorithm(d1,pA(iAlg));
-        do1 = RunAlgorithm(d1,pA(iAlg));   %针对少数的最后一个Bin的输入lastd进行运算 555555555555555555555
-                                            %     plotSolution(do1,pA(iAlg));
-
-                            %             do1.LU.LU_VehType = ones(size(do1.LU.ID)) * do1.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-        do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % 补充变量LU_VehType
-        [do1.LU,do1.Item] = updateItemMargin(do1.LU,do1.Item);
-
-        % 2.4 判断该车型是否可用
-        % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
-        % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
-        if max(do1.LU.LU_Bin(1,:)) == 1
-                                                                                                                                    %do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % 补充变量LU_VehType
-            flaggetSmallVeh=1;
-            break;
-        end
-        
-        % 2.5 若放不下,选择更大车型 -> allidxVehType递减 do1.Veh赋予空值
-        allidxVehType= allidxVehType-1;
-        d1.Veh = [];
-    end
-    
-    %% CHECK 2 运行车型调整算法,
-    if flaggetSmallVeh==1
-        % d1;
-        % do1
-        t1 = struct2table(structfun(@(x) x',d1.LU,'UniformOutput',false));
-        to1 = struct2table(structfun(@(x) x',do1.LU,'UniformOutput',false));
-        checkLU(t1,to1);
-        checktLU(do1.LU);
-    end
+        [flaggetSmallVeh,do1] = HBinChange(maind,do,pA(iAlg));  
     end
 
-    %% 3 运行平铺算法,不改变d 获取d2Array d3Array  do2Array do3Array flagTiled
+    %% 3 运行堆垛平铺（含正常平铺和甩尾平铺）算法,不改变d 来自maind 
+    % 获取 d2Array(甩尾平铺） d3Array（整车平铺） 的输入数据，每个是一个bin
+    % 获取 do2Array do3Array  的输出数据，每个是一个bin
+    % 获取 flagTiledArray 逻辑判定，1 本bin甩尾成功 0 不成功
     if ISpingpu==1
-    % 3.1 初始化5个数据    
-    flagTiledArray = zeros(1,length(do.Bin.Weight));  %1代表整车平铺 2代表甩尾平铺
-    
-    d2Array(1:length(do.Bin.Weight)) = maind;
-    do2Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false);
-    d3Array(1:length(do.Bin.Weight)) = maind;
-    do3Array(1:length(do.Bin.Weight)) = structfun(@(x) [], do, 'UniformOutput', false); %do;
-            
-    %% 3.2 进入bin循环平铺
-    bidx = 1:length(do.Bin.Weight); % NOTE: 修改只考虑甩尾平铺到全部Bin纳入考虑, 对非甩尾平铺的进行平铺判断 % bidx = find(do.Bin.isTileNeed);
-    % 循环: 每个bin分别尝试平铺(整车平铺和甩尾平铺二选一，优先整车平铺)
-    for i=1:numel(bidx)
-        ibin = bidx(i);
-
-        % $1 GET d2 本ibin内待算法计算的数据
-        luIdx = do.LU.LU_Bin(1,:) == ibin;
-        d2 = getdinThisVeh(maind,luIdx); %修改成从maind提取IuIdx个输入,而非从运算后的d中提取
-%         d2 = getdinThisVeh(do,luIdx)
-        %% COMMENT
-%         d2.Veh = do.Veh;
-%         d2.Veh = rmfield(d2.Veh,{'Volume','order'});
-        % 2 最后若干/一个strip内的LU
-%         luidx = do.LU.LU_Bin(1,:) == ibin;  %do.LU.LU_Strip(1,:) == istrip
-
-%         d2.LU = structfun(@(x) x(:,luidx),do.LU,'UniformOutput',false);
-%         d2.LU.LWH([1,2], d2.LU.Rotaed ) = flipud(d2.LU.LWH([1,2], d2.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
-%         d2.LU.PID = d2.LU.OPID;     d2.LU.SID = d2.LU.OSID;  %  d2.LU.LID = d2.LU.OLID;
-%         d2.LU = rmfield(d2.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
-%             'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType','OPID','OSID'});
-%         
-%         d2.Par = do.Par;
-        %% 3.3 如果允许全部平铺(可能是非甩尾平铺), 观察本ibin内是否可以全部平铺,如可以,就取消甩尾平铺; 否则,进入甩尾平铺
-        if ISpingpuAll==1            
-            d3 = d2;
-            if ibin == numel(bidx) && range(d3.LU.ID) == 0 % 最后一车 且 一种完全一样的ID的方可1-2-3的递增平铺
-                minmaxLayer = min(max(d3.LU.maxHLayer), max(d3.LU.maxL(3,:))); %maxHLayer：指定层数; maxL(3,:)：计算最大层数;
-            else
-                minmaxLayer = 1;
-            end
-            iLayer = 1;
-            while 1
-                if iLayer > minmaxLayer, break; end
-                d3.LU.maxHLayer(:) = iLayer; %d2内全部LU的层数设定为1 55555 全部平铺的重要条件
-                iLayer=iLayer+1;
-                
-                % $3.3.1 reRunAlgorithm do3是d3运算后的结果
-                d3Array(ibin) = d3;
-                do3 = RunAlgorithm(d3,pA(iAlg));   % do3Array(ibin) = do3;
-                
-                % $3.3.2 当全部平铺没有问题,做后处理
-                if max(do3.LU.LU_Bin(1,:)) == 1
-                    flagTiledArray(ibin)=1; %1代表整车平铺
-                    do3.LU.LU_VehType = ones(size(d3.LU.ID)) * do3.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-                    [do3.LU,do3.Item] = updateItemMargin(do3.LU,do3.Item);               %  plot3DBPP(do3,pA(iAlg))
-                    do3Array(ibin) = do3;                    
-                    %                 plotSolutionT(do3.LU,do3.Veh);
-                    % do3修改到d中？？？目前保留到do2Array中，未与d合并
-                    break;    %  continue;   %不进入下面的甩尾平铺了 加了while不能continue了
-                end
-            end
-        end
-        if flagTiledArray(ibin)==1 
-            continue;
-        end
-        %% 3.4 若整车平铺失败 进入甩尾平铺
-
-                % 3.4.1 GET do2 本ibin内含输出数据：甩尾平铺使用
-                        stripidx = do.Strip.Strip_Bin(1,:) == ibin; %do.LU.LU_Strip(1,:) == istrip
-                        itemidx = do.Item.Item_Bin(1,:) == ibin; %do.LU.LU_Strip(1,:) == istrip
-                do2.Veh = do.Veh;
-                do2.LU = structfun(@(x) x(:,luIdx),do.LU,'UniformOutput',false);
-                do2.Bin = structfun(@(x) x(:,ibin),do.Bin,'UniformOutput',false);                       
-                do2.Strip = structfun(@(x) x(:,stripidx),do.Strip,'UniformOutput',false);
-                do2.Item = structfun(@(x) x(:,itemidx),do.Item,'UniformOutput',false);        
-
-            %% 获取luidxPP 并更新其 d2.LU.maxHLayer(luidxPP)
-            % 555 plotSolutionT(do2.LU,do2.Veh);  % 甩尾平铺前的 观察
-            while do2.Bin.isTileNeed(1) == 1 %do2内的Bin永远只有1个, 可能平铺后该bin仍需要平铺,所以有while判断
-            % $3.4.2 修订d2.LU.maxHLayer (仅对ibin内最后选定的几个strip平铺) TODO $4写的有些复杂,后期简化
-            % $4.1 GET luidxPP ： 某个strip对应的LU逻辑值
-            % 循环从本ibin内最后一个strip开始平铺 istrip= nbStrip;
-            nbStrip = numel(do2.Strip.Weight);
-                        if unique(do2.Strip.Strip_Bin(2, :)) ~= nbStrip,    error('超预期错误');    end
-            istrip= nbStrip;
-            fi = find(do2.Strip.Strip_Bin(2,:) >= istrip ); % 同bin的strip序号 and 顺序>=istrip
-            u=unique(do2.LU.LU_Strip(1,:)); %获取Strip序号的唯一排序值
-            luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
-                        if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
-        
-            % $4.2 修订d2.LU.maxHLayer           d2.LU    maind.LU
-            d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
-
-            % $4.2 若当前luidxPP对应Lu的层数均已经为1了, 则需要增加更多的istrip及luidxPP; 再修订d2.LU.maxHLayer
-            % GET 更新 d2.LU.maxHLayer(luidxPP) 必须luidxPP的层数>=2层
-            while all(d2.LU.maxHLayer(luidxPP)<1)  
-               istrip = istrip-1;
-               if istrip==0,break;end
-                fi = find( do2.Strip.Strip_Bin(2,:) >= istrip ); %fi = find( do2.Strip.Strip_Bin(2,:) == istrip ); 
-                luidxPP = ismember(do2.LU.LU_Strip(1,:), u(fi)); %%% fi->u(fi) 真正的序号 ********************* 
-                                        if ~any(luidxPP),  error('luidxPP全部为空, 不存在u(fi)对应的Lu逻辑判断'); end
-                                        if istrip == 0,  error('此bin不存在tileneed,超预期错误');   end
-                d2.LU.maxHLayer(luidxPP) = min( d2.LU.maxL(3,luidxPP), d2.LU.maxHLayer(luidxPP)) - 1;
-            end
-            % 修复: 对误减的恢复为1
-            d2.LU.maxHLayer(d2.LU.maxHLayer<=1) = 1;
-
-            %% 运行主算法及后处理 $5 reRunAlgorithm
-            d2Array(ibin) = d2;
-            %% %%%%%
-             do2 = RunAlgorithm(d2,pA(iAlg));    %             do2 = RunAlgorithmPP(d2,pA(iAlg)); 
-            
-            do2.LU.LU_VehType = ones(size(d2.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-            
-            
-            [do2.LU,do2.Item] = updateItemMargin(do2.LU,do2.Item);  % do2Array(ibin) = do2; 必须注释，因为是个循环                    
-                                                                if ISplotEachPingPu == 1,     plotSolution(do2,pA(iAlg));       end
-            % $6 后处理
-            if max(do2.LU.LU_Bin(1,:)) == 1  %    do2.LU.LU_VehType = ones(size(do2.LU.ID))*do.Veh.order(1); 
-                
-                flagTiledArray(ibin)=2; %2代表甩尾平铺
-                do2Array(ibin) = do2;
-%                  plotSolutionT(do2.LU,do2.Veh);
-%                  pause(0.2)
-                1
-                % do2 数据不进入d 仅在return2bba中修改
-                % do2 数据进入d???? return2bba不修改？？？                
-            else
-                break;  %单车甩尾放不下 不再继续甩尾平铺了，到此结束，进入下一辆车甩尾判断
-            end
-            
-            end % END OF WHILE
-    end% END OF FOR
-    
-    %% CHECK
-    if any(flagTiledArray)
-        for ibin=1:length(flagTiledArray)
-            if flagTiledArray(ibin)==1 %整车平铺
-                t3 = struct2table(structfun(@(x) x',d3Array(ibin).LU,'UniformOutput',false));
-                to3 = struct2table(structfun(@(x) x',do3Array(ibin).LU,'UniformOutput',false));
-                checkLU(t3,to3);
-                checktLU(t3);
-                checktLU(to3);
-                
-            end
-            if flagTiledArray(ibin)==2 %甩尾平铺
-                t2 = struct2table(structfun(@(x) x',d2Array(ibin).LU,'UniformOutput',false));
-                to2 = struct2table(structfun(@(x) x',do2Array(ibin).LU,'UniformOutput',false));
-                checkLU(t2,to2);
-                % checktLU(t2);
-                checktLU(to2);
-            end
-            
-            flagTiledArray;
-            d2Array;
-            do2Array;
-            d3Array;
-            do3Array;
-        end
-    end
+        [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,pA(iAlg));            
     end
 end
-
    
 %% Simulate - CHOOSE BEST ONE
 % 555 算法首先判断并排除bin内相同类型托盘不相邻的解 TODO 数据的CHECK
@@ -435,12 +228,13 @@ end
 % bestOne = 1;
                                 %%%% dA = do = daBest(1) = daBest(bestOne) %isequal(do,d1)
 %% POST PROCESSING
+% 基于do do1 do2 do3 flagTiledArray flaggetSmallVeh 等结果数据进行处理
+% 基于table格式
 
 
-    % daBest(bestOne).LU.OPID
 %% 1 ******************获取展示顺序 do数据 T=d.LU增加ShowSEQ
 T = getTableLU(do);
-        checktLU(T) 
+chktLU(T)
         %% TODO 目前仅对甩尾平铺后的进行Gap调整
         % if parGap==1,            [flagGap, dd] = getMixedGap(dd);       end
 
@@ -468,8 +262,8 @@ T = getTableLU(do);
 %% 2 ****************** 针对车型变化 do1数据 获取修订的 output ******************
 if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
     T1 = getTableLU(do1);
-        checktLU(T1) 
-        1
+    chktLU(T1) 
+        
     % 替换T中的最后一车的部分属性 来自T1
     lastVehIdx = max(T{:,'BINID'});
     flaglastLUIdx = T{:,'BINID'}==lastVehIdx;
@@ -480,7 +274,7 @@ if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
        % 某个bin内调整,其BINSEQ,CoordLUBin,LU_VehType一定发生变化 （按bid和binseq排序的） 其ITEMID似乎没用 不返回了把
        % 重点是更新坐标和LU_VehType和BINSEQ，LU_VehType 这几个必定变化(PID/SID需要留意) % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
     T{flaglastLUIdx,{'CoordLUBin','BINSEQ','LU_VehType'}} = T1{:,{'CoordLUBin','BINSEQ','LU_VehType'}};
-    checktLU(T)
+    chktLU(T)
     %%
     
         % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
@@ -520,7 +314,7 @@ end
 %% 3 ****************** 针对平铺选择 do2（甩尾平铺）/do3Array（整车平铺）数据 获取修订的 output ******************
 if ISpingpu==1
     if ~all(flagTiledArray==0)
-        flagTiledArray
+        %flagTiledArray
         warning('需要平铺');end
     for ibin=1:length(do2Array) %do*Array 包含所有BIN
         if flagTiledArray(ibin)==0  % 该ibin未平铺 继续循环
@@ -540,7 +334,7 @@ if ISpingpu==1
             
             % 获取LU的Table格式
             T23 = getTableLU(dd);   %T23 = getTableLU(do3Array(ibin));
-            checktLU(T23) ;
+            chktLU(T23) ;
         end
         if flagTiledArray(ibin)==2    % 该ibin甩尾平铺成功            
             dd = do2Array(ibin);            
@@ -552,9 +346,10 @@ if ISpingpu==1
             
             % 获取LU的Table格式
             T23 = getTableLU(dd);   % T23 = getTableLU(do2Array(ibin));
-            checktLU(T23) ;
+            chktLU(T23) ;
         end
 
+        % 当前table所有属于该bin的逻辑号 
        flagTileLUIdx = T{:,'BINID'}==ibin;
        
        %% CHECK 1 是否该ibin内的LU排序是严格递增; 是否T内选中的flagTileLUIdx部分LU属于该ibin且也是严格递增的
@@ -600,17 +395,16 @@ if ISpingpu==1
 %     plotSolutionT(T23,struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false)));
 %     1
     
-        T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
+        T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报chktLU错了.
             T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
         % 如果考虑Gap且成功替换Gap,则本bin内的LWH和Rotaed也要替换到主数据T中
         if parGap % && flagGap Gap调整是必须
-            T{flagTileLUIdx,{'LWH','Rotaed'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报checktLU错了.
+            T{flagTileLUIdx,{'LWH','Rotaed'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报chktLU错了.
                 T23{:,{'LWH','Rotaed'}};
         end
-
         
 %        sortrows(T.LU_Item)'
-%        checktLU(T) %仍有无法通过的可能性; 如LU_Item影响不大,建议先注释 TODO
+%        chktLU(T) %仍有无法通过的可能性; 如LU_Item影响不大,建议先注释 TODO
 
             %% 下面是错的
             %        T{flagTileLUIdx,{'LU_VehType','BINSEQ','ShowSEQ'}} = ...
@@ -676,8 +470,10 @@ end
 
 % ****************** 针对车型选择 获取修订的 output ******************
 
-T = getShowSeq(T); %增加ShowSEQ
-%% CHECK 1 上轻下重
+T = getShowSeq(T); %增加ShowSEQ tblorder
+
+%        chktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
+
 
 %% table转为结构体后判断是否上轻下重
 % lu = table2struct(T,'ToScalar',true)
@@ -688,10 +484,11 @@ T = getShowSeq(T); %增加ShowSEQ
     %     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'})
 %     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
     % if ITEMID相同 其坐标CoordLUBin的长宽必须相同 不同ITEMID的上下重量对比
-    % 对table格式LU进行check 主要是重量
+    % 对table格式LU进行chk 主要是重量
+    
 
-%        checktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
 
+% NOTE : 在此之前均未改变LU的顺序
 % 返回BBA数组格式给JAR
 [~,T.ttt] = sort(T.tblorder);
 T = sortrows(T,'ttt');
@@ -704,13 +501,19 @@ output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
 % output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'
 % ITEMID意义不大 
+
+% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
+% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
+
 if verMilkRun == 1 
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index','OEID'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
-else
+else % 带回去OPID OSID OEID 等 其实用途也不大 %用途大的是
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 end
 % output_LU_Seq([2,3,5,8],:)
-
+output_LU_LWH
+output_CoordLUBin
+output_LU_Seq
 if ISplotBBA
 %     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
     V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
@@ -1152,53 +955,9 @@ end
 % end
 
 
-% 每次RunAlgorithm后，判断d.LU在输入与输出的差距
-function checkLU(TIN,TOUT)
-    TOUT.LWH(TOUT.Rotaed,1) = TIN.LWH(TOUT.Rotaed,1);
-    TOUT.LWH(TOUT.Rotaed,2) = TIN.LWH(TOUT.Rotaed,2);
-    %% 1.1 LWH CHECK
-    if any(TOUT.LWH ~= TIN.LWH),
-        any(TOUT.LWH ~= TIN.LWH);
-        error('LWH');
-    end
-    %% 1.2 Weight CHECK
-    if any(TOUT.Weight ~= TIN.Weight) || any(TOUT.OPID ~= TIN.PID) || any(TOUT.OSID ~= TIN.SID)  || any(TOUT.OEID ~= TIN.EID)
-        any(TOUT.Weight ~= TIN.Weight),
-        error('other');
-    end
-end
 
-% 指定ibin,获取该bin内的LU,Veh等作为输入数据,重点是LU数据
-function thisd = getdinThisVeh(tmpd,luIdx)
-        % 1 Veh和Par
-        thisd.Veh = tmpd.Veh;        
-        thisd.Par = tmpd.Par;
-        thisd.LU = structfun(@(x) x(:,luIdx),tmpd.LU,'UniformOutput',false);
 
-        % 2 bin内的LU
-%         luIdx = tmpd.LU.LU_Bin(1,:) == ibin;    %tmpd.LU.LU_Strip(1,:) == istrip
-        
-        % thisd.Veh = rmfield(thisd.Veh,{'Volume','order'});
-%         thisd.LU.LWH([1,2], thisd.LU.Rotaed ) = flipud(thisd.LU.LWH([1,2], thisd.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
-%         thisd.LU.PID = thisd.LU.OPID;     thisd.LU.SID = thisd.LU.OSID;  %  thisd.LU.LID = thisd.LU.OLID;
-%         thisd.LU = rmfield(thisd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip',...
-%             'LU_Bin','CoordLUBin','CoordLUStrip','LU_VehType','OPID','OSID'});
-        
-        
-        
-%     % tmpd中的Bin是排序后的, 从最小的开始试
-%     tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
-%     flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
-%     if isSameCol(tmpd.LU)
-%         % 获取仅最后一个Bin的输入数据
-%         lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %仅取最后一辆车内的LU
-%         lastd.LU.LWH([1,2], lastd.LU.Rotaed ) = flipud(lastd.LU.LWH([1,2], lastd.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
-%         lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin','maxL','CoordLUStrip'}); 
-%         lastd.Par = tmpd.Par;
-%     else
-%         error('不能使用structfun');
-%     end
-end
+
 
 function lastd = getdinLastVeh(tmpd)
     % tmpd中的Bin是排序后的, 从最小的开始试
@@ -1300,7 +1059,7 @@ plot3DBPP(do,par);
 
         % V2 margin version
         % 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
-        % [do.LU,do.Item] = updateItemMargin(do.LU,do.Item);
+        % [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
         
 
 end
@@ -1863,7 +1622,7 @@ end
 % %     findBinArray = find(binLeftMatrix(2,1:iBin) >= stripLeftMatrix(2,iStrip));
 % %     if findBinArray
 % %         tepMin = binLeftMatrix(2,1:iBin);
-% %         tepMin = min(tepMin(findBinArray)); % 555 check
+% %         tepMin = min(tepMin(findBinArray)); % 555 chk
 % %         thisBin = find(binLeftMatrix(2,1:iBin)==tepMin);
 % %         if length(thisBin)>1
 % %             thisBin = thisBin(1);

@@ -8,7 +8,7 @@ function [d] = RunAlgorithm(d,p)
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性
         % NOTE: 调研下面函数前：确保输入LU的LWH是不含margin的
         % 555 新增对LU的LWH改变（包含Rotaed属性）
-        [d.LU, d.Veh] = cpuLULWH(d.LU, d.Veh); 
+         
         [d.LU, d.Veh] = cpuLUVeh(d.LU, d.Veh); %必须做 ******  含cpuLU  含cpuVeh **********
 
         %% 启发式: LU到Item的算法    
@@ -20,7 +20,7 @@ function [d] = RunAlgorithm(d,p)
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
         
         % 核查是否还有上轻下重的情况
-        checktLU(d.LU);
+        chktLU(d.LU);
          
         %% 启发式: Item到Strip的算法        
         %  *******  *******  *******

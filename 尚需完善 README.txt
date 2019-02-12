@@ -514,7 +514,7 @@ for g=1:length(gapY)-1
 end
     
 V0109
-1:增加修订前低后高问题（存在bug）
+1:增加修订前低后高问题（存在bug，待修复）
 function insertItemToStrip(thisLevel,iItem)       
    
         % V2 按照Item的高度，高的优先进入Strip（）
@@ -543,15 +543,19 @@ function insertItemToStrip(thisLevel,iItem)
             %  2.3 更新本level对应的StripWeight:   (相比V1不变)
             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
 
-
 V190115
 1: 修改多个polygon的，包含NAN的strip向上问题
 2: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
 
+%% 重构BBA代码
+V190212
+1：修订数据核验和数据预处理
+2：主函数的更换车型和平铺操作放入子函数HBinChange和HBinpingpu
 
 
 TODO
 
+1: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
 
 1 SID/LID问题测试
 2 nbLuarray单个问题 Stripbalance中

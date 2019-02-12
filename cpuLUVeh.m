@@ -87,6 +87,10 @@ function [LU,Veh] = cpuLUVeh(LU,Veh)
     else
         LU.maxHLayer = min( [LU.maxHLayer',LU.maxL(3,:)'], [], 2 )';  % 同步更新对应LU的maxHLayer    
     end
+    
+    if ~isfield(LU, 'Rotaed')
+        LU.Rotaed = zeros(size(LU.ID));
+    end
 
     %% 5 计算LU同样ID/可堆垛ID下的个数
     % V1"
