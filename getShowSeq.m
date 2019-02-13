@@ -1,4 +1,4 @@
-function [TLU] = getShowSeq(d)
+function [ShowSEQ,tblorder] = getShowSeq(d)
 
 if ~istable(d)
     TLU = getTableLU(d);
@@ -30,8 +30,8 @@ end
 %% 返回TLU
        %         TLUsorted.ShowSEQ = LUShowSeq;        %         TLUsorted.tblorder = tblorder;
        [~,x] = sort(tblorder);
-       TLU.ShowSEQ = LUShowSeq(x);  %        TLU.ShowSEQ = LUShowSeq(tblorder);
-       TLU.tblorder = tblorder;
+       ShowSEQ = LUShowSeq(x);  %        TLU.ShowSEQ = LUShowSeq(tblorder);
+       tblorder = tblorder;
        
 %% 4 精简为返回的数据表
 % T1=TLUsorted(:,'CoordLUBin');

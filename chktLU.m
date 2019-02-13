@@ -53,8 +53,23 @@ for iItem = 1:length(uniItemID) %对ITEM进行循环
 end
 end
 
-
-
+%% 3 LWH1(含margin) LWH2（不含margin） 和 OLWH（含Rotaed，但不含mragin） 核验
+    OLWH = t.OLWH';
+    Rotaed = t.Rotaed';
+    margin= t.margin';
+    
+    
+    OLWHtmp = OLWH;
+    OLWH(1,Rotaed) = OLWHtmp(2,Rotaed);
+    OLWH(2,Rotaed) = OLWHtmp(1,Rotaed);
+    
+    LWH1 = t.LWH';
+    LWH2 = LWHunbuffer(LWH1, margin);
+    
+    if ~isequal(OLWH,LWH1) && ~isequal(OLWH,LWH2)
+        error('t的LWH在变化前后有错误，需要核验');
+    end
+    
 %% V1 先判断后循环;
 % % %% 2 相同ITEMID下的CHEK
 % % uniItemID = unique(t.ITEMID(:));

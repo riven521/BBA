@@ -17,16 +17,16 @@ global ISlastVehType ISpingpu parGap
     if ISlastVehType==1 && flaggetSmallVeh == 1 %如有当允许且车型替换成功
         T1 = getTableLU(do1);     chktLU(T1);
 
-        % 替换T中的最后一车的部分属性 来自T1
-        lastVehIdx = max(T{:,'BINID'});
-        flaglastLUIdx = T{:,'BINID'}==lastVehIdx;
+        % 获取 最后一车的逻辑值 
+        flaglastLUIdx = T.BINID == max(T.BINID);           % V1 V2等价: % lastVehIdx = max(T.BINID);  %lastVehIdx = max(T{:,'BINID'});     % flaglastLUIdx = T.BINID == lastVehIdx; % lastVehIdx = ibin
 
-        %% 哪些会变化??
+        %% 哪些会变化?? fixeme 后期使用时需仔细调整
         % 某个bin内调整,其binID一定不会变化;
         % 其LID/Weight/LWH应该不会变化; SID/PID会变化; 因为OPID OSID OID等原因
         % 某个bin内调整,其BINSEQ,CoordLUBin,LU_VehType一定发生变化 （按bid和binseq排序的） 其ITEMID似乎没用 不返回了把
         % 重点是更新坐标和LU_VehType和BINSEQ，LU_VehType 这几个必定变化(PID/SID需要留意) % LU_VehType   'BINID'   BINSEQ   SID    LID    'ITEMID'    PID  ShowSEQ   'Weight'
         T{flaglastLUIdx,{'CoordLUBin','BINSEQ','LU_VehType'}} = T1{:,{'CoordLUBin','BINSEQ','LU_VehType'}};     chktLU(T);
+        
     end
 
 %% 3 ****************** 针对平铺选择 do2（甩尾平铺）/do3Array（整车平铺）数据 获取修订的 output ******************
@@ -50,10 +50,11 @@ global ISlastVehType ISpingpu parGap
                 T23 = getTableLU(dd);    chktLU(T23) ;
             end
             
-            % 当前table所有属于该bin的逻辑号
-            flagTileLUIdx = T{:,'BINID'}==ibin;
+            % 当前table所有属于该bin的逻辑号            
+            flagTileLUIdx = T.BINID ==ibin;  % V1" % flagTileLUIdx = T{:,'BINID'}==ibin; (二者等价）
             
-            %% CHECK 1 是否该ibin内的LU排序是严格递增; 是否T内选中的flagTileLUIdx部分LU属于该ibin且也是严格递增的
+            %% CHECK 总表T 和 子表 T23等内部核验
+            % 1 是否该ibin内的LU排序是严格递增; 是否T内选中的flagTileLUIdx部分LU属于该ibin且也是严格递增的
             if ~issorted(sort(T23.BINSEQ),'strictascend') || ~issorted(sort(T.BINSEQ(flagTileLUIdx,:)'),'strictascend')
                 T.BINSEQ(flagTileLUIdx,:)'
                 T23.BINSEQ'
@@ -91,16 +92,18 @@ global ISlastVehType ISpingpu parGap
             % 作图：仅平铺的那个BIN的图
             %     plotSolutionT(T23,struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false)));
             
+            % fixeme 后期使用时需仔细调整 哪些变量变化的调整
             T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报chktLU错了.
                 T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
-            
+
             % 如果考虑Gap且成功替换Gap,则本bin内的LWH和Rotaed也要替换到主数据T中
             if parGap % && flagGap Gap调整是必须  18-12 此处增加对混装间隙的处理 - 基于Table格式
-                T{flagTileLUIdx,{'LWH','Rotaed'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报chktLU错了.
-                    T23{:,{'LWH','Rotaed'}};
+                T{flagTileLUIdx,{'LWH','Rotaed'}} = T23{:,{'LWH','Rotaed'}};
             end
             
             %        sortrows(T.LU_Item)'
+            %        if ITEMID相同 其坐标CoordLUBin的长宽必须相同 不同ITEMID的上下重量对比
+            %        对table格式LU进行chk 主要是重量
             %        chktLU(T) %仍有无法通过的可能性; 如LU_Item影响不大,建议先注释 TODO
             
         end % END OF BIN
@@ -108,18 +111,12 @@ global ISlastVehType ISpingpu parGap
     end % END OF PINGPU
 
 %% 4 ****************** 针对获取的T 进行最后返回的output处理 ******************
-    T = getShowSeq(T); %增加ShowSEQ tblorder
-    %        chktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
+    [T.ShowSEQ, T.tblorder] = getShowSeq(T); %增加 ShowSEQ(按车辆/供应商号/LID区分显示步骤) 和 tblorder
+    %       chktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
 
-%% 依据T内最终LU_LUinBin坐标数据判断
-%     x=T(T.BINID==2&T.ID==1,{'ID','LID','PID','H','Weight','CoordLUBin','BINSEQ','ShowSEQ','ITEMID','ITEMSEQ'}) 
-%     x=T2(:,{'ID','LID','PID','H','Weight','X','Y','Z','ITEMID','ITEMSEQ','BINID','BINSEQ','ShowSEQ'})
-% if ITEMID相同 其坐标CoordLUBin的长宽必须相同 不同ITEMID的上下重量对比
-% 对table格式LU进行chk 主要是重量
-
-% NOTE : 在此之前均未改变LU的顺序
-[~,T.ttt] = sort(T.tblorder);
-T = sortrows(T,'ttt');                         % T = sortrows(T,'BINID')  % T.LID % T.BINID % T.BINSEQ
+    % NOTE : 在此之前均未改变LU的顺序，改变LU顺序为按照显示顺序ShowSEQ递增
+    [~,T.ttt] = sort(T.tblorder);
+    T = sortrows(T,'ttt');                               % T = sortrows(T,'BINID')  % T.LID % T.BINID % T.BINSEQ
 end
 
 

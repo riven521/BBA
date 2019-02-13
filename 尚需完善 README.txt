@@ -558,7 +558,11 @@ V190212 V1
 V190212 V2
 1: 独立HBinGapAdjust 车辆间隙调整算法，在平铺之后
 2：独立HBinCombine do do1 do2array do3array等整合到table格式T中
-3: 精简HBinCombine
+3: 精简HBinCombine/BBA_Main等
+
+%% 重构BBA代码 1
+V190213 V1
+1: chktLU增加对LHW与OLWH的核验
 
 TODO
 

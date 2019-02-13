@@ -206,10 +206,10 @@ for iAlg = 1:nAlg
     [d.LU] = setLULWHwithbuff(d.LU, d.Veh);
     
     % 1.2 主函数RunAlgorithm
-    do = RunAlgorithm(d,pA(iAlg));   %获取可行解结构体 ( 在此之前获取固定LU方向和固定LU大小的LWH）   % 可删 - 已在RunAlgorithm中声明 do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
+    do = RunAlgorithm(d,pA(iAlg));   %获取解结构体do ( 输入d：固定LU方向和固定LU大小和固定margin的LWH）   % 可删 - 已在RunAlgorithm中声明 do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
 
     % 1.3 修订LU和Item的LWH/Coord数据 删除margin
-    [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);   
+    [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
     
     % 1.4 CHECK 输入和输出的LU
     chkLUnewold(d.LU,do.LU);  %新老数据对比 todo 完善新老数据对比 预防算法内部错误
@@ -271,8 +271,8 @@ end
 % bestOne = 1;
                                 %%%% dA = do = daBest(1) = daBest(bestOne) %isequal(do,d1)
 %% POST PROCESSING
-% 基于do do1 do2 do3 flagTiledArray flaggetSmallVeh 等结果数据进行处理
-% 基于table格式
+% 基于do do1 do2 do3 flagTiledArray flaggetSmallVeh 等结果数据 整合到do(T)内
+% 基于table格式 方便处理
 
 if ISlastVehType && ISpingpu
     T = HBinCombine(do,flaggetSmallVeh,do1,flagTiledArray,do2Array,do3Array);  
@@ -285,19 +285,17 @@ elseif ~ISlastVehType && ~ISpingpu
 end
 
 %% return必须的参数
-% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
-% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
-
 output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
 % V2 get output_LU_Seq
+% 行1：托盘所在车型号(必须换)    行2：托盘所在车序号(会变,不能换,换就错) 行3：托盘车内安置顺序(必须换) 行4：托盘SID供应商编号(不会变,不用变??)
+% 行5：托盘ID型号LID(不会变,不用变?) 行6：托盘堆垛序号ITEM(会变,不能换,换就错,用途?) 行7：托盘零部件编号PID(不会变,不用变?) 增加行8: 展示顺序(必须换)
 if verMilkRun == 1 
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index','OEID'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 else % 带回去OPID OSID OEID 等 其实用途也不大 %用途大的是
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index'}}'; %增加返回行10: LuIndex来自刘强只要是数字就可以
 end
-% V1
-% output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'; % ITEMID意义不大    output_LU_Seq([2,3,5,8],:)
+% V1： % output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'; % ITEMID意义不大    output_LU_Seq([2,3,5,8],:)
 
 % plot
 if ISplotBBA
