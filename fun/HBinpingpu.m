@@ -74,7 +74,7 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                     
                     % 2.3   当全部平铺没有问题,做后处理
                     if max(do3.LU.LU_Bin(1,:)) == 1
-                        
+                        fprintf(1,'       Exsiting 整车平铺 in HBinpingpu (do3)...\n');
                         flagTiledArray(ibin)=1;   %1代表整车平铺                       %do3.LU.LU_VehType = ones(size(d3inIbin.LU.ID)) * do3.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值                        
                         
                         do3Array(ibin) = do3;
@@ -142,7 +142,7 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                     
                     % $6 后处理 甩尾平铺一次不够，需要循环再进行甩尾平铺 直到超出一车容量
                     if max(do2.LU.LU_Bin(1,:)) == 1  %    do2.LU.LU_VehType = ones(size(do2.LU.ID))*do.Veh.order(1);
-                        
+                        fprintf(1,'       Exsiting 甩尾平铺 in HBinpingpu (do2)...\n');
                         flagTiledArray(ibin)=2; %2代表甩尾平铺
                         
                         do2Array(ibin) = do2;                        % todo -> do2 数据不进入d 仅在return2bba中修改    % do2 数据进入d???? return2bba不修改？？？
@@ -181,11 +181,11 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                     chktLU(do2Array(ibin).LU);
                 end
                 
-                flagTiledArray;
-                d2Array;
-                do2Array;
-                d3Array;
-                do3Array;
+%                 flagTiledArray;
+%                 d2Array;
+%                 do2Array;
+%                 d3Array;
+%                 do3Array;
             end
         end
 

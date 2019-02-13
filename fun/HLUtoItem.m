@@ -11,7 +11,7 @@ function [LU,Item] = HLUtoItem(LU,Veh)
 % Item.Weight          (1,n): ITEM的重量
 % tmpItem_LU         (1,n): 行1 ITEM的LU数量
 
-global ISisNonMixedLU ISisMixTileLU
+
 
 %% LU排序
 % 获取LU的顺序(重点是高度递减排序)
@@ -168,12 +168,12 @@ end
 function [tepLUorder] = getLUorder(LU)
 % V1: ********** 不考虑isNonMixed
 % tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH; LU.Weight];
-tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH(1,:); LU.LWH(2,:); LU.LWH(3,:); LU.Weight];
-[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6, 7],{'ascend','descend','ascend','ascend','descend','descend'}); 
+%tmpLUMatrix = [LU.SID; LU.ID; LU.PID; LU.LWH(1,:); LU.LWH(2,:); LU.LWH(3,:); LU.Weight];
+%[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 5, 2, 3, 6, 7],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % 1 SID; 2 长度；3 ID；4 PID；5 高度；6 重量；
-tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight];
-[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','ascend','ascend','descend','descend'}); 
+%tmpLUMatrix = [LU.SID; LU.LWH(2,:); LU.ID; LU.LID; LU.PID; LU.LWH(3,:); LU.Weight];
+%[~,tepLUorder] = sortrows(tmpLUMatrix',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','ascend','ascend','descend','descend'}); 
 
 % V2: ********** 考虑isNonMixed
 global ISisNonMixedLU ISisMixTileLU % TODO 考虑不满托盘,同样LULID下

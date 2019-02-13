@@ -3,7 +3,7 @@ function [d] = RunAlgorithm(d,p)
         global ISplotStrip
                 
         %% 预处理:检验Input输入数据
-        
+        fprintf(1,'   Running RunAlgorithm  ...\n');
         %         d = GcheckInput(d);    %可以不做   因为main做一下即可          
         
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性  （进入之前LWH已经时包含margin的）        
@@ -13,6 +13,7 @@ function [d] = RunAlgorithm(d,p)
         %         plotSolutionT(d.LU,d.Veh)
         [d.LU] = cpuLU(d.LU,d.Veh);     % 计算LU的isNonMixed和LU的isMixedTile 属性
         
+        %fprintf(1,'     Running HLUtoItem...\n');
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
                                 %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
 
@@ -27,6 +28,7 @@ function [d] = RunAlgorithm(d,p)
         % 1 Item排序: %1: SID ; 2: isNonMixed; 一般正真开始: 
         %                       3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
         % 2 按Item给定顺序插入新或旧的Strip
+        %fprintf(1,'     Running HItemToStrip...\n');
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
 
         % 计算LU.LU_Strip, LU.CoordLUStrip
@@ -34,9 +36,10 @@ function [d] = RunAlgorithm(d,p)
 
         %         close all;   plotSolutionT(d.LU,d.Veh)
         
-        %% 启发式：堆垛均衡设置
+        %% 启发式：特殊：堆垛均衡设置
         % ********* 1 5555 堆垛均衡设置 *********** 修改 d.LU.maxHLayer(luidxPP) 
          if ISstripbalance==1
+             fprintf(1,'     Running HStripBalance...\n');
              [d.Strip,d.Item,d.LU] = HStripBalance(d.Strip,d.Item,d.LU,d.Veh,p);  end
         
         %            close all;  plotSolutionT(d.LU,d.Veh);
@@ -46,6 +49,7 @@ function [d] = RunAlgorithm(d,p)
         %% 启发式：Strip到Bin的算法        
         %% ********* 1 Strip排序: % 1: SID 2: priorityofLID
         %         close all;  plotSolutionT(d.LU,d.Veh);
+        %fprintf(1,'     Running HStripToBin...\n');
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
         %         close all;  plotSolutionT(d.LU,d.Veh);
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
@@ -53,10 +57,11 @@ function [d] = RunAlgorithm(d,p)
         
          if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
                                                     
-        %% ********* 2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
+        %% 特殊：2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
                                                         %         ti = d.Strip;  tl = d.Bin;
         if ISreStripToBin==1
+                fprintf(1,'     Running HStripToBinAgain...\n');
                 [d.Strip,d.Bin] = HStripToBinAgain(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
@@ -71,8 +76,10 @@ function [d] = RunAlgorithm(d,p)
         if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
 
                                           
-        %% ********* 3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin 第二行
-        if ISshuaiwei==1,      [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    
+        %% 特殊：3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin 第二行
+        if ISshuaiwei==1   
+                fprintf(1,'     Running HStripSW...\n');
+                [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
         end
@@ -83,7 +90,7 @@ function [d] = RunAlgorithm(d,p)
 
        %% 赋值车型
        d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
-       
+       fprintf(1,'   Running RunAlgorithm  DONE ...\n');
                 %         printstruct(d.Item,'sortfields',1,'PRINTCONTENTS',0)  
                 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
                 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  

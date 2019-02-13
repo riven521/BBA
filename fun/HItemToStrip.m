@@ -13,7 +13,7 @@ function [LU,Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 %% 初始化
 % nDim Item维度(2) nItem Item数量 nStrip Strip数量 
 % widthStrip Strip最大宽度
-nDim = size(Item.LWH,1); if nDim ==3, nDim = nDim-1;end
+    % nDim = size(Item.LWH,1); if nDim ==3, nDim = nDim-1;end
 sz = size(Item.LWH);
 nItem = sz(2);
 wStrip = Veh.LWH(1,1);
@@ -309,81 +309,81 @@ end
         
     end
     
-    function printscript()
-        % 测试代码
-        % % LWHStrip
-        % % sItem.Item_Strip
-        % % ItemLWSort
-        % % itemCoordMatrixSort
-        % % Item_Strip
-        % % LWHItem
-        % % itemCoordMatrix
-        %  printstruct(d);
-        
-        % 输出主要结果:获得从1开始每个strip包含的数据
-        for iStrip = 1:max(Item.Item_Strip(1,:))
-            [~,idx] = find(Item.Item_Strip(1,:)==iStrip);
-            fprintf('strip %d 的剩余宽+最大长为:  ',iStrip);
-            fprintf('( %d ) ',Strip.LW(:,iStrip));
-            fprintf('\n');
-            fprintf('strip %d 包含 original Item 索引号(长宽)[旋转标志]{坐标}为  \n  ',iStrip);
-            fprintf('%d ',idx);
-            fprintf('( %d ) ', Item.LWH(1:nDim,idx));fprintf('\n');
-            fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %sItem.Rotaed
-            fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
-            fprintf('\n');
-        end
-    end
-
-    function plot2DStrip()
-        %% 初始化
-        wStrip = wStrip;        
-        hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
-        nstrip = sum(sItem.Item_Strip(2,:)>0);
-
-        tmpLID = cellfun(@(x)x(1), sItem.LID);        
-        nIDType = unique(tmpLID);
-        nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
-        
-        %% 画图
-        % 1 画图：画本次Strip
-        DrawRectangle([wStrip/2 hStrip/2 wStrip hStrip 0],'--', [0.5 0.5 0.5]);
-        hold on;
-        % 2 画图：逐个strip/item 画图
-        for istrip = 1:nstrip
-            % 找出当前istrip的物品索引
-            idxDrawItem = find(sItem.Item_Strip(1,:)==istrip);
-            % 获取该索引下的变量
-            drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
-            drawItemLWH = sItem.LWH(:,idxDrawItem);
-            drawItemId = tmpLID(:,idxDrawItem);
-
-            % 画图：逐个item
-            nThisItem = size(drawItemLWH,2);
-            for iplotItem = 1:nThisItem
-                % 画图：画本次iItem
-                itemWidth = drawItemLWH(1,iplotItem);
-                itemLength = drawItemLWH(2,iplotItem);
-                itemCenter = [drawItemCoordMatrix(1,iplotItem)+itemWidth/2 ...
-                    drawItemCoordMatrix(2,iplotItem)+itemLength/2 ];
-                
-                % 增加对本次iItem的类型（颜色）判断
-                itemID = drawItemId(iplotItem);
-                itemColor = 0.8*nColors(nIDType==itemID, : );
-                
-                DrawRectangle([itemCenter itemWidth itemLength 0],  '-',itemColor);
-                hold on;
-            end
-        end
-        % hold off;
-    end
+% %     function printscript()
+% %         % 测试代码
+% %         % % LWHStrip
+% %         % % sItem.Item_Strip
+% %         % % ItemLWSort
+% %         % % itemCoordMatrixSort
+% %         % % Item_Strip
+% %         % % LWHItem
+% %         % % itemCoordMatrix
+% %         %  printstruct(d);
+% %         
+% %         % 输出主要结果:获得从1开始每个strip包含的数据
+% %         for iStrip = 1:max(Item.Item_Strip(1,:))
+% %             [~,idx] = find(Item.Item_Strip(1,:)==iStrip);
+% %             fprintf('strip %d 的剩余宽+最大长为:  ',iStrip);
+% %             fprintf('( %d ) ',Strip.LW(:,iStrip));
+% %             fprintf('\n');
+% %             fprintf('strip %d 包含 original Item 索引号(长宽)[旋转标志]{坐标}为  \n  ',iStrip);
+% %             fprintf('%d ',idx);
+% %             fprintf('( %d ) ', Item.LWH(1:nDim,idx));fprintf('\n');
+% %             fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %sItem.Rotaed
+% %             fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
+% %             fprintf('\n');
+% %         end
+% %     end
+% % 
+% %     function plot2DStrip()
+% %         %% 初始化
+% %         wStrip = wStrip;        
+% %         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
+% %         nstrip = sum(sItem.Item_Strip(2,:)>0);
+% % 
+% %         tmpLID = cellfun(@(x)x(1), sItem.LID);        
+% %         nIDType = unique(tmpLID);
+% %         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色
+% %         
+% %         %% 画图
+% %         % 1 画图：画本次Strip
+% %         DrawRectangle([wStrip/2 hStrip/2 wStrip hStrip 0],'--', [0.5 0.5 0.5]);
+% %         hold on;
+% %         % 2 画图：逐个strip/item 画图
+% %         for istrip = 1:nstrip
+% %             % 找出当前istrip的物品索引
+% %             idxDrawItem = find(sItem.Item_Strip(1,:)==istrip);
+% %             % 获取该索引下的变量
+% %             drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
+% %             drawItemLWH = sItem.LWH(:,idxDrawItem);
+% %             drawItemId = tmpLID(:,idxDrawItem);
+% % 
+% %             % 画图：逐个item
+% %             nThisItem = size(drawItemLWH,2);
+% %             for iplotItem = 1:nThisItem
+% %                 % 画图：画本次iItem
+% %                 itemWidth = drawItemLWH(1,iplotItem);
+% %                 itemLength = drawItemLWH(2,iplotItem);
+% %                 itemCenter = [drawItemCoordMatrix(1,iplotItem)+itemWidth/2 ...
+% %                     drawItemCoordMatrix(2,iplotItem)+itemLength/2 ];
+% %                 
+% %                 % 增加对本次iItem的类型（颜色）判断
+% %                 itemID = drawItemId(iplotItem);
+% %                 itemColor = 0.8*nColors(nIDType==itemID, : );
+% %                 
+% %                 DrawRectangle([itemCenter itemWidth itemLength 0],  '-',itemColor);
+% %                 hold on;
+% %             end
+% %         end
+% %         % hold off;
+% %     end
 end
 
 %% 局部函数 %%
 
 %% 函数1: getITEMorder
 % 给定ITEM的顺序,按NEXT FIT的方式插入STRIP（先插入SID小的; 后续高度/宽度： 后续LID）
-function order = getITEMorder(Item,whichSortItemOrder)
+function order = getITEMorder(Item,~)
 
 %对SID/EID 排序: SID/EID 按给定顺序排序,序号小的在前面
 % V1 : 仅同一堆垛 不混合SID/EID CASE
@@ -407,9 +407,9 @@ ItemLID = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % V2: ********** 考虑isNonMixed
 global ISisNonMixed ISisMixTile
 % 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpItem = [ItemSID; Item.isNonMixed; Item.isMixedTile; ...      % SINGLE VERSION
+tmpItem = [ItemSID; Item.isNonMixed; Item.isMixedTile; ...                     % SINGLE VERSION    todo 二者区别是什么????
     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-tmpItem = [ItemSIDord; Item.isNonMixed; Item.isMixedTile; ...  % MILKRUN VERSION
+tmpItem = [ItemSIDord; Item.isNonMixed; Item.isMixedTile; ...                % MILKRUN VERSION
     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
 
 if ISisNonMixed==1    
@@ -585,7 +585,7 @@ elseif p.whichStripH == 2 % firstfit  % firstfit下能不能直接套用bestfit的代码?
     end
 elseif p.whichStripH == 3 % nextfit
     % 增对Rotation增加变量
-    sItem.itemorder
+    sItem.itemorder;
     if sItem.isRota(iItem) == 1 %此Item可以旋转 % nextfit下不能直接套用bestfit的代码
         % V2: iItem已经是旋转后的,最佳摆放位置,无需判断旋转后的容纳情况
         % 判定当前level是否可以在任一摆放方向可放入该iItem flaged: 有内容表示可以，否则不可以        

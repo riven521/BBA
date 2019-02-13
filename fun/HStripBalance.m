@@ -9,6 +9,7 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
             nbstrip = numel(idxstr);
             
             for idx=1:nbstrip
+                fprintf(1,'       Exsiting 不平衡的Strip in HStripBalance...\n');
                 luidxPP = ismember(LU.LU_Strip(1,:), idxstr(idx));
                 
                 % FINDOUT 本strip对应Item的LU个数,通过Item

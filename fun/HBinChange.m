@@ -31,7 +31,8 @@ function [flaggetSmallVeh,do1] = HBinChange(maind,do,p)
         % 由于Veh内部按体积递减排序,获取order的第个作为当前对应真车型索引号
         % 判断: 是否改为第allidxVehType(小)车型后,1个车辆可以放下;
         if max(do1.LU.LU_Bin(1,:)) == 1
-                                                                                                                                    %do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % 补充变量LU_VehType
+            fprintf(1,'       Exsiting 车型更换 in HBinChange (do1)...\n');
+                                                                                                                               %do1.LU.LU_VehType = ones(size(do1.LU.ID))*do.Veh.order(allidxVehType); % 补充变量LU_VehType
             flaggetSmallVeh=1;
             break;
         end

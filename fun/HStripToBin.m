@@ -75,63 +75,63 @@ end
 % printscript();
 
 %% 嵌套函数
-    function printscript()
-        % 输出主要结果:获得从1开始每个bin包含的数据
-        % Strip.stripBeBinMatrix
-        for iBin = 1:max(Strip.Strip_Bin(1,:))
-            [~,idx] = find(Strip.Strip_Bin(1,:)==iBin); %本iBin下的strip索引号
-            idxSeq = Strip.Strip_Bin(2,idx); %本iBin内strip放入顺序Seq
-            fprintf('bin 的宽+长为: ' );
-            fprintf(' %d  ', Veh.LWH(:,1));
-            fprintf('\n');
-            fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);
-            fprintf('( %d ) ',Bin.LW(:,iBin));
-            fprintf('\n');
-            fprintf('bin %d 包含 original strip 索引号{顺序}(长宽)为  \n  ',iBin);
-            fprintf('%d ',idx);fprintf('\n');
-            fprintf('{%d} ',idxSeq);fprintf('\n');
-            fprintf('( %d ) ', Strip.LW(1:2,idx));fprintf('\n');
-            fprintf('\n');
-        end
-    end
+% %     function printscript()
+% %         % 输出主要结果:获得从1开始每个bin包含的数据
+% %         % Strip.stripBeBinMatrix
+% %         for iBin = 1:max(Strip.Strip_Bin(1,:))
+% %             [~,idx] = find(Strip.Strip_Bin(1,:)==iBin); %本iBin下的strip索引号
+% %             idxSeq = Strip.Strip_Bin(2,idx); %本iBin内strip放入顺序Seq
+% %             fprintf('bin 的宽+长为: ' );
+% %             fprintf(' %d  ', Veh.LWH(:,1));
+% %             fprintf('\n');
+% %             fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);
+% %             fprintf('( %d ) ',Bin.LW(:,iBin));
+% %             fprintf('\n');
+% %             fprintf('bin %d 包含 original strip 索引号{顺序}(长宽)为  \n  ',iBin);
+% %             fprintf('%d ',idx);fprintf('\n');
+% %             fprintf('{%d} ',idxSeq);fprintf('\n');
+% %             fprintf('( %d ) ', Strip.LW(1:2,idx));fprintf('\n');
+% %             fprintf('\n');
+% %         end
+% %     end
 
     % 未完成函数 TODO
-    function plot2DBin()
-    % 初始化
-            % 初始化
-        Bin.LW
-        sStrip.LW
-        tmpBin_Strip
-        sStrip.Strip_Bin
-        sStrip
-            %% 初始化
-        nThisItem = size(d.Item.LWH,2);
-        nIDType = unique(d.Item.LID);
-        nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
-%         tmpUniqueBin = unique(Veh.LWH(1:2,:)','rows')';
-        %         wBin = tmpUniqueBin(1);
-%         hBin = tmpUniqueBin(2);     
-        wBin = Veh.LWH(1,1);
-        hBin = Veh.LWH(2,1);
-   
-    
-        nUsedBin = sum(sStrip.Strip_Bin(2,:)>0);
-
-%         %% 画图
-        % 1 画个画布 宽度为nUsedBin+1个bin宽 长（高）度为bin高
-        figure();
-        DrawRectangle([wBin*(nUsedBin+1)/2 hBin/2 wBin*(nUsedBin+1) hBin 0],'--');
-        hold on;
-        % 2 逐个bin 画图
-        iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
-        for iBin = 1:nUsedBin
-            % 找出当前iBin的物品索引
-            idxDrawStrip = find(sStrip.Strip_Bin(1,:)==iBin);
-            % 。。。 由于没有Strip在bin内的Coord，此函数暂停
-        end
-        % 逐个strip画图
-        
-    end
+% %     function plot2DBin()
+% %     % 初始化
+% %             % 初始化
+% %         Bin.LW
+% %         sStrip.LW
+% %         tmpBin_Strip
+% %         sStrip.Strip_Bin
+% %         sStrip
+% %             %% 初始化
+% %         nThisItem = size(d.Item.LWH,2);
+% %         nIDType = unique(d.Item.LID);
+% %         nColors = hsv(length(nIDType)); %不同类型LU赋予不同颜色        
+% % %         tmpUniqueBin = unique(Veh.LWH(1:2,:)','rows')';
+% %         %         wBin = tmpUniqueBin(1);
+% % %         hBin = tmpUniqueBin(2);     
+% %         wBin = Veh.LWH(1,1);
+% %         hBin = Veh.LWH(2,1);
+% %    
+% %     
+% %         nUsedBin = sum(sStrip.Strip_Bin(2,:)>0);
+% % 
+% % %         %% 画图
+% %         % 1 画个画布 宽度为nUsedBin+1个bin宽 长（高）度为bin高
+% %         figure();
+% %         DrawRectangle([wBin*(nUsedBin+1)/2 hBin/2 wBin*(nUsedBin+1) hBin 0],'--');
+% %         hold on;
+% %         % 2 逐个bin 画图
+% %         iterWidth=0;    %每个bin在前1个bin的右侧 此为增加变量
+% %         for iBin = 1:nUsedBin
+% %             % 找出当前iBin的物品索引
+% %             idxDrawStrip = find(sStrip.Strip_Bin(1,:)==iBin);
+% %             % 。。。 由于没有Strip在bin内的Coord，此函数暂停
+% %         end
+% %         % 逐个strip画图
+% %         
+% %     end
 
 end
 

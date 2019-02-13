@@ -8,7 +8,7 @@ function [LU,Veh] = cpuVehLU(LU,Veh)
     %% 1 更新车辆Veh顺序 增加order
     % Veh从体积大->小   默认顺序
     Veh.Volume = prod(Veh.LWH);
-    [~,order] = sortrows(Veh.Volume', [1],{'descend'});    
+    [~,order] = sortrows(Veh.Volume',  1 ,{'descend'});    
     Veh = structfun(@(x) x(:,order),Veh,'UniformOutput',false);
     if ~isrow(order)
         order = order';

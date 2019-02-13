@@ -101,7 +101,7 @@ function [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tLID)
             if ~isempty(nbcol1)
                 [~,b]= ismember(nbcol1,order);
                 tmp= [nbcol1,b];
-                [a,~] = sortrows(tmp,[2],{'ascend'});
+                [a,~] = sortrows(tmp, 2 ,{'ascend'});
                 for i1=1:length(nbcol1)
                     SIDorder(a(i1,1)) = priority;
                     priority=priority+1;
@@ -111,7 +111,7 @@ function [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tLID)
             % 寻找tID中的列: 该列有2个以上LID; 该列对应的SIDorder为0；该列包含（不等于）tLID
             [~,nbcol2] = find(tID(:,:)==tLID & sum(~isnan( tID(:,:) ),1) ~=1 &  SIDorder==0);
             if ~isempty(nbcol2)
-                if ~isscalar(nbcol2),  
+                if ~isscalar(nbcol2)
                     tID(:,:)
                     % tID(:,:)=tLID
                     error('nbcol2包含不只一个数: 存在多个相同混合的STRIP; -> 同一个单Strip, 找其混合的其它Strip, 但发现有2个包含该strip的混合strip,无从选择哪个作为相邻strip的矛盾 ');   

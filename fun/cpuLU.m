@@ -16,7 +16,7 @@ function   [LU] = cpuLU(LU,Veh)
             %     CateOrder = tLUsorted(:,{'SID','ID','LID','H'});  %增加maxHLayer?
             %     [GID,g] = findgroups(CateOrder)
     VehHeight = Veh.LWH(3,1);  % 车辆高度
-    VehWidth = Veh.LWH(1,1);  % 车辆宽度
+    % VehWidth = Veh.LWH(1,1);  % 车辆宽度 暂未使用
 
     %% 1.2  以堆垛标记ID区分LU的isNonMixed和isMixedTile
     uniID = unique(tLUsorted.ID);

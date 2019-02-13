@@ -31,7 +31,7 @@ end
        %         TLUsorted.ShowSEQ = LUShowSeq;        %         TLUsorted.tblorder = tblorder;
        [~,x] = sort(tblorder);
        ShowSEQ = LUShowSeq(x);  %        TLU.ShowSEQ = LUShowSeq(tblorder);
-       tblorder = tblorder;
+       % tblorder = tblorder;
        
 %% 4 精简为返回的数据表
 % T1=TLUsorted(:,'CoordLUBin');

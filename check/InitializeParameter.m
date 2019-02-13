@@ -28,7 +28,7 @@ p.whichRotationHori = 1;
 
 n = length(varargin);
 
-for k = 1:2:length(varargin)
+for k = 1:2:n
     switch varargin{k}
         case 'whichStripH'
             p.whichStripH                        = varargin{k+1};

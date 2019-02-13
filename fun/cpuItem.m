@@ -9,7 +9,7 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     global ISdiagItem
     %% 初始化
     sz = size(Item.isRota);
-    hVeh  = Veh.LWH(3,1);  
+    % hVeh  = Veh.LWH(3,1);  % 暂时为用
 
     Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
 %     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1) 修改为直接修复每个Item

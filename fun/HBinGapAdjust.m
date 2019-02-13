@@ -1,6 +1,6 @@
 function [LU] = HBinGapAdjust(LU,VEH)
 % HBinGapAdjust ==> Gap Adjust for Each Bin
-
+ 
 TLU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
 TVEH = struct2table(structfun(@(x) x',VEH,'UniformOutput',false));
 
@@ -186,7 +186,7 @@ for iVertex=1:size(coordGapArray,1)
                 end
                 axis equal;    grid on;    xlim([0 1.5*VEH.LWH(1,1)]);    ylim([0 1.2*VEH.LWH(1,2)]);      pause(pausetime*6);  hold off;
             end
-            
+            fprintf(1,'       Exsiting 混装间隙 in HBinGapAdjust (do2/do3)...\n');    
             % fLU: 需要调整的LU标记  从botttomLU计算, 但需返回到LU替换, 即非底部LU也要调整
             fLU = LU.CoordLUBin(:,1) == thisLU.CoordLUBin(1) & LU.CoordLUBin(:,2) == thisLU.CoordLUBin(2);
             

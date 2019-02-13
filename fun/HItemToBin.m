@@ -4,7 +4,7 @@ function [LU,Item] = HItemToBin(LU,Item,Strip)
 %% 获取LU与bin的关系 LU_Bin  + 坐标 CoordLUBin
 
 %% 初始化
-nDim = 3;
+%nDim = 3;
 nItem = size(Item.LWH,2); %具体使用的Item的数量
 nLU= size(LU.LWH,2); %具体使用的LU的数量
     
@@ -133,49 +133,49 @@ end
     
 % 输出主要结果:获得从1开始每个bin包含的item数据
 % CoordItemBin Item_Bin
-    function printscript()
-        nBin = max(Item.Item_Bin(1,:));
-        for iBin = 1: nBin
-            [~,idx] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
-            idxSeq = Item.Item_Bin(2,idx); %本iBin内item放入顺序Seq
-            fprintf('bin 的宽+长+高为: ' );
-            fprintf(' %d  ',Veh.LWH);
-            fprintf('\n');
-            fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
-            fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
-            fprintf('\n');
-            
-            fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);
-            fprintf('%d ',idx);fprintf('\n');
-            fprintf('{%d} ',idxSeq);fprintf('\n');
-            fprintf(' (%d %d %d) ', Item.LWH(1:nDim,idx));fprintf('\n');
-            fprintf(' [%d]     ', Item.Rotaed(:,idx));fprintf('\n');
-            fprintf(' {%d %d %d} ', Item.CoordItemBin(:,idx));fprintf('\n');
-            fprintf('\n');
-            
-            [~,idxLU] = find(LU.LU_Bin(1,:)==iBin); %本iBin下的item索引号
-            fprintf('bin %d 包含 original LU 索引号{顺序}[item序号](长宽)[旋转标志]{坐标}为  \n  ',iBin);
-            idxLUSeq = LU.LU_Bin(2,idxLU); %本iBin内item放入顺序Seq
-            idxLUItem = LU.LU_Item(1,idxLU);
-            fprintf('%d ',idxLU);fprintf('\n');
-            fprintf('{%d} ',idxLUSeq);fprintf('\n');
-            fprintf('[%d] ',idxLUItem);fprintf('\n');
-            fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU));fprintf('\n');
-            fprintf(' [%d]     ', LU.Rotaed(:,idxLU));fprintf('\n');
-            fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU));fprintf('\n');
-            fprintf('\n');
-            
-            % 按安放顺序展示
-            % %     [~,x]=sort(LU.LU_Bin(2,idxLU));
-            % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
-            % %     idxLUItem = idxLUItem(x);
-            % %     fprintf('%d ',idxLU);fprintf('\n');
-            % %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
-            % %     fprintf('[%d] ',idxLUItem);fprintf('\n');
-            % %     fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU(x)));fprintf('\n');
-            % %     fprintf(' [%d]     ', LU.LURotaFlag(:,idxLU(x)));fprintf('\n');
-            % %     fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU(x)));fprintf('\n');
-            % %     fprintf('\n');
-        end
-    end
+% %     function printscript()
+% %         nBin = max(Item.Item_Bin(1,:));
+% %         for iBin = 1: nBin
+% %             [~,idx] = find(Item.Item_Bin(1,:)==iBin); %本iBin下的item索引号
+% %             idxSeq = Item.Item_Bin(2,idx); %本iBin内item放入顺序Seq
+% %             fprintf('bin 的宽+长+高为: ' );
+% %             fprintf(' %d  ',Veh.LWH);
+% %             fprintf('\n');
+% %             fprintf('bin %d 的剩余宽+剩余长为:  ',iBin);fprintf('\n');
+% %             fprintf('( %d ) ',Bin.LW(:,iBin));fprintf('\n');
+% %             fprintf('\n');
+% %             
+% %             fprintf('bin %d 包含 original item 索引号{顺序}(长宽)[旋转标志]{坐标}为  \n  ',iBin);
+% %             fprintf('%d ',idx);fprintf('\n');
+% %             fprintf('{%d} ',idxSeq);fprintf('\n');
+% %             fprintf(' (%d %d %d) ', Item.LWH(1:nDim,idx));fprintf('\n');
+% %             fprintf(' [%d]     ', Item.Rotaed(:,idx));fprintf('\n');
+% %             fprintf(' {%d %d %d} ', Item.CoordItemBin(:,idx));fprintf('\n');
+% %             fprintf('\n');
+% %             
+% %             [~,idxLU] = find(LU.LU_Bin(1,:)==iBin); %本iBin下的item索引号
+% %             fprintf('bin %d 包含 original LU 索引号{顺序}[item序号](长宽)[旋转标志]{坐标}为  \n  ',iBin);
+% %             idxLUSeq = LU.LU_Bin(2,idxLU); %本iBin内item放入顺序Seq
+% %             idxLUItem = LU.LU_Item(1,idxLU);
+% %             fprintf('%d ',idxLU);fprintf('\n');
+% %             fprintf('{%d} ',idxLUSeq);fprintf('\n');
+% %             fprintf('[%d] ',idxLUItem);fprintf('\n');
+% %             fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU));fprintf('\n');
+% %             fprintf(' [%d]     ', LU.Rotaed(:,idxLU));fprintf('\n');
+% %             fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU));fprintf('\n');
+% %             fprintf('\n');
+% %             
+% %             % 按安放顺序展示
+% %             % %     [~,x]=sort(LU.LU_Bin(2,idxLU));
+% %             % %     idxLUSeq = idxLUSeq(x); %本iBin内item放入顺序Seq
+% %             % %     idxLUItem = idxLUItem(x);
+% %             % %     fprintf('%d ',idxLU);fprintf('\n');
+% %             % %     fprintf('{%d} ',idxLUSeq);fprintf('\n');
+% %             % %     fprintf('[%d] ',idxLUItem);fprintf('\n');
+% %             % %     fprintf(' (%d %d %d) ', LU.LWH(1:nDim,idxLU(x)));fprintf('\n');
+% %             % %     fprintf(' [%d]     ', LU.LURotaFlag(:,idxLU(x)));fprintf('\n');
+% %             % %     fprintf(' {%d %d %d} ', LU.CoordLUBin(:,idxLU(x)));fprintf('\n');
+% %             % %     fprintf('\n');
+% %         end
+% %     end
 end

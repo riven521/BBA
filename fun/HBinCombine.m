@@ -56,12 +56,12 @@ global ISlastVehType ISpingpu parGap
             %% CHECK 总表T 和 子表 T23等内部核验
             % 1 是否该ibin内的LU排序是严格递增; 是否T内选中的flagTileLUIdx部分LU属于该ibin且也是严格递增的
             if ~issorted(sort(T23.BINSEQ),'strictascend') || ~issorted(sort(T.BINSEQ(flagTileLUIdx,:)'),'strictascend')
-                T.BINSEQ(flagTileLUIdx,:)'
-                T23.BINSEQ'
-                sort(T23.BINSEQ)'
-                sort(T23.BINID)'
-                do2Array(ibin).LU.LU_Bin
-                sort(T.BINSEQ(flagTileLUIdx,:))'
+                T.BINSEQ(flagTileLUIdx,:)';
+                T23.BINSEQ';
+                sort(T23.BINSEQ)';
+                sort(T23.BINID)';
+                do2Array(ibin).LU.LU_Bin;
+                sort(T.BINSEQ(flagTileLUIdx,:))';
                 error('1');
             end
             % 2 是否总表T内BINID内是统一binid；是否子表T23内是否同一binid；是否ibin等于T内LU对应的binid号

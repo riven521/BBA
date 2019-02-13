@@ -30,6 +30,7 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE ÊÇ·ñËæ»úµÄ±êÖ¾
 close all;
 
+
 % È«¾Ö±äÁ¿1£º °æ±¾¿ØÖÆ
 % verMilkRun£º1 milkrun°æ±¾£¨°üº¬¶àÒ»¸öEIDÊäÈë£© 0 ·Çmilkrun£»
 global verMilkRun
@@ -67,7 +68,7 @@ parMulipleGap = 1; % ±ØĞëÎª1£¬³ı·Ç²»ÏëÈÃÆäÊ¹ÓÃ ÊÇ·ñÔÊĞí¼äÏ¶µİ¹é¶à´Îµ÷Õû
 % È«¾Ö±äÁ¿6£º ¸Ä±ä³µĞÍ¿ª¹Ø
 % ISlastVehType£º½«×îºó²»ÂúµÄÒ»³µ¸ÄÎª¸üĞ¡µÄ³µĞÍ
 global ISlastVehType
-ISlastVehType = 0   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
+ISlastVehType = 0;   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
 
 % È«¾Ö±äÁ¿7£º ×÷Í¼¿ª¹Ø
 % ISplotBBA£º ÊÇ·ñ×îºó¶ÔT×÷Í¼µÄ×Ü¿ª¹Ø£»  ISplotShowGapAdjust: ÊÇ·ñÏÔÊ¾gap¼äÏ¶µ÷Õû¹ı³ÌÍ¼
@@ -84,7 +85,7 @@ ISplotShowType = 3; % 1 LID 2 PID 3 ID ×÷Í¼µÄÑÕÉ«±ê¼ÇÑ¡Ïî 4 SID 5EID
      
 % RunAlgorithmÖĞ
 global   ISplotStrip  % plotStrip
-ISplotStrip = 0             % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û ¿´Ï¸½Ú ºóÆÚÌæ»»ÎªÍ¬Ò»
+ISplotStrip = 0;             % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û ¿´Ï¸½Ú ºóÆÚÌæ»»ÎªÍ¬Ò»
 
 
 % * to modify*
@@ -93,18 +94,18 @@ ISplotStrip = 0             % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û ¿´Ï¸½Ú ºóÆÚÌ
 global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
 global ISisNonMixed ISisMixTile                 %ITEM2STRIP
           
-ISisNonMixedLU = 1 % 555: ÓÅÏÈ·Ç»ìºÏLUĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 £»1 LU¿ÉÒÔĞÎ³ÉÂú¶â 0 ±Ø¶¨ÓĞ·ÇÂú¶âÉú³É LUÅÅĞòÒÀ¾İ
-ISisMixTileLU = 1       % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 £»1 µ±isNonMixed=0Ê±, ½«·ÇÂú¶â¶ÔÓ¦µÄLU¸³ÖµÎª1£¨½áºÏLUÅÅĞòÉú³ÉITEMÖªÊ¶£©
+ISisNonMixedLU = 1; % 555: ÓÅÏÈ·Ç»ìºÏLUĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 £»1 LU¿ÉÒÔĞÎ³ÉÂú¶â 0 ±Ø¶¨ÓĞ·ÇÂú¶âÉú³É LUÅÅĞòÒÀ¾İ
+ISisMixTileLU = 1;       % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ĞÎ³ÉITEM, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 £»1 µ±isNonMixed=0Ê±, ½«·ÇÂú¶â¶ÔÓ¦µÄLU¸³ÖµÎª1£¨½áºÏLUÅÅĞòÉú³ÉITEMÖªÊ¶£©
 
-ISisNonMixed = 1    % 555: ÓÅÏÈ·Ç»ìºÏItemĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1
-ISisMixTile  = 1         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
+ISisNonMixed = 1;    % 555: ÓÅÏÈ·Ç»ìºÏItemĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1
+ISisMixTile  = 1;         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ĞÎ³ÉSTRIP, Í¼ºÃ¿´Ğí¶à ±ØĞëÓĞ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
 
 global ISshuaiwei  ISstripbalance ISreStripToBin    % RunAlgorithmÖĞ
 % ¿ª¹Ø + Gpreproc µÄV2°æ±¾ ĞŞ¸´ÒµÎñ3ÎÊÌâ(¼´ITEM·ÇÂú¶âÇÒÒ»²ãµÄ¾ùºâÎÊÌâ)
-ISstripbalance = 1     % µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø 555£ºÓĞÁËÍ¼ĞÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊı²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊıµİ¼õ; ÈçÎŞ·¨£©
+ISstripbalance = 1;     % µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø 555£ºÓĞÁËÍ¼ĞÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊı²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊıµİ¼õ; ÈçÎŞ·¨£©
 % ISstripbalance=0 ¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
-ISreStripToBin = 1   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
-ISshuaiwei = 1         % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Ë¦Î²Æ½ÆÌÎŞ·¨½øĞĞ*******
+ISreStripToBin = 1;   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
+ISshuaiwei = 1;         % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Ë¦Î²Æ½ÆÌÎŞ·¨½øĞĞ*******
 
 global ISdiagItem       %cpuItemÖĞ ÅĞ¶¨ItemÊÇ·ñisHeightFull¸ß¶ÈÂú²ã£¬Èô1£ºÒÀ¾İ¶Ô½ÇÏßÅĞ¶¨
 ISdiagItem = 0;          % Ä¬ÈÏÎª 0 °É Îª1 ×ÜÓĞĞ©¹ıÓÚµÍµÄ±»ÈÏÎªItem¸ß¶ÈÂú²ã, checkÔ­Òò°É
@@ -162,12 +163,13 @@ structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), d.LU, 'Uni
 structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), d.Veh, 'UniformOutput', false);
 
 %% 2:  ÔÚ´Ë»ù´¡ÉÏ½øĞĞÊı¾İĞĞÁĞµ÷Õû£¬Êı¾İĞŞ¸Ä£¨LWH, IDºÅµÈ£©
-fprintf(1,'check and preprocessing Lu and Veh processing ... ');
+fprintf(1,'\nRunging Checking and preprocessing Input Data ...\n');
 
 d = chkInput(d);
 if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
-    errorr('LU»òVehµÄÁĞÊı²»Í¬');
+    error('LU»òVehµÄÁĞÊı²»Í¬');
 end
+
 %% 3£º¶ÔĞÂÔöºó½«½øĞĞÔËËãµÄÊı¾İ½øĞĞcheck Gpreproc=cpuLUVeh dÊÇĞèÒª±£ÁôµÄ
 [d.LU,d.Veh] = cpuVehLU(d.LU,d.Veh);
 d = chkInput(d);
@@ -199,19 +201,20 @@ end            % if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar
                      
 %% Simulate - All ALGORITHM
 
-fprintf(1,'\nRunning the simulation...\n');
-
 for iAlg = 1:nAlg
     %% 1 ÔËĞĞÖ÷Ëã·¨ ÊäÈëd Êä³ö do
+    fprintf(1,'\nRunning RunAlgorithm with d ...\n');
     
     % 1.1 ĞŞ¶©LUµÄLWHÊı¾İ °üº¬margin ¿¼ÂÇRotaed
     d = maind;
+    %fprintf(1,'   Running setLULWHwithbuff...\n');
     [d.LU] = setLULWHwithbuff(d.LU, d.Veh);
     
     % 1.2 Ö÷º¯ÊıRunAlgorithm
     do = RunAlgorithm(d,pA(iAlg));   %»ñÈ¡½â½á¹¹Ìådo ( ÊäÈëd£º¹Ì¶¨LU·½ÏòºÍ¹Ì¶¨LU´óĞ¡ºÍ¹Ì¶¨marginµÄLWH£©   % ¿ÉÉ¾ - ÒÑÔÚRunAlgorithmÖĞÉùÃ÷ do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
 
     % 1.3 ĞŞ¶©LUºÍItemµÄLWH/CoordÊı¾İ É¾³ımargin
+    %fprintf(1,'   Running setLCwithoutbuff...\n');
     [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
     
     % 1.4 CHECK ÊäÈëºÍÊä³öµÄLU
@@ -224,6 +227,7 @@ for iAlg = 1:nAlg
     
     %% 2 ÔËĞĞ³µĞÍµ÷ÕûËã·¨,²»¸Ä±äd »ñÈ¡d1ºÍdo1, flaggetSmallVeh
     if ISlastVehType
+        fprintf(1,'\nRunning HBinChange with output do1 ...\n');
         [flaggetSmallVeh,do1] = HBinChange(maind,do,pA(iAlg));  
     end
 
@@ -232,18 +236,21 @@ for iAlg = 1:nAlg
     % »ñÈ¡ do2Array do3Array  µÄÊä³öÊı¾İ£¬Ã¿¸öÊÇÒ»¸öbin
     % »ñÈ¡ flagTiledArray Âß¼­ÅĞ¶¨£¬1 ±¾binË¦Î²³É¹¦ 0 ²»³É¹¦
     if ISpingpu==1
+        fprintf(1,'\nRunning HBinpingpu with output do2 and do3 ...\n');
         [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,pA(iAlg));            
     end
     
     %% 4 ÔËĞĞ¼äÏ¶µ÷ÕûËã·¨ Êä³ödo3
     if parGap == 1
-        
+        fprintf(1,'\nRunning HBinGapAdjust with output do2 and do3 ...\n');
         if ISpingpu==1 && any(flagTiledArray==1) %£¨½öÔÊĞíË¦Î²Æ½ÆÌºÍÕû³µÆ½ÆÌ³É¹¦µÄ³µ½øĞĞ£©todo ¿ª·Å¸øËùÓĞbin
             idxArray = find(flagTiledArray~=0);
             for i=1:length(idxArray)
                 if flagTiledArray(idxArray(i)) == 1
+                    fprintf(1,'       Running »ì×°¼äÏ¶_Õû³µÆ½ÆÌ (do3)...\n');    
                     dd = do3Array(idxArray(i)); 
                 elseif flagTiledArray(idxArray(i)) == 2
+                    fprintf(1,'       Running »ì×°¼äÏ¶_Ë¦Î²Æ½ÆÌ (do2)...\n');    
                     dd = do2Array(idxArray(i)); 
                 end
                 
@@ -276,6 +283,8 @@ end
 %% POST PROCESSING
 % »ùÓÚdo do1 do2 do3 flagTiledArray flaggetSmallVeh µÈ½á¹ûÊı¾İ ÕûºÏµ½do(T)ÄÚ
 % »ùÓÚtable¸ñÊ½ ·½±ã´¦Àí
+
+fprintf(1,'\nRunning HBinCombine with output T...\n');
 
 if ISlastVehType && ISpingpu
     T = HBinCombine(do,flaggetSmallVeh,do1,flagTiledArray,do2Array,do3Array);  
@@ -318,10 +327,11 @@ end
 % whos
 
 clearvars -except output*
-fprintf(1,'Simulation done.\n');
+fprintf(1,'\nSimulation done.\n');
 
 % mcc -W 'java:BBA_Main,Class1,1.0' -T link:lib BBA_Main.m -d '.\new'
 % mcc -W 'java:BBA_MR_Main,Class1,1.0' -T link:lib BBA_MR_Main.m -d '.\new'
+% mlintrpt(fullfile(pwd,'fun'),'dir') ´úÂë·ÖÎö
 
 % printstruct(do,'sortfields',1,'PRINTCONTENTS',0);    printstruct(do.Veh);
 % do = rmfield(do, {'Veh', 'LU'});

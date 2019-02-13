@@ -5,6 +5,7 @@ function [Strip,Bin] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
         % 方法: ****** 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法. ******
         nbBin = max(Strip.Strip_Bin(1,:));
         if nbBin>1
+            fprintf(1,'       Exsiting 量大车头 in HStripToBinAgain (nBin>1)...\n');
             ibin=2;
             while 1
                 % 1 获取f and fidx: 排除首个bin后的剩余Strip逻辑值 and 索引值

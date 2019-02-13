@@ -148,7 +148,7 @@ Strip.isGapBalance = Strip.GapValue < 0.33*Strip.maxLULength;
 % fgap=Strip.isGapBalance ==0;
 % Strip.LID
 % printstruct(Strip)
-1
+
 %% 5,6
 %Strip.isAllPured：混合:-1; 单纯: 1 (混合strip内没有改ID) ; 0 (混合strip内含有该单纯strip的ID)
 %Strip.isSingleItem: 混合: -1; 单纯: Strip内仅有一个Item,必定是单纯的.
@@ -318,7 +318,7 @@ function Strip = isWidthFullStrip(Strip,Item)
     uniItem = unique(Item.Item_Strip(1,:));
     for i=1:length(Strip.isWidthFull)
         flagItem = Item.Item_Strip(1,:) == uniItem(i); 
-        max(Item.LWH(1, flagItem))
+                    max(Item.LWH(1, flagItem));
         if Strip.LW(1, i) >= min(Item.LWH(1, flagItem))
             Strip.isWidthFull(i) = 0;
         else

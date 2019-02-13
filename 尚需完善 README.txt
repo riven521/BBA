@@ -568,6 +568,13 @@ V190213 V1
 4：修订getPartDinThisBin 从d或do中获取ibin的数据
 5：梳理全局变量；梳理函数名（同一前缀）
 
+%% 重构BBA代码 2
+V190213 V2
+1：testMain增加各种类型的核心算法测试算例及展示DEMO todo 完善
+2：输出每步，若有使用核心算法，fprintf，若重要展示plot； todo 结合文档
+3：
+
+
 TODO
 
 1: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
