@@ -1,7 +1,7 @@
-%%PARAMETERNITIALIZE Initialize the parameter data structure.
+%%InitializeParameter Initialize the parameter data structure.
 %
 %% Form
-%  p = ParameterInitialize( varargin )
+%  p = InitializeParameter( varargin )
 %
 %% Description
 % Initializes the algorithm's parameter data structure using parameter pairs.
@@ -17,7 +17,7 @@
 %
 %% Outputs
 %   p	(.)  Data structure
-function p = ParameterInitialize( varargin )
+function p = InitializeParameter( varargin )
 
 % Defaults
 p.whichStripH = 1;

@@ -1,4 +1,4 @@
-function [ShowSEQ,tblorder] = getShowSeq(d)
+function [ShowSEQ,tblorder] = getBBASeqTLU(d)
 
 if ~istable(d)
     TLU = getTableLU(d);

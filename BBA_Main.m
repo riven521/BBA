@@ -30,100 +30,103 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE 是否随机的标志
 close all;
 
-global ISshuaiwei ISdiagItem ISstripbalance ISreStripToBin ISisNonMixed ISisMixTile  
-global ISisNonMixedLU ISisMixTileLU
-global parBalance
-
-% 全局变量1： 平铺开关
-%   ISpingpu : 是否甩尾平铺 ISpingpuall：是否整车平铺  二选一 若平铺：必须甩尾平铺，可不整车平铺；但不可整车平铺，不甩尾平铺。
-global ISpingpu ISpingpuAll
-% 全局变量2： 混装间隙开关
-%   parGap ： 是否允许间隙调整（仅在甩尾平铺或整车平铺成功的车内进行）；parMulipleGap：是否在间隙调整过程中允许多次调整（必须有）
-global  parGap parMulipleGap
-% 全局变量3： 改变车型开关
-% ISlastVehType：将最后不满的一车改为更小的车型
-global ISlastVehType
-
-
-% 全局变量5： 版本控制
+% 全局变量1： 版本控制
 % verMilkRun：1 milkrun版本（包含多一个EID输入） 0 非milkrun；
 global verMilkRun
-% 全局变量6： 作图开关
-global ISplotBBA  ISplotEachPingPu ISplotStrip ISplotPause ISplotShowType ISplotShowGapAdjust % plotStrip
-% 全局变量7： 已删除
-% global ISisGpreprocLU1 ISsItemAdjust ISreStripToBinMixed ISplotSolu
+verMilkRun = 0;  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
+% MR的参数9: EP LOCATION增加, 多的变量的自动增加
+if nargin > 1 && length(varargin) < 9 %'LUEID',varargin{9});
+    verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));
+elseif nargin > 1
+    verMilkRun = 1;  % 9个输入参数为milkrun版本
+end
 
-% 开关2
-parGap = 1  % 是否允许主函数的间隙调整
-parMulipleGap = 1 % 是否允许间隙递归多次调整
+% 全局变量2： 平铺开关
+%   ISpingpu : 是否甩尾平铺 ISpingpuall：是否整车平铺 ISpingpuShuaiWei：是否甩尾平铺 二选一 
+%   若平铺：ISpingpu必须开；其次甩尾平铺和整车平铺可选 
+global ISpingpu ISpingpuAll ISpingpuShuaiWei
+if verMilkRun == 1
+    ISpingpu = 0;         % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+    ISpingpuAll = 0;       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+    ISpingpuShuaiWei = 0; % 555: 甩尾平铺
+else
+    ISpingpu = 1;          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
+    ISpingpuAll = 1;       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
+    ISpingpuShuaiWei = 1; % 555: 甩尾平铺
+end
 
-parBalance = 8/30;
-% ISisNonMixedLU    1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
-% ISisMixTileLU          1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
-% ISisGpreprocLU1    1 与ISisNonMixedLU取值有关
-% ISstripbalance        1 调用高度均衡开关
+% 全局变量3： 混装间隙开关
+%   parGap ： 是否允许间隙调整（仅在甩尾平铺或整车平铺成功的车内进行）；parMulipleGap：是否在间隙调整过程中允许多次调整（必须有）
+global  parGap parMulipleGap
+parGap = 1;  % 是否允许主函数的间隙调整
+parMulipleGap = 1; % 必须为1，除非不想让其使用 是否允许间隙递归多次调整
 
 
+% * to add*
 
-% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
-ISstripbalance = 1     % 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
-% ISisGpreprocLU1 = 1 % 必须1; 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
-% ISstripbalance=0 即不均衡时,可以ISisGpreprocLU1=0; 表示LU使劲高度堆,更多的ISisNonMixedLU=0.
+% 全局变量6： 改变车型开关
+% ISlastVehType：将最后不满的一车改为更小的车型
+global ISlastVehType
+ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
-%
-% DEL ISisMixedStrip = 1 可以删除了 % 1表示依据LU.ID判断是否混合 0依据LU.LID判断 NOTE: 所有STRIP
-% ITEM均为ID替换LID
-% ISsItemAdjust = 1              % 暂时不用 用途忘记了
-% ISreStripToBinMixed = 1   %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
-
-ISplotBBA = 1 % 是否显示LU/Strip/Bin的结果（均已排序）
-ISplotShowGapAdjust = 0 % 是否显示Gap调整过程
-
-ISplotShowType = 3 % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
-        % ISplotSolu = 0
-
-                            ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
-                            ISplotEachPingPu = 0 % 每次Main 平铺时 生成Strip就显示结果 看细节 后期替换为同一
-
+% 全局变量7： 作图开关
+% ISplotBBA： 是否最后对T作图的总开关；  ISplotShowGapAdjust: 是否显示gap间隙调整过程图
+% ISplotEachPingPuAll/ISplotEachPingPuShuaiWei：整车平铺和甩尾平铺后画对比图 
+global ISplotBBA ISplotShowGapAdjust ISplotEachPingPuShuaiWei ISplotEachPingPuAll    
+ISplotBBA = 1; % 是否显示LU/Strip/Bin的结果（均已排序）
+ISplotEachPingPuShuaiWei = 1;  % 每次甩尾平铺成功后，展示平铺前后的对比图
+ISplotEachPingPuAll = 1;             % 每次整车平铺成功后，展示平铺前后的对比图
+ISplotShowGapAdjust = 0;         % 是否显示Gap调整过程
+% ISplotPause: plotSolutionT 等暂停时间 0不暂停 ISplotShowType：基于某种类型区分颜色
+global ISplotPause ISplotShowType
 ISplotPause = 0.0;  %-0.05 % plot间隔时间
+ISplotShowType = 3; % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
+     
+% RunAlgorithm中
+global   ISplotStrip  % plotStrip
+ISplotStrip = 0             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
 
-ISdiagItem = 0  % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
 
+% * to modify*
 % 下面还不完整, 可能要调 目前全部为1
-ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1
-ISisMixTileLU = 1       % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1
+
+global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
+global ISisNonMixed ISisMixTile                 %ITEM2STRIP
+          
+ISisNonMixedLU = 1 % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1 ；1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
+ISisMixTileLU = 1       % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1 ；1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
 
 ISisNonMixed = 1    % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1         % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象
 
+global ISshuaiwei  ISstripbalance ISreStripToBin    % RunAlgorithm中
+% 开关 + Gpreproc 的V2版本 修复业务3问题(即ITEM非满垛且一层的均衡问题)
+ISstripbalance = 1     % 调用高度均衡开关 555：有了图形好看, 堆垛均衡使用 同一Strip非混合且高度不均衡且LU层数差异值>1时操作 （方法：对应LU的最大层数递减; 如无法）
+% ISstripbalance=0 即不均衡时,可以ISisGpreprocLU1=0; 表示LU使劲高度堆,更多的ISisNonMixedLU=0.
 ISreStripToBin = 1   % 车头优先LU数量排序参数 默认为1 必须
+ISshuaiwei = 1         % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 甩尾平铺无法进行*******
 
-ISshuaiwei = 1         % 555 : 宽度和高度不满, 甩尾   ******  该参数需要和下面的pingpu结合使用 不甩尾 平铺无法进行*******
+global ISdiagItem       %cpuItem中 判定Item是否isHeightFull高度满层，若1：依据对角线判定
+ISdiagItem = 0;          % 默认为 0 吧 为1 总有些过于低的被认为Item高度满层, check原因吧
+
+global parBalance       %cpuStrip中 判定Strip有多个堆垛是否为高度均衡 isHeightBalance
+parBalance = 8/30;     % 最高的Item的1/3，若高于最高堆垛Item的1/3；8/30，即为高度均衡，参数之一
+
+% 全局变量7： 已删除
+% global ISisGpreprocLU1 ISsItemAdjust  ISreStripToBinMixed ISisMixedStrip
+% ISisGpreprocLU1 = 1 % 必须1; 与ISisNonMixedLU取值有关 配合ISstripbalance使用 1表示对同一水平strip内ITEM可能有2个以上的判断为ISisNonMixedLU=1->堆垛均衡使用 0 表示正常判断
+% ISsItemAdjust = 1              % 暂时不用 用途忘记了
+% ISreStripToBinMixed = 1   %车头优先非AllPure类型, 再考虑优先LU数量排序参数 默认为1 应该可以删除的参数
+% ISisMixedStrip = 1 可以删除了 % 1表示依据LU.ID判断是否混合 0依据LU.LID判断 NOTE: 所有STRIP  NOTE: ITEM均为ID替换LID
 
 
-ISlastVehType = 0   % 555: 最后一车的调整, 与其它无关, 暂不考虑
 
-% Milkrun版本 特殊全局变量
-verMilkRun = 0  % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
-
-    % MR的参数9: EP LOCATION增加, 多的变量的自动增加
-     if nargin > 1 && length(varargin) < 9 %'LUEID',varargin{9});
-          verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));
-     elseif nargin > 1
-           verMilkRun = 1; % 9个输入参数为milkrun版本
-     end
      
-if verMilkRun == 1
-ISpingpu = 0         % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 0       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
-else
-ISpingpu = 1          % 555 : 宽度和高度不满, 且层数>1, 平铺. 可能有问题 (在于平铺后与ISisNonMixed矛盾)
-ISpingpuAll = 1       %555: 所有均平铺, 只要该车辆放得下; 若放不下, 考虑上面甩尾平铺问题
-end
+
 
 %% Initialize Parameter Variable
 nAlg = 1;
-pA(nAlg) = ParameterInitialize('whichStripH', 3,...
+pA(nAlg) = InitializeParameter('whichStripH', 3,...
                              'whichBinH',3, ...
                              'whichSortItemOrder',3, ... 
                              'whichRotation',2, ...
@@ -132,10 +135,10 @@ pA(nAlg) = ParameterInitialize('whichStripH', 3,...
 %% Initialize Data Structure  - d
 if nargin < 1 % Randome Generate
     n=32; m=1;                                          % 16需要注意 250 srng1
-    d = DataRandomInitialize(n,m);        % 0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
+    d = InitializeRandomData(n,m);        % 0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
     save( strcat( '.\useless\', strcat('GoodIns',num2str(n))), 'd');          %     load .\new\GoodIns200.mat;
 else
-    d = DataInitialize( ...
+    d = InitializeInputData( ...
             'LUID', LUID,...
             'LULWH',LULWH, ...
             'VEHID',VEHID,...
@@ -166,7 +169,7 @@ if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
     errorr('LU或Veh的列数不同');
 end
 %% 3：对新增后将进行运算的数据进行check Gpreproc=cpuLUVeh d是需要保留的
-[d.LU,d.Veh] = cpuLUVeh(d.LU,d.Veh);
+[d.LU,d.Veh] = cpuVehLU(d.LU,d.Veh);
 d = chkInput(d);
 
 % ************* 保留输入且处理过后的数据 ***********
@@ -304,14 +307,6 @@ if ISplotBBA
     plotSolutionT(T,V); %按table格式做图
 end
 
-    % if  ISplotSolu 
-    % %      plotSolution(daBest(bestOne),paBest(bestOne)); %尽量不用 包含plotStrip 不包含单车型作图
-    % %      if max(do2.LU.LU_Bin(1,:)) == 1
-    % %      plotSolution(do2,pA(iAlg));
-    % %      end
-    % %        if flaggetSmallVeh,   plotSolution(do1,paBest(bestOne));   end %尽量不用 包含plotStrip 仅包含单车型作图
-    % end
-
     
 %% 常用语句
 % T.Properties.VariableNames
@@ -333,6 +328,25 @@ fprintf(1,'Simulation done.\n');
 % pcode 'H*.m'.
 % lu = table2struct(T,'ToScalar',true)
 % lu = (structfun(@(x) x',lu,'UniformOutput',false));
+
+% 备查代码
+% printstruct(d);
+% printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',0)
+% TVEHIN = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
+% % TLUIN = struct2table(structfun(@(x) x',d.LU,'UniformOutput',false));
+% TLUIN.Properties.VariableNames{'PID'} = 'OPID'; 
+% TLUIN.Properties.VariableNames{'SID'} = 'OSID';
+% s = table2struct(TLUIN,'ToScalar',true)
+% t = struct2table(l,'AsArray',true)
+%%
+% t = [d.LU.ID;d.LU.LWH]
+% sortrows(t',[1,4],{'ascend','descend'})
+% 缺少field的新增
+% % %     if ~isfield(d.LU, 'isRota'),  d.LU.isRota = ones(1,n); end %与ID一致
+% 算例参数
+% if ~isfield(d, 'Par') || ~isfield(d.Par, 'H')
+%     d.Par.maxHeavey = 100; end
+
 end %END MAIN
 
 
@@ -478,109 +492,109 @@ end %END MAIN
 
 
 
-function lastd = getdinLastVeh(tmpd)
-    % tmpd中的Bin是排序后的, 从最小的开始试
-    tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
-    flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
-    if isSameCol(tmpd.LU)
-        % 获取仅最后一个Bin的输入数据
-        lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %仅取最后一辆车内的LU
-        lastd.LU.LWH([1,2], lastd.LU.Rotaed ) = flipud(lastd.LU.LWH([1,2], lastd.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
-        lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin','maxL','CoordLUStrip'}); 
-        lastd.Par = tmpd.Par;
-    else
-        error('不能使用structfun');
-    end
-end
+% % function lastd = getdinLastVeh(tmpd)
+% %     % tmpd中的Bin是排序后的, 从最小的开始试
+% %     tmpusedVehIdx = max(tmpd.LU.LU_Bin(1,:)); %tmpusedVehIdx: 最后一个Bin的index值
+% %     flagusedLUIdx = tmpd.LU.LU_Bin(1,:)==tmpusedVehIdx; % flagused: 找出最后一个Bin对应的LUindex值
+% %     if isSameCol(tmpd.LU)
+% %         % 获取仅最后一个Bin的输入数据
+% %         lastd.LU = structfun(@(x) x(:,flagusedLUIdx),tmpd.LU,'UniformOutput',false);  %仅取最后一辆车内的LU
+% %         lastd.LU.LWH([1,2], lastd.LU.Rotaed ) = flipud(lastd.LU.LWH([1,2], lastd.LU.Rotaed)); %LU.LWH 如旋转,则恢复原形
+% %         lastd.LU = rmfield(lastd.LU,{'Rotaed','order','LU_Item','DOC','LU_Strip','LU_Bin','CoordLUBin','maxL','CoordLUStrip'}); 
+% %         lastd.Par = tmpd.Par;
+% %     else
+% %         error('不能使用structfun');
+% %     end
+% % end
 
 %% **** 算法指标选择最优解 ****
-function [daMax,parMax] = getbestsol(DaS,Par)
-
-    % 如果仅有一个可行解, 直接返回;
-    if size(DaS,2)==1    %仅当dA有多次时采用,目前参数锁定,
-        daMax = DaS(1); parMax = Par(1);
-        return
-    end
-    
-%获取评价指标和对应参数
-for r=1:length(DaS)
-    resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的装载率均值最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateStripLimit(r) = mean(DaS(r).Strip.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateBinLimit(r) = mean(DaS(r).Bin.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
-    resLoadingRateStrip(r) = mean(DaS(r).Strip.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit    
-%     Par(r);
-end
-
-%% 算法选择最优的解给用户
-% maxresBin=max(resLoadingRateBinLimit(1,idxStrip)); %找出idxStrip中的最大bin
-% if ~all(ismember(idxBin,idxStrip)),   error('not all member of bin in strip'); end %错误有可能出现 
-%% 1 maxresBin代表常规车辆的平均装载率,物品总量一定,bin越多,该值越小,解越差,此最大值是必须
-%% 2 maxresStrip代表常规Strip的平均装载率,物品总量一定,strip宽度一定,高度越高,该值越小,解越差,此最大值不一定时必须（因为看起来不好看）
-%% 但该值在不同bin高度时可能有影响，且该值好时，人为看起来可能并不好
-%% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
-%% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
-%% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
-idxBin=find(resLoadingRateBin==max(resLoadingRateBin)); %取
-idxStripLimit=find(resLoadingRateStripLimit==max(resLoadingRateStripLimit));
-idxBinLimit=find(resLoadingRateBinLimit==max(resLoadingRateBinLimit));
-idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
-%% 5 找出idxStrip和idxBin两者的交集
-% % if isempty(intersect(idxBin,idxStrip))
-idx =idxBin;
-if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
-idx0 =intersect(idx,idxStripLimit);
-if ~isempty(idx0),
-    idx = idx0; 
-else
-    warning('idx0 is empty');
-end
-% if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
-idx1 = intersect(idx,idxBinLimit);
-if ~isempty(idx1),  
-%      idx = idx1; 
-else
-    warning('idx1 is empty');
-end
-idx2 = intersect(idx,idxStrip);
-if ~isempty(idx2),  
-%     idx = idx2; 
-else
-    warning('idx2 is empty');
-end
-
-%% 将idx剩余的返回到主函数
-if ~isempty(idx)
-    for tmpidx=1:length(idx)
-        daMax(tmpidx) = DaS(idx(tmpidx));
-        parMax(tmpidx) = Par(idx(tmpidx));
-    end
-end
-
-end % END OF ALL
-
-
-
-
-
-        
-function plotSolution(do,par)
-%% 画图
-% V3 margin 提前到RunAlgorithm运行后就执行:
-% plot2DBPP(do,par);
-plot3DBPP(do,par);
-
-        % V1 buff version
-        % do.Item.LWH = do.Item.LWH - do.LU.buff(:,1:size(do.Item.LWH,2));
-        % do.Item.LWH(1,:) = do.Item.LWH(1,:) - ( do.LU.margin(1, 1:size(do.Item.LWH,2) ) + do.LU.margin(2,: )); 
-        % do.Item.LWH(2,:) = do.Item.LWH(2,:) - (do.LU.margin(3,: ) + do.LU.margin(4,: )); 
-        % do.Item.CoordItemBin = do.Item.CoordItemBin + do.LU.buff(:,1:size(do.Item.LWH,2))/2;
-
-        % V2 margin version
-        % 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
-        % [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
-        
-
-end
+% % function [daMax,parMax] = getbestsol(DaS,Par)
+% % 
+% %     % 如果仅有一个可行解, 直接返回;
+% %     if size(DaS,2)==1    %仅当dA有多次时采用,目前参数锁定,
+% %         daMax = DaS(1); parMax = Par(1);
+% %         return
+% %     end
+% %     
+% % %获取评价指标和对应参数
+% % for r=1:length(DaS)
+% %     resLoadingRateBin(r) = mean(DaS(r).Bin.loadingrate); %bin的装载率均值最大 Itemloadingrate ItemloadingrateLimit
+% %     resLoadingRateStripLimit(r) = mean(DaS(r).Strip.loadingrateLimit); %strip的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+% %     resLoadingRateBinLimit(r) = mean(DaS(r).Bin.loadingrateLimit); %bin的limit装载率最大 Itemloadingrate ItemloadingrateLimit
+% %     resLoadingRateStrip(r) = mean(DaS(r).Strip.loadingrate); %strip的装载率最大 Itemloadingrate ItemloadingrateLimit    
+% % %     Par(r);
+% % end
+% % 
+% % %% 算法选择最优的解给用户
+% % % maxresBin=max(resLoadingRateBinLimit(1,idxStrip)); %找出idxStrip中的最大bin
+% % % if ~all(ismember(idxBin,idxStrip)),   error('not all member of bin in strip'); end %错误有可能出现 
+% % %% 1 maxresBin代表常规车辆的平均装载率,物品总量一定,bin越多,该值越小,解越差,此最大值是必须
+% % %% 2 maxresStrip代表常规Strip的平均装载率,物品总量一定,strip宽度一定,高度越高,该值越小,解越差,此最大值不一定时必须（因为看起来不好看）
+% % %% 但该值在不同bin高度时可能有影响，且该值好时，人为看起来可能并不好
+% % %% 3 maxresStripLimit代表特殊Strip的平均装载率,物品总量一定,strip内部宽度越大,间隙越大,值越小,此最大值几乎是必须
+% % %% 该值好时，人为看起来可能好（strip内部间隙小）；但不一定时最优（还有可能相同托盘不在一起）
+% % %% 4 maxresBinLimit代表特殊Bin的平均装载率,物品总量一定?? 对特殊情况有用,待观察
+% % idxBin=find(resLoadingRateBin==max(resLoadingRateBin)); %取
+% % idxStripLimit=find(resLoadingRateStripLimit==max(resLoadingRateStripLimit));
+% % idxBinLimit=find(resLoadingRateBinLimit==max(resLoadingRateBinLimit));
+% % idxStrip=find(resLoadingRateStrip==max(resLoadingRateStrip));
+% % %% 5 找出idxStrip和idxBin两者的交集
+% % % % if isempty(intersect(idxBin,idxStrip))
+% % idx =idxBin;
+% % if isempty(idx), error('idxBin为空 '); end %错误几乎不可能出现
+% % idx0 =intersect(idx,idxStripLimit);
+% % if ~isempty(idx0),
+% %     idx = idx0; 
+% % else
+% %     warning('idx0 is empty');
+% % end
+% % % if isempty(idx), error('idxBin and idxStripLimit 的交集为空 '); end %错误几乎不可能出现
+% % idx1 = intersect(idx,idxBinLimit);
+% % if ~isempty(idx1),  
+% % %      idx = idx1; 
+% % else
+% %     warning('idx1 is empty');
+% % end
+% % idx2 = intersect(idx,idxStrip);
+% % if ~isempty(idx2),  
+% % %     idx = idx2; 
+% % else
+% %     warning('idx2 is empty');
+% % end
+% % 
+% % %% 将idx剩余的返回到主函数
+% % if ~isempty(idx)
+% %     for tmpidx=1:length(idx)
+% %         daMax(tmpidx) = DaS(idx(tmpidx));
+% %         parMax(tmpidx) = Par(idx(tmpidx));
+% %     end
+% % end
+% % 
+% % end % END OF ALL
+% % 
+% % 
+% % 
+% % 
+% % 
+% %         
+% % function plotSolution(do,par)
+% % %% 画图
+% % % V3 margin 提前到RunAlgorithm运行后就执行:
+% % % plot2DBPP(do,par);
+% % plot3DBPP(do,par);
+% % 
+% %         % V1 buff version
+% %         % do.Item.LWH = do.Item.LWH - do.LU.buff(:,1:size(do.Item.LWH,2));
+% %         % do.Item.LWH(1,:) = do.Item.LWH(1,:) - ( do.LU.margin(1, 1:size(do.Item.LWH,2) ) + do.LU.margin(2,: )); 
+% %         % do.Item.LWH(2,:) = do.Item.LWH(2,:) - (do.LU.margin(3,: ) + do.LU.margin(4,: )); 
+% %         % do.Item.CoordItemBin = do.Item.CoordItemBin + do.LU.buff(:,1:size(do.Item.LWH,2))/2;
+% % 
+% %         % V2 margin version
+% %         % 作图前更新LU ITEM的Coord和LW; 更新ITEM同时更新LU
+% %         % [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
+% %         
+% % 
+% % end
 
 
     %% ************ 判断是否相同类型托盘相邻摆放

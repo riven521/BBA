@@ -135,7 +135,7 @@ fmix = Strip.isMixed==1;
 fwid = Strip.isWidthFull==0;
 
 % StripCheck 可多次调用
-checkStrip(Strip);
+chkStrip(Strip);
 
 % Calc GapValue
 Strip.GapValue(~fmix) =0;

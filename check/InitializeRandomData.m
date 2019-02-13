@@ -1,4 +1,6 @@
-function [d] = DataRandomInitialize(n,m)
+function [d] = InitializeRandomData(n,m)
+% InitializeRandomData ==> 初始化随机生成数据
+
 %     rng(10000);
 %     rng('default');
     s = rng;     save('srng','s');

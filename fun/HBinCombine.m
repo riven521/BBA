@@ -111,7 +111,7 @@ global ISlastVehType ISpingpu parGap
     end % END OF PINGPU
 
 %% 4 ****************** 针对获取的T 进行最后返回的output处理 ******************
-    [T.ShowSEQ, T.tblorder] = getShowSeq(T); %增加 ShowSEQ(按车辆/供应商号/LID区分显示步骤) 和 tblorder
+    [T.ShowSEQ, T.tblorder] = getBBASeqTLU(T); %增加 ShowSEQ(按车辆/供应商号/LID区分显示步骤) 和 tblorder
     %       chktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
 
     % NOTE : 在此之前均未改变LU的顺序，改变LU顺序为按照显示顺序ShowSEQ递增

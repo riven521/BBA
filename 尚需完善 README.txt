@@ -563,6 +563,10 @@ V190212 V2
 %% 重构BBA代码 1
 V190213 V1
 1: chktLU增加对LHW与OLWH的核验
+2：注释plotSolutinoT
+3：HBinpingpu 增加甩尾平铺全局变量ISpingpuShuaiwei 
+4：修订getPartDinThisBin 从d或do中获取ibin的数据
+5：梳理全局变量；梳理函数名（同一前缀）
 
 TODO
 

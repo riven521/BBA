@@ -79,7 +79,7 @@ for idx = 1:length(fields)
             
         end
     catch    
-        error('try error in Veh向量判断');
+        warning('try error in Veh向量判断');
         % V1 版本判定
         % 判断1: 必须是数值型
         if ~ismatrix(aField) || ~isnumeric(aField), error('车辆数据存在错误(非数值型矩阵)'); end
@@ -120,7 +120,7 @@ end
      % 2 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
 %      if isrepeated(LU.ID,LU.SID)
 %         warning('存在托盘ID号重复, 需要更正'); 
-%         LU.ID = reviseID(LU.ID,LU.SID);
+%         LU.ID = getReviseID(LU.ID,LU.SID);
 %      end
 
     % V1: 可能造成更新后ID与其它ID号相同

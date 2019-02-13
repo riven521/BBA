@@ -1,4 +1,5 @@
-function [flag]  =placeItemHori(LWH,isRota,margin,HoriOrVert)
+function [flag]  = getLuRotaedBBA(LWH,isRota,margin,HoriOrVert)
+% getLuRotaedBBA ==> 更新LU的Rotaed标记( LU横放或竖放 却决于距离边界的宽度 哪个小选哪个 
 % placeItemHori ==> 更新LU的Rotaed标记( LU横放或竖放 却决于距离边界的宽度 哪个小选哪个 
 %   在每次进入RunAlgorithm前进行 -> 获取LU的当前状态
 

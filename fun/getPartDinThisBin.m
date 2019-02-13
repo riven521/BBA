@@ -1,12 +1,40 @@
-function partd = getPartdinThisBin(d,luIdx)
-% getPartdinThisBin ==> GET 结构体d中的属于本bin的部分托盘数据
+function partd = getPartDinThisBin(do,ibin,d)
+% getPartdinThisBin ==> GET 结构体d中的属于本bin的部分数据
+%   若nagrin不到3个，全部从do中取数据；否则，从d中取数据
 %   指定ibin,获取该bin内的LU,Veh等作为输入数据,重点是LU数据
-        
-        partd.Veh = d.Veh;        
-        partd.Par = d.Par;
-        partd.LU = structfun(@(x) x(:,luIdx),d.LU,'UniformOutput',false);
-        
+
+luIdx = do.LU.LU_Bin(1,:) == ibin;
+stripidx = do.Strip.Strip_Bin(1,:) == ibin;
+itemidx = do.Item.Item_Bin(1,:) == ibin;
+
+if nargin < 3   %全部从do中取数据；
+    partd.Veh = do.Veh;
+    partd.Par = do.Par;
+    partd.LU = structfun(@(x) x(:,luIdx),do.LU,'UniformOutput',false);
+    partd.Bin = structfun(@(x) x(:,ibin),do.Bin,'UniformOutput',false);
+    partd.Strip = structfun(@(x) x(:,stripidx),do.Strip,'UniformOutput',false);
+    partd.Item = structfun(@(x) x(:,itemidx),do.Item,'UniformOutput',false);
+else    %全部从d中取数据；
+    partd.Veh = d.Veh;
+    partd.Par = d.Par;
+    partd.LU = structfun(@(x) x(:,luIdx),d.LU,'UniformOutput',false);
 end
+
+
+
+
+
+
+%% V1 : V2 增加为3个参数，双重用途
+% function partd = getPartDinThisBin(d,luIdx)
+% % getPartdinThisBin ==> GET 结构体d中的属于本bin的部分托盘数据
+% %   指定ibin,获取该bin内的LU,Veh等作为输入数据,重点是LU数据
+%         
+%         partd.Veh = d.Veh;        
+%         partd.Par = d.Par;
+%         partd.LU = structfun(@(x) x(:,luIdx),d.LU,'UniformOutput',false);
+%         
+% end
 
 %% 注释
         % 2 bin内的LU

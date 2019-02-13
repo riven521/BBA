@@ -1,7 +1,7 @@
-function [LU,Veh] = cpuLUVeh(LU,Veh)
-% cpuLUVeh 重要函数:
+function [LU,Veh] = cpuVehLU(LU,Veh)
+% cpuVehLU 重要函数:
 % 更新 Veh 的Volume/order
-% 更新 LU 的ID/LU的LWH/LU的maxL/LU的maxHLayer/LU的nbID/LU的isNonMixed/isMixedTile
+% 更新 LU 的ID/LU的LWH/LU的maxL/LU的maxHLayer/LU的nbID
         
      % global  ISisGpreprocLU1
 
@@ -20,23 +20,23 @@ function [LU,Veh] = cpuLUVeh(LU,Veh)
      % TODO : 增加不同SID/不同EID下的ID号不可重复
      if isrepeated(LU.ID,LU.SID)
         warning('存在托盘ID号在不同 SID下重复, 需要更正'); 
-        LU.ID = reviseID(LU.ID,LU.SID);
+        LU.ID = getReviseID(LU.ID,LU.SID);
      end
 
      if isrepeated(LU.EID,LU.SID)
          warning('存在托盘EP LOCATION ID号在不同SID下重复, 需要更正');
-         LU.EID = reviseID(LU.EID,LU.SID);
+         LU.EID = getReviseID(LU.EID,LU.SID);
      end
      
      if isrepeated(LU.PID,LU.SID)
          warning('存在托盘PID ID号在不同SID下重复, 需要更正');
-         LU.PID = reviseID(LU.PID,LU.SID);
+         LU.PID = getReviseID(LU.PID,LU.SID);
      end
      
      % 是否需要？fixme 
       if isrepeated(LU.LID,LU.SID)
          warning('存在托盘LID ID号在不同SID下重复, 需要更正');
-         LU.LID = reviseID(LU.LID,LU.SID);
+         LU.LID = getReviseID(LU.LID,LU.SID);
       end    
      
      if isrepeated(LU.ID,LU.EID)
@@ -52,7 +52,7 @@ function [LU,Veh] = cpuLUVeh(LU,Veh)
     % 1 如果相同ID（PID/EID/LID等）号下，对应SID号要必须不同；如相同改变ID号，直到不存在相同的ID在不同SID内;
     if isrepeated(LU.ID,LU.SID),  error('存在ID号重复, 应该在check时已调整');   end
     
-    %% 3 更新LU：含margin的LU的LWH；更新LU的Rotaed标记
+    %% 3 更新LU：含margin的LU的LWH；更新LU的Rotaed标记 （放在外面运算） cAN REMOVE
 % %     % GET LU's LWH with margin and Rotaed or not
 % %     % 2 Input增加间隙BUFF后的feasible的LU和BIN的长宽高转换
 % %     LU.OLWH = LU.LWH;
@@ -101,9 +101,10 @@ function [LU,Veh] = cpuLUVeh(LU,Veh)
     LU.nbID = sum(LU.ID==LU.ID');
     LU.nbLID = sum(LU.LID==LU.LID');
     
-    %% 6：555 ITEMBALANCE必须 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
+    %% can del: 放到外面计算
+    % 6：555 ITEMBALANCE必须 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
     % 555 区分为LU相同高度（依据层数判断） 或 LU多种高度（依据高度判断 TODO 增加层数判断）两种类型
-    [LU] = cpuLU(LU,Veh);
+    %     [LU] = cpuLU(LU,Veh);
     
   end
 

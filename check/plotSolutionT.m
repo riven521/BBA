@@ -1,8 +1,13 @@
-function [] = plotSolutionT(T,V)
+function [] = plotSolutionT(T,V,plotLU,plotStrip)
 % plotSolutionT ==> 作图LU/STRIP/BIN
 %   T: LU; V: Veh.
 if isstruct(T),  T = struct2table(structfun(@(x) x',T,'UniformOutput',false)); end
 if isstruct(V), V = struct2table(structfun(@(x) x',V,'UniformOutput',false)); end
+
+if nargin < 3
+    plotLU = 1;
+    plotStrip = 1;
+end
 
 global ISplotPause ISplotShowType
 
@@ -26,7 +31,7 @@ if ~ismember('LWH_V', T.Properties.VariableNames)
 %% 1 获取LUcolor 含 颜色 属性的T  LID/SID/OPID etc   % 作图所需 1 LU的bin序号; 2 LWH 3 COORDLUBIN 4 LID 排序
 if ISplotShowType == 1
     if ismember('isShuaiWei', T.Properties.VariableNames)
-    tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+        tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
     else
         tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
     end
@@ -44,7 +49,6 @@ tmpT.LUcolor = 0.8*hsv(height(tmpT));
 T = join(T,tmpT);
 
 %% 图1：作图LU,按给定LU顺序
-plotLU = 1;
 if plotLU
     
     figure('name',strjoin({'LU展示：入ITEM时的排序后，合计*个',num2str(height(T))}));
@@ -64,7 +68,6 @@ if plotLU
 end
 
 %% 图2：作图Strip划分 （有LU_Strip(CoordLUStrip)即可）
-plotStrip = 1;
 if plotStrip
     if ismember('LU_Strip', T.Properties.VariableNames)
         

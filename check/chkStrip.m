@@ -1,8 +1,8 @@
-%% checkStrip Strip结构体核对
+%% chkStrip Strip结构体核对
 %% Form
-%    checkStrip(Strip)
+%    chkStrip(Strip)
 
-function checkStrip(Strip)
+function chkStrip(Strip)
      if ~isstruct(Strip), error('NOT a STRUCT!'); end
      if isstruct(Strip)
      T = struct2table(structfun(@(x) x', Strip,'UniformOutput',false));  end

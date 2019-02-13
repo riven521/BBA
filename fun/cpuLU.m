@@ -1,9 +1,5 @@
-%% GET LU 相关属性
-% 计算LU的
-
-%% 函数
 function   [LU] = cpuLU(LU,Veh)
-% 获取最新的LU.isNonMixed和LU.isMixedTile
+% cpuLU ==> 获取LU的isNonMixed和LU的isMixedTile
 
 %% 1 获取最新的LU.isNonMixed和LU.isMixedTile
 

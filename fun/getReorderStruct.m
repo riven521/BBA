@@ -1,4 +1,4 @@
-function oS = reorderStruct(o,S)
+function oS = getReorderStruct(o,S)
 oS = struct;
 if isstruct(S) && isrow(o)
     % 动态数组并排序

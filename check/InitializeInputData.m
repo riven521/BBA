@@ -1,6 +1,6 @@
 %% V2 - ²»º¬RandomËãÀı
-function d = DataInitialize( varargin )
-% DATAITIALIZE Initialize the DATA data structure using parameter pairs.
+function d = InitializeInputData( varargin )
+% InitializeInputData Initialize the DATA data structure using parameter pairs.
 % Inputs
 %     varargin:  ('parameter',value,...)
 % Outputs

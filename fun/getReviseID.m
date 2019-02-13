@@ -1,5 +1,5 @@
-function [id] = reviseID(id, fatherid)
-%reviseID 在同一fatherid下,确定重复时，改变当下id与其他重复的数字,
+function [id] = getReviseID(id, fatherid)
+%getReviseID 在同一fatherid下,确定重复时，改变当下id与其他重复的数字,
 %   return a non-repeated id
 
 ufid = unique(fatherid);
@@ -14,7 +14,7 @@ for i=1:numel(ufid)
             id(id1 == interid) = id(id1 == interid) + 1;
         end
          if isrepeated(id,fatherid)
-             id = reviseID(id,fatherid);
+             id = getReviseID(id,fatherid);
          end
     end
 end
