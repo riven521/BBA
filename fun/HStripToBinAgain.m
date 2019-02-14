@@ -1,9 +1,10 @@
 %% 函数1: 量大车头方案2: V3: 
     % s1 :HStripToBin计算时:为基于Strip排除已安排Bin后的剩余Strip; cpuStripnbItem为全部Strip进入
-function [Strip,Bin] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
+function [Strip,Bin,TF] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
         % 目的: 解决量大的LU被车辆拆分为量小但仍摆放车头;
         % 方法: ****** 每个Bin都对排除前任已安排Strip后的剩余Strip, 重新排序并分别执行HStripToBin算法. ******
         nbBin = max(Strip.Strip_Bin(1,:));
+        TF = false;
         if nbBin>1
             fprintf(1,'       Exsiting 量大车头 in HStripToBinAgain (nBin>1)...\n');
             ibin=2;
@@ -53,6 +54,7 @@ function [Strip,Bin] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
                 
                 % 8 ibin自增
                 ibin = ibin+1;
+                TF = true;
             end
         end
 end

@@ -1,6 +1,7 @@
 %% 函数: Strip均衡
-function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
+function   [Strip,Item,LU,TF] = HStripBalance(Strip,Item,LU,Veh,p)
         flagBalanced = 0;
+        TF = false;
         while 1
             % 找到strip不混合的且不平衡的
             fstrip = Strip.isMixed==0 & Strip.isHeightBalance==0;
@@ -56,6 +57,7 @@ function   [Strip,Item,LU] = HStripBalance(Strip,Item,LU,Veh,p)
                 [Item,LU] = cpuItem(Item,LU,Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
                 [LU,Item,Strip] = HItemToStrip(LU,Item,Veh,p);
                 [Strip,LU] = cpuStrip(Strip,Item,LU,Veh);
+                TF = true;
                 % fstrip = Strip.isMixed==0 & Strip.isHeightBalance==0;
                 flagBalanced = 0;
             end

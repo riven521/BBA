@@ -1,12 +1,27 @@
-function [] = plotSolutionT(T,V,plotLU,plotStrip)
+function [] = plotSolutionT(T,V,plotLU,plotItem,plotStrip,plotBin,plotColor,figname)
 % plotSolutionT ==> 作图LU/STRIP/BIN
-%   T: LU; V: Veh.
+% T: table 格式的LU
+% V: table 格式的Veh
+% plotLU：非0：做LU的图；2：按T.index顺序（输入顺序）作图 3:按T.order（排序后顺序）作图 1：按T的目前顺序作图；
+% plotItem：非0：做Item的图； 1：按Item排序后作图
+% plotStrip：非0：做Strip的图；1：按Strip的顺序作图
+% plotBin：非0：做Bin的图；1：
+% example：plotSolutionT(d.LU,d.Veh,1,1,1,1)
+%                  plotSolutionT(d.LU,d.Veh,2,0,0,3)
+
 if isstruct(T),  T = struct2table(structfun(@(x) x',T,'UniformOutput',false)); end
 if isstruct(V), V = struct2table(structfun(@(x) x',V,'UniformOutput',false)); end
 
 if nargin < 3
-    plotLU = 1;
+    plotLU = 1;  % 1：采用目前T内顺序 2: 采用index顺序
     plotStrip = 1;
+    plotBin = 1;
+    plotItem = 1;
+    
+end
+if nargin < 8
+    plotColor = 3;
+    figname ='';
 end
 
 global ISplotPause ISplotShowType
@@ -29,12 +44,16 @@ if ~ismember('LWH_V', T.Properties.VariableNames)
 % %     T.LID = cell2mat(T.LID); end
 
 %% 1 获取LUcolor 含 颜色 属性的T  LID/SID/OPID etc   % 作图所需 1 LU的bin序号; 2 LWH 3 COORDLUBIN 4 LID 排序
+% if ISplotShowType == 1
+%     if ismember('isShuaiWei', T.Properties.VariableNames)
+%         tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+%     else
+%         tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+%     end
+
+ISplotShowType = plotColor;
 if ISplotShowType == 1
-    if ismember('isShuaiWei', T.Properties.VariableNames)
-        tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
-    else
-        tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
-    end
+    tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
 elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
 elseif ISplotShowType == 3
@@ -43,6 +62,12 @@ elseif ISplotShowType == 4
     tmpT = unique(T(:,{'SID'}));
 elseif ISplotShowType == 5
     tmpT = unique(T(:,{'EID'}));
+elseif ISplotShowType == 6
+    tmpT = unique(T(:,{'isNonMixed'}));
+elseif ISplotShowType == 7
+    tmpT = unique(T(:,{'isMixTile'}));
+elseif ISplotShowType == 8
+    tmpT = unique(T(:,{'isShuaiWei'}));   
 end
 
 tmpT.LUcolor = 0.8*hsv(height(tmpT));
@@ -50,30 +75,64 @@ T = join(T,tmpT);
 
 %% 图1：作图LU,按给定LU顺序
 if plotLU
-    
-    figure('name',strjoin({'LU展示：入ITEM时的排序后，合计*个',num2str(height(T))}));
-    subT = T(1:end,:);
-
-    % 5555 构建仅plotLU的LU的坐标系
-    XYZ = zeros(height(subT),3);
+    figure('name',strjoin({figname,'LU展示：入ITEM时的排序后，合计*个',num2str(height(T))}));
+    if plotLU==1, subT = T(1:end,:); end                %LU进入顺序
+    if plotLU==2, subT = sortrows(T,'Index'); end  %LU进入顺序
+    if plotLU==3, subT = sortrows(T,'order'); end  %LU排序后顺序
+    % 5555 构建LU的坐标系Coord X坐标依据LU的宽度L移动 Y为0 Z为LU高度
+    XYZ = zeros(height(subT),3);                
     XYZ(:,1) = cumsum(subT.LWH(:,1));
     subT.Coord =[0 0 0; XYZ(1:end-1,:)];
-    
     for iLU=1:height(subT)
-        plotcube(subT.LWH(iLU,:),subT.Coord(iLU,:),0.7, subT.LUcolor(iLU,:));
+        plotcube(subT.LWH(iLU,:), subT.Coord(iLU,:),0.7, subT.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         view(60,40); %view(111,33);  
         if ISplotPause>0 ,      pause(ISplotPause);   end
     end
 end
 
+% 实质还是plotLU，同一Item依据顺序，给不同的高度Z值.
+if plotItem
+    
+    XYZ = zeros(height(T),3);
+    
+    % 逐个Item作图
+    nItem = max(T.LU_Item(:,1)); %Item的个数
+    figure('name',strjoin({figname,'Item展示：合计*个',num2str([nItem])}));
+    
+    % 计算每个Lu在Item的坐标Coord
+    sumL = 0;
+    % todo 修改iItem的顺序，区别Item的排序
+    for iItem=1:nItem
+        % 从第1个Item开始
+        fidxItem = T.LU_Item(:,1)==iItem;
+        XYZ(fidxItem,1) = sumL;
+        sumL = sumL + unique(T.LWH(fidxItem,1));       if numel(sumL) >  1 , error('e'); end
+        
+        nLU = sum(fidxItem);
+        sumH = 0;
+        for iLU = 1:nLU
+            fidxLU = T.LU_Item(:,2)==iLU;
+            XYZ(fidxItem&fidxLU,3) = sumH;
+            sumH = sumH + T.LWH(fidxItem&fidxLU,3);
+        end
+    end
+    
+    for iLU=1:height(T)
+        plotcube(T.LWH(iLU,:), XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
+        axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+        view(60,40); %view(111,33);
+        if ISplotPause>0 ,      pause(ISplotPause);   end
+    end
+end
+
 %% 图2：作图Strip划分 （有LU_Strip(CoordLUStrip)即可）
 if plotStrip
-    if ismember('LU_Strip', T.Properties.VariableNames)
+%     if ismember('LU_Strip', T.Properties.VariableNames)
         
         T=sortrows(T,{'LU_Strip'},{'ascend'});     % T的排序 (LU_Strip递增)
         
-        figure('name',strjoin({'STRIP展示：先后顺序排序后，合计*个',num2str([ max(T.LU_Strip(:,1));])}));
+        figure('name',strjoin({figname,'STRIP展示：先后顺序排序后，合计*个',num2str([ max(T.LU_Strip(:,1));])}));
         subT = T(1:end,:);  % subT = T;
         
         for iLU=1:height(subT)
@@ -82,10 +141,11 @@ if plotStrip
             view(111,33);    %view(60,40);
             if ISplotPause>0 ,      pause(ISplotPause);   end
         end
-    end
+%     end
 end
 
 %% 图3：作图Bin划分 (有LU_Bin即可)
+if plotBin
 pos = 1;
 if ismember('LU_Bin', T.Properties.VariableNames)
     
@@ -93,7 +153,7 @@ if ismember('LU_Bin', T.Properties.VariableNames)
     
     % 逐个bin作图
     nBin = max(T.LU_Bin(:,1)); %bin的个数
-    figure('name',strjoin({'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
+    figure('name',strjoin({figname,'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
     
     for ibin=1:nBin % for ibin=nBin:nBin
             %     if ibin==5
@@ -113,6 +173,7 @@ if ismember('LU_Bin', T.Properties.VariableNames)
         end
         
     end
+end
 end
 
 %% 注释

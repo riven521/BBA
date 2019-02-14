@@ -1,17 +1,18 @@
 %% 函数: Strip甩尾
-function   [Strip,LUisShuaiWei] = HStripSW(Strip,LU)
+function   [Strip,LUisShuaiWei,TF] = HStripSW(Strip,LU)
 %% 初始化
 
     Strip.isShuaiWei = zeros(size(Strip.Weight));
     Strip.seqShuaiWei = zeros(size(Strip.Weight)); % seqShuaiWei越大,表明越早甩尾; 越小, 越晚甩尾, 即越放置在车头.
     LUisShuaiWei = zeros(size(LU.Weight));      % 判断LU是否甩尾出来的,仅在作图时可能有用
-    
+    TF = false;
 %% 1: ********************** 甩尾 ********************************** 
 % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
 % Strip.isHeightFull
 % Strip.isWidthFull
 if any(~Strip.isWidthFull | ~Strip.isHeightFull)
     fprintf(1,'       Exsiting 甩尾需求 in HStripSW (Strip宽高不满)...\n');
+    TF = true;
     % Get b : strip index to be move to end of Vehicle
     [~,bNOTheightfull] = find(Strip.isHeightFull == 0);
     [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);

@@ -77,7 +77,14 @@ global ISplotBBA ISplotShowGapAdjust ISplotEachPingPuShuaiWei ISplotEachPingPuAl
 ISplotBBA = 1; % 是否显示LU/Strip/Bin的结果（均已排序）
 ISplotEachPingPuShuaiWei = 1;  % 每次甩尾平铺成功后，展示平铺前后的对比图
 ISplotEachPingPuAll = 1;             % 每次整车平铺成功后，展示平铺前后的对比图
-ISplotShowGapAdjust = 0;         % 是否显示Gap调整过程
+ISplotShowGapAdjust = 1;         % 是否显示Gap调整过程
+% RunAlgorithm的plot开关
+% ISplotshuaiwei: 是否显示甩尾对比图；ISplotStripToBinAgain：是否显示车头优先对比图；ISplotstripbalance：是否显示左右均衡对比图 ISplotRunAlgo:是否显示RunAlgo过程图
+ global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotstripbalance ISplotRunAlgo
+ ISplotRunAlgo = 1;
+ ISplotshuaiwei = 1;
+ ISplotStripToBinAgain = 1;
+ ISplotstripbalance = 1; 
 % ISplotPause: plotSolutionT 等暂停时间 0不暂停 ISplotShowType：基于某种类型区分颜色
 global ISplotPause ISplotShowType
 ISplotPause = 0.0;  %-0.05 % plot间隔时间
@@ -85,7 +92,7 @@ ISplotShowType = 3; % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
      
 % RunAlgorithm中
 global   ISplotStrip  % plotStrip
-ISplotStrip = 0;             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为同一
+ISplotStrip = 0;             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为plotSolutionT
 
 
 % * to modify*
@@ -224,7 +231,7 @@ for iAlg = 1:nAlg
     % 1.5 % dA(iAlg)=do; % 仅在多算法版本使用    
               %     plotSolutionT(do.LU,do.Veh);
               % plotSolution(do,pA(iAlg)); %尽量不用
-    
+    ISplotRunAlgo = 0
     %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh
     if ISlastVehType
         fprintf(1,'\nRunning HBinChange with output do1 ...\n');
@@ -313,10 +320,9 @@ end
 if ISplotBBA
     %     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
     V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
-    plotSolutionT(T,V); %按table格式做图
+    plotSolutionT(T,V,0,0,0,1,3,'最终BIN'); 
 end
 
-    
 %% 常用语句
 % T.Properties.VariableNames
 % % 简单查看某个bin内的部分子表

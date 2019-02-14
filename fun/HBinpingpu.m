@@ -79,9 +79,9 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         
                         do3Array(ibin) = do3;
                                    
-                        if ISplotEachPingPuAll == 1  % plot 甩尾平铺前和甩尾平铺后的bin图
-                            plotSolutionT(do3inIbin.LU,do3inIbin.Veh, 0, 0);
-                            plotSolutionT(do3.LU,do3.Veh, 0, 0);   % plot整车平铺后的bin % do3 修改到d中？？？目前保留到do2Array中，未与d合并
+                        if ISplotEachPingPuAll  % plot 整车平铺前和整车平铺后的bin图
+                            plotSolutionT(do3inIbin.LU,do3inIbin.Veh, 0, 0, 0 , 1 ,3,'整车平铺前 Bin'); 
+                            plotSolutionT(do3.LU,do3.Veh,  0, 0, 0 , 1 ,3,'整车平铺后 Bin');   % plot整车平铺后的bin % do3 修改到d中？？？目前保留到do2Array中，未与d合并
                         end
                        
                         break;    % 整车平铺成功，跳出while后循环下一个bin
@@ -147,9 +147,9 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         
                         do2Array(ibin) = do2;                        % todo -> do2 数据不进入d 仅在return2bba中修改    % do2 数据进入d???? return2bba不修改？？？
                         
-                        if ISplotEachPingPuShuaiWei == 1  % plot 甩尾平铺前和甩尾平铺后的bin图
-                            plotSolutionT(do2inIbin.LU,do2inIbin.Veh, 0, 0);
-                            plotSolutionT(do2.LU,do2.Veh, 0, 0);  % plot甩尾平铺后的bin
+                        if ISplotEachPingPuShuaiWei  % plot 甩尾平铺前和甩尾平铺后的bin图
+                            plotSolutionT(do2inIbin.LU,do2inIbin.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺前 Bin');
+                            plotSolutionT(do2.LU,do2.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺后 Bin');  % plot甩尾平铺后的bin
                         end
                         
                     else

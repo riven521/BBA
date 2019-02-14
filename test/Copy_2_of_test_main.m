@@ -1647,7 +1647,7 @@ BBAID=[1,2,3,4];
     if ~exist('LUINDEX','var') 
         LUINDEX = BBAID;
     else
-        LUINDEX = BBAID;    
+        LUINDEX = BBAID;
     end
     
 

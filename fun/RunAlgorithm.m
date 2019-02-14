@@ -1,7 +1,7 @@
 function [d] = RunAlgorithm(d,p)
         global ISshuaiwei ISreStripToBin ISstripbalance %重新执行HStripToBin方案
-        global ISplotStrip
-                
+        global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotstripbalance ISplotRunAlgo ISplotStrip
+                     
         %% 预处理:检验Input输入数据
         fprintf(1,'   Running RunAlgorithm  ...\n');
         %         d = GcheckInput(d);    %可以不做   因为main做一下即可          
@@ -10,16 +10,17 @@ function [d] = RunAlgorithm(d,p)
         [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做 in case 意外错误
         
         %% 启发式: LU到Item的算法    
-        %         plotSolutionT(d.LU,d.Veh)
+        
         [d.LU] = cpuLU(d.LU,d.Veh);     % 计算LU的isNonMixed和LU的isMixedTile 属性
         
         %fprintf(1,'     Running HLUtoItem...\n');
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
                                 %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
-
+        
+        
                                 % Item.isNonMixed Item.isMixedTile isHeightFull
         [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
-        
+%        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
         % 核查是否还有上轻下重的情况
         chktLU(d.LU);
          
@@ -30,63 +31,68 @@ function [d] = RunAlgorithm(d,p)
         % 2 按Item给定顺序插入新或旧的Strip
         %fprintf(1,'     Running HItemToStrip...\n');
         [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
-
+                
         % 计算LU.LU_Strip, LU.CoordLUStrip
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
-        %         close all;   plotSolutionT(d.LU,d.Veh)
+        % plot Item (原始和排序后）
+        if ISplotRunAlgo
+            plotSolutionT(d.LU,d.Veh,2,0,0,0,3,'原顺序LU'); %LU原始
+            plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU'); %LU排序后
+            plotSolutionT(d.LU,d.Veh,0,1,0,0,3,'排序后Item'); %Item排序后
+            plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'排序后Strip'); %Strip排序后
+        end
         
         %% 启发式：特殊：堆垛均衡设置
         % ********* 1 5555 堆垛均衡设置 *********** 修改 d.LU.maxHLayer(luidxPP) 
          if ISstripbalance==1
              fprintf(1,'     Running HStripBalance...\n');
-             [d.Strip,d.Item,d.LU] = HStripBalance(d.Strip,d.Item,d.LU,d.Veh,p);  end
-        
-        %            close all;  plotSolutionT(d.LU,d.Veh);
-        if ISplotStrip==1,      figure(222);     
-            plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    %  plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %   figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
+             [d.Strip,d.Item,d.LU,TFStripBalance] = HStripBalance(d.Strip,d.Item,d.LU,d.Veh,p);  end
+         if TFStripBalance && ISplotstripbalance && ISplotRunAlgo
+             plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'均衡后Strip'); %Strip:HStripBalance后
+         end     % V1:  if ISplotStrip==1,      figure(222);      plot3DStrip(d.LU,d.Item,d.Veh,'LU');        end    %  plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin %   figure(222);     plot3DStrip(d.LU,d.Item,d.Veh,'LU');         %    igure(111);          plot3DStrip(d.LU,d.Item,d.Veh,'Item'); 
 
         %% 启发式：Strip到Bin的算法        
         %% ********* 1 Strip排序: % 1: SID 2: priorityofLID
-        %         close all;  plotSolutionT(d.LU,d.Veh);
         %fprintf(1,'     Running HStripToBin...\n');
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
-        %         close all;  plotSolutionT(d.LU,d.Veh);
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
         [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
-        
-         if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
+    
+        if ISplotRunAlgo
+            plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'排序后Bin'); % Bin排序后
+        end         % if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin 
                                                     
         %% 特殊：2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
                                                         %         ti = d.Strip;  tl = d.Bin;
         if ISreStripToBin==1
                 fprintf(1,'     Running HStripToBinAgain...\n');
-                [d.Strip,d.Bin] = HStripToBinAgain(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
+                [d.Strip,d.Bin,TFHStripToBinAgain] = HStripToBinAgain(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                if TFHStripToBinAgain &&  ISplotStripToBinAgain && ISplotRunAlgo
+                    plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'量大车头后Bin'); % Bin排序后
+                end %if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
         end     % 量大车头方案1: 每个Bin内strip比较量      % [d.Strip,d.Bin]= HreStripToEachBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p);
         
         %         close all;  plotSolutionT(d.LU,d.Veh);
-        
+    
                                                         %         [match, er1, er2] = comp_struct(ti,d.Strip,1);
                                                         %         [match, er1, er2] = comp_struct(tl,d.Bin,1);
                                                         %         list_struct(er1)
         
-        if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
-
-                                          
+         
         %% 特殊：3 增加Strip的甩尾优化 *********** 修改 Strip.Strip_Bin 第二行
         if ISshuaiwei==1   
                 fprintf(1,'     Running HStripSW...\n');
-                [d.Strip,d.LU.isShuaiWei] = HStripSW(d.Strip,d.LU);    
+                [d.Strip,d.LU.isShuaiWei,TFHStripSW] = HStripSW(d.Strip,d.LU);    
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
                 [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                if TFHStripSW && ISplotshuaiwei && ISplotRunAlgo
+                    plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 
+                end %if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
         end
-        
-        %         close all;  plotSolutionT(d.LU,d.Veh);
-
-       if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
 
        %% 赋值车型
        d.LU.LU_VehType = ones(size(d.LU.ID)) * d.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值
@@ -95,8 +101,6 @@ function [d] = RunAlgorithm(d,p)
                 %         printstruct(d.Bin,'sortfields',1,'PRINTCONTENTS',1)  
                 %         printstruct(d,'sortfields',1,'PRINTCONTENTS',0)  
 
-
- 
 end
 
        %% 后处理: PID/SID等返回 改为返回顺序，此类不动的值从原始记录中获取

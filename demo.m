@@ -10,7 +10,7 @@ addpath('./fun');
 addpath('./test'); 
 addpath('./utility'); 
 
-runtests('testMain.m') 
+runtests('testBBAMain_MixedGap.m') 
 
 %%
 
