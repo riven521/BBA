@@ -7,38 +7,107 @@ function [d] = RunAlgorithm(d,p)
         %         d = GcheckInput(d);    %可以不做   因为main做一下即可          
         
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性  （进入之前LWH已经时包含margin的）        
-        [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做 in case 意外错误
         
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做 in case 意外错误
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        
+
         %% 启发式: LU到Item的算法    
         % 计算LU的isNonMixed和LU的isMixedTile 属性 用途似乎不大, 目的为了生成Item时,满垛的一起,不满垛的后面
+         
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % ADD: isNonmixed/ismixedtile
         [d.LU] = cpuLU(d.LU,d.Veh);     
         
+        
         %fprintf(1,'     Running HLUtoItem...\n');
+        
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % ADD: order/LU_Item
+        % Item:
+        % ADD: isRota/Rotaed/HLayer/LWH/Weight
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);   %Item将按ID序号排序（但下一操作将变化顺序）
+        
                                 %printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
 %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU原始
 %             plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU'); %LU排序后
 
-        % 计算Item的 isNonMixed isMixedTile isHeightFull 含repairItem
-        [d.Item,d.LU] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
-%        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
-
+        % SECTION 2 计算LU_Item内是否上轻下重(修改顺序而已,坐标此时还未计算)
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % REPAIR: LU_Item
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        d.LU.LU_Item(2,:)= repairItems(d.LU);
+        
         % 核查是否还有上轻下重的情况
-        chktLU(d.LU);
-         
+        chktLU(d.LU)
+    
+        % 计算Item的 isNonMixed isMixedTile isHeightFull 三个参数
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % ADD: /isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        [d.Item] = cpuItem(d.Item,d.LU,d.Veh);        % printstruct(d,'sortfields',1,'PRINTCONTENTS',0);
+        %        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1);
+
         %% 启发式: Item到Strip的算法        
         %  *******  *******  *******
         % 1 Item排序: %1: SID ; 2: isNonMixed; 一般正真开始: 
         %                       3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
         % 2 按Item给定顺序插入新或旧的Strip
-        %fprintf(1,'     Running HItemToStrip...\n');
-        [d.LU,d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
-%                list_struct(d.Strip) 
-        % 计算LU.LU_Strip, LU.CoordLUStrip
+        %fprintf(1,'     Running HItemToStrip...\n');     
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        % ADD: itemorder/Item_Strip/CoordItemStrip
+        % Strip:
+        % ADD: LW/Weight
+        [d.Item,d.Strip] = HItemToStrip(d.LU,d.Item,d.Veh,p);     %   printstruct(d);   %  printstruct(d.Item);
+
+        % Item.H HLyaer Weight isHeightFull LU_Item 等变化
+        % SECTION 3 计算LU_Strip内是否左右不均 (修改顺序而已,坐标此时还未计算)
+        %         d.LU.LU_Item(2,:)= repairStrips(d.LU); % 修改LU_Strip的顺序坐标
+        % 核查是否还有上轻下重的情况
+        %         chktLU(d.LU)
+
+      
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % ADD: .LU_Strip, LU.CoordLUStrip
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        % itemorder/Item_Strip/CoordItemStrip
+        % Strip:
+        % LW/Weight
+        % ADD: isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
+        % ADD: isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
-%         list_struct(d.Strip) 
-        % plot Item (原始和排序后）
-        ISplotRunAlgo=1
+
         if ISplotRunAlgo & 0
 %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU原始
             plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU'); %LU排序后
@@ -58,12 +127,69 @@ function [d] = RunAlgorithm(d,p)
         %% 启发式：Strip到Bin的算法        
         %% ********* 1 Strip排序: % 1: SID 2: priorityofLID
         %fprintf(1,'     Running HStripToBin...\n');
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % ADD: .LU_Strip, LU.CoordLUStrip
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        % itemorder/Item_Strip/CoordItemStrip
+        % Strip:
+        % LW/Weight
+        % isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
+        % isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
+        % ADD: striporder/strip_bin
+        % Bin:
+        % ADD: LW/Weight
         [d.Strip,d.Bin] = HStripToBin(d.Strip,d.Veh,p);
-        
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % LU_Strip, LU.CoordLUStrip
+        % ADD: LU_Bin/CoordLUBin/ lbrt_A
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        % itemorder/Item_Strip/CoordItemStrip
+        % ADD: Item_bin/CoordItemBin
+        % Strip:
+        % LW/Weight
+        % isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
+        % isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
+        % striporder/strip_bin
+        % Bin:
+        % LW/Weight
         [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
 
-        [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
-        
+        % LU:
+        % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
+        % Roated/maxHLayer/nbID/nbLID
+        % isNonmixed/ismixedtile
+        % order/LU_Item
+        % LU_Strip, LU.CoordLUStrip
+        % LU_Bin/CoordLUBin/ lbrt_A
+        % Item:
+        % isRota/Rotaed/HLayer/LWH/Weight
+        % isHeightFull/isNonMixed/isMixedTile/nbItem/IDs
+        % itemorder/Item_Strip/CoordItemStrip
+        % Item_bin/CoordItemBin
+        % Strip:
+        % LW/Weight
+        % isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
+        % isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
+        % striporder/strip_bin
+        % Bin:
+        % LW/Weight        
+        % ADD: isTileNed/IDs
+        [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+
+        list_struct(d.LU)
+        list_struct(d.Bin)        
         
         if ISplotRunAlgo
             plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'排序后Bin'); % Bin排序后
@@ -78,7 +204,7 @@ function [d] = RunAlgorithm(d,p)
                 
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
 
-                [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
 
                 if TFHStripToBinAgain &&  ISplotStripToBinAgain && ISplotRunAlgo
 %                     plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'量大车头后Bin'); % Bin排序后
@@ -108,7 +234,7 @@ function [d] = RunAlgorithm(d,p)
 %                 plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin');
 %                 plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'甩尾后Bin');
                 
-                [d.Bin,d.LU] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin的isTileNeed
+                [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin的isTileNeed
 
                 if TFHStripSW && ISplotshuaiwei && ISplotRunAlgo
                     plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 

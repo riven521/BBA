@@ -1,7 +1,7 @@
 %% GET BIN 相关属性 isTileNeed
 
 %% 函数
-function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
+function   [Bin] = cpuBin(Bin,Strip,Item,LU,Veh)
 %% 初始化
     sz = size(Bin.Weight);
     nBin = size(Bin.LW,2);
@@ -10,21 +10,9 @@ function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
 %     Bin.Itemarea =  ones(sz)*-1; 
 %     Bin.loadingrate =  ones(sz)*-1; 
 %     Bin.loadingrateLimit =  ones(sz)*-1; 
-    
     Bin.isTileNeed =  zeros(sz); 
 
-%% 0: 计算LU_Bin and BIN的PID,LID,SID
-% 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
-
-% % % nbLU = size(LU.LWH,2);
-% % % LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
-% % % for iLU=1:nbLU
-% % %     theStrip = LU.LU_Strip(1,iLU); %iLU属于第几个Item
-% % %     LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
-% % % end
-
-%% V2
-    %% SECTION 0 计算BIN的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
+%% 函数1: V2 计算BIN的PID,LID,SID
     t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
     
     for iBin=1:nBin
@@ -35,17 +23,8 @@ function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
         Bin.EID(:,iBin) = {unique(t.EID(f))};
         Bin.PID(:,iBin) = {unique(t.PID(f))};
     end
-    %  t2 = struct2table(structfun(@(x) x',Strip,'UniformOutput',false));
     
-%% V1
-% % LU.DOC=[LU.DOC; LU.LU_Bin];
-% % nBin = size(Bin.LW,2);
-% % for iBin=1:nBin
-% %     tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
-% %     Bin.PID(:,iBin) = num2cell(unique(tmp(1,:))',1);
-% %     Bin.LID(:,iBin) = num2cell(unique(tmp(2,:))',1);
-% %     Bin.SID(:,iBin) = num2cell(unique(tmp(3,:))',1);
-% % end
+
     
 %% 1: 计算bin装载率 目前用途不大 暂时注释
 % loadingrateLimit - 每个bin内Item的体积和/每个bin去除剩余宽高后的总体积
@@ -59,10 +38,10 @@ function   [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh)
 % 1 总长度小于车长的1/4
 % % f = Bin.LW(2,:) >= 0.75*Veh.LWH(2,1); %所有车的剩余长度 >= 3/4 车长
 
-%% 3: Bin.isTileNeed 判断Bin是否需要甩尾平铺 供HBinpingpu使用:判定哪个bin需要甩尾平铺 利用Item.HLayer Strip.isHeightFull Strip.isWidthFull 判定
+%% 3: Bin.isTileNeed 判断Bin是否需要甩尾平铺 供HBinpingpu使用: 存在条带宽度或高度不满的需要甩尾平铺
+% 利用Item.HLayer Strip.isHeightFull Strip.isWidthFull 判定
 Bin.isTileNeed = computeisTileNeedofBin(nBin,Strip,Item);
 end
-
 
 
 
@@ -200,3 +179,24 @@ function [loadingrate,loadingrateLimit] = computeLoadingRate2DBin(Bin,Item,Veh)
     %每个bin的有限装载比率
     loadingrateLimit =  Bin.Itemarea ./ Bin.BinareaLimit;
 end
+
+%% 以下为注释
+
+%% 0: % 由混合的LU.DOC新增LU_BIN, 计算BIN内包含的PID,LID,SID等数据 1808新增
+
+% % % nbLU = size(LU.LWH,2);
+% % % LU.LU_Bin = [zeros(1,nbLU);zeros(1,nbLU)];
+% % % for iLU=1:nbLU
+% % %     theStrip = LU.LU_Strip(1,iLU); %iLU属于第几个Item
+% % %     LU.LU_Bin(1,iLU)= Strip.Strip_Bin(1,theStrip);
+% % % end
+
+%% V1 计算LU_Bin and BIN的PID,LID,SID
+% % LU.DOC=[LU.DOC; LU.LU_Bin];
+% % nBin = size(Bin.LW,2);
+% % for iBin=1:nBin
+% %     tmp = LU.DOC([1,2,3], LU.DOC(10,:) == iBin);
+% %     Bin.PID(:,iBin) = num2cell(unique(tmp(1,:))',1);
+% %     Bin.LID(:,iBin) = num2cell(unique(tmp(2,:))',1);
+% %     Bin.SID(:,iBin) = num2cell(unique(tmp(3,:))',1);
+% % end

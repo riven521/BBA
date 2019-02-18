@@ -50,7 +50,7 @@ function [Strip,Bin,TF] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
 
                 % 7 主要增加对LU_Bin的计算,
                 [LU,Item] = HItemToBin(LU,Item,Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
-                [Bin,LU] = cpuBin(Bin,Strip,Item,LU,Veh);  %计算Bin内相关属性 % 计算isTileNeed
+                [Bin] = cpuBin(Bin,Strip,Item,LU,Veh);  %计算Bin内相关属性 % 计算isTileNeed
                 
                 % 8 ibin自增
                 ibin = ibin+1;

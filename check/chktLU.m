@@ -87,9 +87,12 @@ end
     end
     
     % v2: 也是核验LWH是否正确的
-    LWHOLD = T.OLWH';
+    % 当T.LWH包含margin
     LWHNEW = LWHunbuffer(T.LWH', T.margin', T.Rotaed');
-    if ~isequal(LWHOLD,LWHNEW) 
+    % 当T.LWH不包含margin(已排除margin后),先增加margin,再去除margin和rota
+    LWHNEWMARGIN = LWHbuffer(T.LWH', T.margin');
+    LWHNEWMARGIN = LWHunbuffer(LWHNEWMARGIN, T.margin', T.Rotaed');
+    if ~( isequal(T.OLWH',LWHNEW)  || isequal(T.OLWH',LWHNEWMARGIN))  
         error('t的LWH在变化前后有错误，需要核验');
     end
 end

@@ -582,9 +582,45 @@ V190215 V1
 1：验证由double改为numerical型
 2：重构cpuStrip和cpuItem函数
 
+（高度不同托盘的修订）
+V190218 V1
+1：修改cpuStirp/cpuItem/cpuBin等
+2：Hpingpu函数 精练
+3：修改plotSolutionT，确保LU甩尾可用
+4: 修改Hbinpinpu，确保降低层数循环正确
+5：精炼hstripsw
+6：修改maxHLayer，确保高度不同的托盘，使用最大可摆托盘数
+7：增加全局变量ISmaxLayer，确保初始不考虑层数（可删除，因为第6条）
 
+V190218 V2
+1：修改repairItems
+2: 增加isisUpDownWeight判定上轻下重函数
+3: 增加getstructT：结构体返回表
+4: 更新chktLU：核对LU，Item等，后期全部统一此函数
+
+V190218 V3
+1：repairItem放到cputItem后，
+2：修复chktLU的LWH核验
+3: 删除cpuItem的输出二(lu)和HItemToStrip的输出lu和cpuBin的lu输出  
+4：Hbinpingpu降低高度，从堆垛层数>1且堆垛最高的进行降低，直接降低到当前层-1
+5：修改Strip.是否需要甩尾平铺。 高度均衡需要甩尾，但不需要平铺
 
 TODO
+LU排序是否必须？ 特别是：LU考虑isNonMixed是否必须？（意义不大） 
+
+删除该排序后，意义何在（排序简化，不考虑isNonMixed）
+
+LU层数限制 堆垛对于初步非甩尾 是否必须？ 增加TTT  层数意义大的。
+
+Next Fit 改为 其它Fit？ 仍然next fit
+
+LU的isNonMixed是如何计算的？ 不用关
+
+Stripbalance的规则？？ 可以不要
+
+甩尾平铺和前面的关系？ 要调整，确保strip均衡此处解决(重点解决甩尾均衡问题)
+
+
 
 1: gap问题自认已完美解决（todo，哪些无需调整gap的呢？）
 

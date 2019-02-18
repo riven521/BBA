@@ -3,7 +3,7 @@ function [LWHBuff,OLWH] = LWHbuffer(LWH, margin, rota)
 % 参数3必须有，默认为则不恢复旋转
     narginchk(2,3);
 
-    OLWH          = LWH;
+    OLWH = LWH;
     
     LWHBuff = LWH;    
     if nargin > 2

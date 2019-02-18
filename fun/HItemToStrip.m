@@ -1,5 +1,5 @@
 % function [d] = HItemToStrip(d,p)
-function [LU,Item,Strip]= HItemToStrip(LU,Item,Veh,p)
+function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % 重要函数:Item放入Strip中 %  行数:长宽高(row);  列数:托盘数量(coloum);
 % Input ---  ITEM:  ID LWH Weight
 % Output --- ITEM: itemorder Item_Strip itemRotaFlag CoordItemStrip
