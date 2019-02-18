@@ -3,8 +3,8 @@ function [TF] = isrepeated(id, fatherid)
 %   return a logical scalar
 
 if nargin < 2,  fatherid = ones(1:length(id));   end
-validateattributes(id,{'double'},{'integer','vector'});
-validateattributes(fatherid,{'double'},{'integer','vector'});
+validateattributes(id,{'numeric'},{'integer','vector'});
+validateattributes(fatherid,{'numeric'},{'integer','vector'});
 
 TF = false;
 % 重构id数组 按照fatherid相同的为一个数组

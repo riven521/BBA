@@ -53,7 +53,7 @@ if ~ismember('LWH_V', T.Properties.VariableNames)
 
 ISplotShowType = plotColor;
 if ISplotShowType == 1
-    tmpT = unique(T(:,{'LID'})); %LID/ID/isNonMixed/isMixTile/isShuaiWei
+    tmpT = unique(T(:,{'LID'})); 
 elseif ISplotShowType == 2
     tmpT = unique(T(:,{'PID'}));
 elseif ISplotShowType == 3
@@ -75,10 +75,14 @@ T = join(T,tmpT);
 
 %% 图1：作图LU,按给定LU顺序
 if plotLU
+    
     figure('name',strjoin({figname,'LU展示：入ITEM时的排序后，合计*个',num2str(height(T))}));
-    if plotLU==1, subT = T(1:end,:); end                %LU进入顺序
-    if plotLU==2, subT = sortrows(T,'Index'); end  %LU进入顺序
-    if plotLU==3, subT = sortrows(T,'order'); end  %LU排序后顺序
+    
+    if plotLU==1, subT = T(1:end,:); end                          % LU目前顺序
+    if plotLU==2, subT = sortrows(T,'Index'); end           % LU的BBA输入顺序
+    
+    if plotLU==3, subT = T(T.order,:); end                       %LU排序后顺序  %     if plotLU==3, subT = sortrows(T,'order'); end      %LU排序后顺序
+    
     % 5555 构建LU的坐标系Coord X坐标依据LU的宽度L移动 Y为0 Z为LU高度
     XYZ = zeros(height(subT),3);                
     XYZ(:,1) = cumsum(subT.LWH(:,1));

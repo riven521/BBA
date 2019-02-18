@@ -10,7 +10,10 @@ addpath('./fun');
 addpath('./test'); 
 addpath('./utility'); 
 
+warning('off');
 runtests('testBBAMain_MixedGap.m') 
+
+% runtests('testBBAMain.m') 
 
 %%
 

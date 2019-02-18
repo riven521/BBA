@@ -11,6 +11,7 @@ nLU= size(LU.LWH,2); %具体使用的LU的数量
 % 新增变量初始化
 Item.Item_Bin=zeros(2,nItem);
 Item.CoordItemBin=zeros(2,nItem);
+
 LU.LU_Bin=zeros(2,nLU);
 LU.CoordLUBin=zeros(2,nLU); % LU.LU_Strip=zeros(2,nLU); %% NOTE: 在plot3DBPP时 出错, 发现此处赋值无用, so 删除该语句
 [LU.leftA,LU.bottomA,LU.rightA,LU.topA] = deal(zeros(1,nLU));

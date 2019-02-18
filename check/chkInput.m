@@ -31,8 +31,8 @@ nLU = length(LU.Weight);
 %% *************** 1 Lu和Veh的综合判断：确保为数值型矩阵 ***************
 % 1: 均必须为非负/二维数组，包括标量、向量、矩阵和空数组的double型数组
 try
-    structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), LU, 'UniformOutput', false);
-    structfun(@(x) validateattributes(x,{'double'},{'nonnegative','2d'}), Veh, 'UniformOutput', false);
+    structfun(@(x) validateattributes(x,{'numeric'},{'nonnegative','2d'}), LU, 'UniformOutput', false);
+    structfun(@(x) validateattributes(x,{'numeric'},{'nonnegative','2d'}), Veh, 'UniformOutput', false);
 catch
     fLU = structfun(@(x) any( x(:) < 0), LU, 'UniformOutput', false);
     fVeh = structfun(@(x) any( x(:) < 0), LU, 'UniformOutput', false);
@@ -50,7 +50,7 @@ for idx = 1:length(fields)
         % 向量判定
         if ~strcmp('LWH',fields{idx}) % && ~strcmp('buff',fields{idx}) 目前没有buff变量
             if ~isrow(aField),  Veh.(fields{idx}) = aField';     end %如果车辆数据非行向量,修改
-            validateattributes(Veh.(fields{idx}),{'double'},{'nonnegative','vector','ncols', nVeh});
+            validateattributes(Veh.(fields{idx}),{'numeric'},{'nonnegative','vector','ncols', nVeh});
         % 矩阵判定
         else
             if size(aField,1) == nVeh && size(aField,2) ~= nVeh %如果矩阵的行数==车辆数 且 列数~=车辆数
@@ -75,7 +75,7 @@ for idx = 1:length(fields)
                 
             end
             
-            validateattributes(Veh.(fields{idx}),{'double'},{'nonnegative','2d','ncols', nVeh});
+            validateattributes(Veh.(fields{idx}),{'numeric'},{'nonnegative','2d','ncols', nVeh});
             
         end
     catch    
@@ -153,7 +153,7 @@ for idx = 1:length(fields)
         % 向量判定
         if ~strcmp('LWH',fields{idx}) && ~strcmp('maxL',fields{idx}) && ~strcmp('margin',fields{idx}) %目前没有buff变量
             if ~isrow(aField),  LU.(fields{idx}) = aField';    end %如果车辆数据非行向量,修改
-            validateattributes(LU.(fields{idx}),{'double','logical'},{'nonnegative','vector','ncols', nLU});
+            validateattributes(LU.(fields{idx}),{'numeric','logical'},{'nonnegative','vector','ncols', nLU});
         % 矩阵判定
         else
             if size(aField,1) == nLU && size(aField,2) ~= nLU
@@ -184,7 +184,7 @@ for idx = 1:length(fields)
                 
             end
             
-            validateattributes(LU.(fields{idx}),{'double'},{'nonnegative','2d','ncols', nLU});
+            validateattributes(LU.(fields{idx}),{'numeric'},{'nonnegative','2d','ncols', nLU});
             
         end
     catch

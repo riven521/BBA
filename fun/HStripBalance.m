@@ -1,9 +1,10 @@
 %% 函数: Strip均衡
+ % 找到Strip不混合(即全部相同托盘ID) 且 Strip高度不平衡的(参看strip高度不平衡定义)
 function   [Strip,Item,LU,TF] = HStripBalance(Strip,Item,LU,Veh,p)
         flagBalanced = 0;
         TF = false;
         while 1
-            % 找到strip不混合的且不平衡的
+            % 找到strip不混合的且高度不平衡的(即同类型ID的LU) 
             fstrip = Strip.isMixed==0 & Strip.isHeightBalance==0;
             if ~any(fstrip) || flagBalanced==1, break; end
             idxstr = find(fstrip);

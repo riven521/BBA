@@ -1,14 +1,14 @@
 %% GET ITEM 相关属性
-% 1: Item.isHeightFull (对角线>=顶层间隙, 视为满层; Item内最大LU高度 >= 顶层间隙, 视为满层)
+% 1: Item.isHeightFull ( Item内最大LU高度 * 0.95 >= 顶层间隙, 视为满层)  computeisHeightFullItem
 % 2: Item.Layer 计算每个Item内堆垛的层数
 % 3: Item.isWeightFine 每个Item内是否满足上轻下重
 % 4: Item.isNonMixed  计算每个Item是否为不需要混拼的可能
 % 5: Item.nbItem 计算每个Item包含同LU/ID的数量
 %% 函数
 function   [Item,LU] = cpuItem(Item,LU,Veh)
-    global ISdiagItem
+
     %% 初始化
-    sz = size(Item.isRota);
+    sz = size(Item.Weight);
     % hVeh  = Veh.LWH(3,1);  % 暂时为用
 
     Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
@@ -45,57 +45,31 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 % %     end
     
     %% SECTION 1 计算ITEM的isHeightFull
-    % (对角线>=顶层间隙, 视为满层; Item内最大LU高度 >= 顶层间隙, 视为满层)
-    for iItem=1:length(Item.isHeightFull)
-        % diagItem: ITEM的对角线长度 
-        diagItem = sqrt(Item.LWH(1,iItem)^2 + Item.LWH(2,iItem)^2);
-        % maxHeightinLUofThisItem: Item内Lu的最高的高度
-        flagLU = LU.LU_Item(1,:) == iItem;
-        maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
-        % hMargin: ITEM距离车顶的间隙 ************* 1  此方法可能造成pingpuall时,产生不必要的甩尾
-        %         hMargin = hVeh - Item.LWH(3,iItem);
-        % hMargin: ITEM距离所有Item的最高值的间隙 ************* 2
-        hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
-        %                 if abs(maxHeightinLUofThisItem - hMargin ) <=60
-        %                 hMargin
-        %                 maxHeightinLUofThisItem
-        %                 end
-            % V1: 相互冲突
-                %         if ISdiagItem==1 && diagItem >= hMargin,  
-                %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
-                %         if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
-            % V2: 任一满足, 均为满层
-        if ISdiagItem==1
-            if maxHeightinLUofThisItem >= hMargin || diagItem >= hMargin, Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
-        else
-            if 0.95*maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end
-        end
-    end
+    Item.isHeightFull = computeisHeightFullItem(Item,LU);
 
     %% SECTION 2 计算ITEM的isWeightFine并进行修复
-    % ****************** 上轻下重的判断+修复 ************ 开放
-    % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
-
     % V2版 修复上轻下重——check过程就修复了
     LU  = repairItems(LU);
 
-% V1版 修复上轻下重——
-% %     Item = isWeightUpDown(Item,LU);
-% %     Item.isWeightFine
-% %     % repairItemWeight: 如果存在上轻下重的case, 进行修复
-% %     if ~all(Item.isWeightFine)
-% %         [~,order] = find(Item.isWeightFine == 0);
-% %         for iItem=1:length(order)
-% %             LU = repairItemWeight(LU,order(iItem));
-% %         end
-% %     end
-% %     
-% %     Item = isWeightUpDown(Item,LU);
-% %     Item.isWeightFine
-% %     checktLU(LU)
-% %     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
+    % V1版 修复上轻下重——
+    % ****************** 上轻下重的判断+修复 ************ 开放
+    % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
+    % %     Item = isWeightUpDown(Item,LU);
+    % %     Item.isWeightFine
+    % %     % repairItemWeight: 如果存在上轻下重的case, 进行修复
+    % %     if ~all(Item.isWeightFine)
+    % %         [~,order] = find(Item.isWeightFine == 0);
+    % %         for iItem=1:length(order)
+    % %             LU = repairItemWeight(LU,order(iItem));
+    % %         end
+    % %     end
+    % %     
+    % %     Item = isWeightUpDown(Item,LU);
+    % %     Item.isWeightFine
+    % %     checktLU(LU)
+    % %     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
 
-    %% 	
+    %% 	SECTION 3 Item.isNonMixed: and  Item.isMixedTile
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
     ItemLID = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
@@ -162,7 +136,49 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 end
 
 %% 局部函数 %%
-
+function TF = computeisHeightFullItem(Item,LU)
+    global ISdiagItem
+    
+    n = length(Item.Weight);
+    TF = deal(ones(1,n)*-1);    
+    
+    % (对角线>=顶层间隙, 视为满层; Item内最大LU高度 >= 顶层间隙, 视为满层)
+    for iItem=1:n
+        % ItemDiag : ITEM的对角线长度 
+        ItemDiag = sqrt(Item.LWH(1,iItem)^2 + Item.LWH(2,iItem)^2);
+        
+        % maxHeightinLUofThisItem: Item内Lu的最高的高度
+        flagLU = LU.LU_Item(1,:) == iItem;
+        maxHeightinLUofThisItem = max(LU.LWH(3,flagLU));
+        
+        % hMargin: ITEM距离车顶的间隙 ************* V1  此方法可能造成pingpuall时,产生不必要的甩尾
+        %         hMargin = hVeh - Item.LWH(3,iItem);
+        
+        % hMargin: 该ITEM距离所有车的所有Item堆垛的最高值的间隙(差距) ************* V2
+        hMargin = max(Item.LWH(3,:)) - Item.LWH(3,iItem);
+        
+        %                 if abs(maxHeightinLUofThisItem - hMargin ) <=60
+        %                 hMargin
+        %                 maxHeightinLUofThisItem
+        %                 end
+            % V1: 相互冲突
+                %         if ISdiagItem==1 && diagItem >= hMargin,  
+                %             Item.isHeightFull(iItem) = 1;  else Item.isHeightFull(iItem) = 0; end
+                %         if maxHeightinLUofThisItem >= hMargin,   Item.isHeightFull(iItem) = 1;  else  Item.isHeightFull(iItem) = 0; end    
+            
+        % V2: 任一满足, 均为满层
+        % 条件1: 本堆垛内最大LU高度 > 本堆垛与最高堆垛的高度差 -> 满层 || 堆垛对角线 >  本堆垛与最高堆垛的高度差
+        % 条件2: 本堆垛内最大LU高度*0.95 > 本堆垛与最高堆垛的高度差 %参数为2
+        if ISdiagItem==1
+            if maxHeightinLUofThisItem >= hMargin || ItemDiag >= hMargin, TF(iItem) = 1;  else  TF(iItem) = 0; end
+        else
+            if 0.95*maxHeightinLUofThisItem >= hMargin,   TF(iItem) = 1;  else  TF(iItem) = 0; end
+        end
+        
+    end
+    
+end
+    
 %% 函数1 : isWeightFine: 判断LU是否上轻下重构成
 %% v2 repairItems
 function LU = repairItems(t)  % t必定是托盘类型的table或struct
@@ -199,7 +215,8 @@ for iItem = 1:length(uniItemID) %对ITEM进行循环
     if any(strcmp('Y', t.Properties.VariableNames))
         % 如果重量不是递减或Z高度不是递增
         if ~issorted(v.Z,'ascend') || ~issorted(v.Weight,'descend')
-            issorted(v.Z,'ascend');  issorted(v.Weight,'descend');
+            issorted(v.Z,'ascend')  
+            issorted(v.Weight,'descend')
             error('相同ITEM,但重量不是递减或Z高度不是递增'); end
         else
         if ~issorted(v.Weight,'descend')
@@ -212,6 +229,19 @@ for iItem = 1:length(uniItemID) %对ITEM进行循环
     end
 end
 LU = t;
+
+% 删除初始化获取的列
+if any(strcmp('ITEMID', LU.Properties.VariableNames))
+        LU.ITEMID = []; end
+if any(strcmp('ITEMSEQ', LU.Properties.VariableNames))
+        LU.ITEMSEQ = []; end
+    if any(strcmp('X', LU.Properties.VariableNames))
+        LU.X = []; end
+    if any(strcmp('Y', LU.Properties.VariableNames))
+        LU.Y = []; end
+    if any(strcmp('Z', LU.Properties.VariableNames))
+        LU.Z = []; end
+    
 if istable(LU)
     LU = table2struct(LU,'ToScalar',true);
     LU = (structfun(@(x) x',LU,'UniformOutput',false));

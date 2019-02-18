@@ -571,8 +571,17 @@ V190213 V1
 %% 重构BBA代码 2
 V190213 V2
 1：testMain增加各种类型的核心算法测试算例及展示DEMO todo 完善
-2：输出每步，若有使用核心算法，fprintf，若重要展示plot； todo 结合文档
-3：
+2：输出每步，若有使用核心算法，fprintf，
+
+%% 重构BBA代码 1
+V190214 V1
+1：完善plotSolutionT：各种展示plot； todo 完善文档，example等
+2：增加TF标记
+
+V190215 V1
+1：验证由double改为numerical型
+2：重构cpuStrip和cpuItem函数
+
 
 
 TODO
