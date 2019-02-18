@@ -11,19 +11,19 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
     sz = size(Item.Weight);
     % hVeh  = Veh.LWH(3,1);  % 暂时为用
 
-    Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)
-%     Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1) 修改为直接修复每个Item
+    Item.isHeightFull = zeros(sz);    %Item的是否高度满层(初始为0)  %  Item.isWeightFine = ones(sz)*-1;    %Item的是否上轻下重(初始为-1) 修改为直接修复每个Item
     Item.isNonMixed = ones(sz)*-1;    %1:ITEM可以完美放到所有strip,无需和其它ITEM混合; 0: 有必要混合; 将偶数个的Item提前进行Strip生成
     Item.isMixedTile = zeros(sz);          % 0:当isNonMixed=1,全部为0;当isNonMixed=0时,部分余下必须混的尾垛ITEM赋值值为1. 
-
+    Item.nbItem = zeros(sz);  
+    
     %% V2 SECTION 0 计算ITEM的PID,LID,SID,由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
     % 由混合的LU.DOC计算ITEM内包含的PID,LID,SID等数据 1808新增 计算Item.PID,LID,SID等使用
     t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
     
     nItem = size(Item.LWH,2);
     for iItem=1:nItem
-        f = t.LU_Item(:,1) == iItem;     %  f = logical(ones(height(t),1))
-        Item.LID(:,iItem) = {unique(t.ID(f))};           % NOTE: ITEM里的LID是LU的ID
+        f = t.LU_Item(:,1) == iItem;                          %  f = logical(ones(height(t),1))
+        Item.LID(:,iItem) = {unique(t.ID(f))};             % NOTE: ITEM里的LID是LU的ID
         %         Item.LID(:,iItem) = {unique(t.LID(f))};
         Item.SID(:,iItem) = {unique(t.SID(f))};
         Item.EID(:,iItem) = {unique(t.EID(f))};
@@ -49,26 +49,10 @@ function   [Item,LU] = cpuItem(Item,LU,Veh)
 
     %% SECTION 2 计算ITEM的isWeightFine并进行修复
     % V2版 修复上轻下重——check过程就修复了
-    LU  = repairItems(LU);
-
-    % V1版 修复上轻下重——
-    % ****************** 上轻下重的判断+修复 ************ 开放
-    % isWeightUpDown: ITEM增加判断是否上轻下重的判断Item.isWeightFine
-    % %     Item = isWeightUpDown(Item,LU);
-    % %     Item.isWeightFine
-    % %     % repairItemWeight: 如果存在上轻下重的case, 进行修复
-    % %     if ~all(Item.isWeightFine)
-    % %         [~,order] = find(Item.isWeightFine == 0);
-    % %         for iItem=1:length(order)
-    % %             LU = repairItemWeight(LU,order(iItem));
-    % %         end
-    % %     end
-    % %     
-    % %     Item = isWeightUpDown(Item,LU);
-    % %     Item.isWeightFine
-    % %     checktLU(LU)
-    % %     if ~all(Item.isWeightFine),   error('仍有上轻下重casse, 错误'); end
-
+    LU.LU_Item(2,:)= repairItems(LU);    
+    % 是否仍旧上轻下重
+    chktLU(LU)
+    
     %% 	SECTION 3 Item.isNonMixed: and  Item.isMixedTile
     % ****************** Iten内是否为不需要混拼计算 ************ 开放
     % GET Item.isNonMixed: 计算每个Item是否为不需要混拼的可能
@@ -180,96 +164,122 @@ function TF = computeisHeightFullItem(Item,LU)
 end
     
 %% 函数1 : isWeightFine: 判断LU是否上轻下重构成
-%% v2 repairItems
-function LU = repairItems(t)  % t必定是托盘类型的table或struct
-% 0 结构体转换为table 预处理
-if isstruct(t)
-    t = struct2table(structfun(@(x) x', t,'UniformOutput',false));  end
-
-% 1.1 初步核查LU_Item 如不存在获取子ITEMID 
-if any(strcmp('LU_Item', t.Properties.VariableNames))
-        t.ITEMID = t.LU_Item(:,1);
-        t.ITEMSEQ = t.LU_Item(:,2); end
-
-if any(strcmp('CoordLUBin', t.Properties.VariableNames))
-    t.X = t.CoordLUBin(:,1);    t.Y = t.CoordLUBin(:,2);   t.Z = t.CoordLUBin(:,3);   end
+% v3 repairItems
+function ITEMSEQ = repairItems(LU)  % t必定是托盘类型的table或struct
     
-%% 2 相同ITEMID下的CHEK
-uniItemID = unique(t.ITEMID(:));
-% 2.1 如果坐标CoordLUBin存在,用坐标系判断与ITEMID的差异(1:XY值(坐标是否相同); 2:重量和Z值)
-for iItem = 1:length(uniItemID) %对ITEM进行循环
-    flagIdx = t.ITEMID==uniItemID(iItem); %对单一ItemId去逻辑值;
-    if any(strcmp('Y', t.Properties.VariableNames))
-        vX = t{flagIdx,'X'};
-        vY = t{flagIdx,'Y'};
-        if any(vX ~= vX(1)) || any(vY ~= vY(1))
-            error('相同ITEM,但X或Y坐标错位'); end
-        
-        v = t(flagIdx,{'Z','Weight','ITEMSEQ'});
-    else
-        v = t(flagIdx,{'Weight','ITEMSEQ'});
+T = getTableLU(LU);
+
+uniItemID = unique(T.ITEMID(:));
+for iItem = 1:length(uniItemID)         %对ITEM进行循环
+    
+    flagLUIdx = T.ITEMID==uniItemID(iItem); %对单一ItemId去逻辑值;
+    
+    subT = T(flagLUIdx,{'Weight','ITEMSEQ'});
+    
+    if isUpDownWeight(subT) 
+        T.ITEMSEQ(flagLUIdx) = repairItemWeight(T,flagLUIdx); % 调整t的LU_Item
+        ITEMSEQ = T.ITEMSEQ';
     end
     
-    v = sortrows(v,'ITEMSEQ');
-    
-    if any(strcmp('Y', t.Properties.VariableNames))
-        % 如果重量不是递减或Z高度不是递增
-        if ~issorted(v.Z,'ascend') || ~issorted(v.Weight,'descend')
-            issorted(v.Z,'ascend')  
-            issorted(v.Weight,'descend')
-            error('相同ITEM,但重量不是递减或Z高度不是递增'); end
-        else
-        if ~issorted(v.Weight,'descend')
-                                                            %             uniItemID(iItem)
-                                                            %             v
-            t = repairItemWeight(t,uniItemID(iItem)); % 调整t的LU_Item
-                                                            %             v = t(flagIdx,{'Weight','LU_Item'});
-                                                            %             v = sortrows(v,'LU_Item');
-        end
-    end
-end
-LU = t;
-
-% 删除初始化获取的列
-if any(strcmp('ITEMID', LU.Properties.VariableNames))
-        LU.ITEMID = []; end
-if any(strcmp('ITEMSEQ', LU.Properties.VariableNames))
-        LU.ITEMSEQ = []; end
-    if any(strcmp('X', LU.Properties.VariableNames))
-        LU.X = []; end
-    if any(strcmp('Y', LU.Properties.VariableNames))
-        LU.Y = []; end
-    if any(strcmp('Z', LU.Properties.VariableNames))
-        LU.Z = []; end
-    
-if istable(LU)
-    LU = table2struct(LU,'ToScalar',true);
-    LU = (structfun(@(x) x',LU,'UniformOutput',false));
 end
 
+% LU = getSturctT(T); %可用不返回结构体LU
 end
 
+
+%% v2
+% % function LU = repairItems(t)  % t必定是托盘类型的table或struct
+% %     chktLU(t)
+% % % % 0 结构体转换为table 预处理
+% % T = getTableLU(t)
+% % T.Properties.VariableNames
+% %    t=T
+% % 
+% % %% 2 相同ITEMID下的CHEK
+% % 
+% % uniItemID = unique(t.ITEMID(:));
+% % % 2.1 如果坐标CoordLUBin存在,用坐标系判断与ITEMID的差异(1:XY值(坐标是否相同); 2:重量和Z值)
+% % for iItem = 1:length(uniItemID) %对ITEM进行循环
+% %     flagIdx = t.ITEMID==uniItemID(iItem); %对单一ItemId去逻辑值;
+% %     if any(strcmp('Y', t.Properties.VariableNames))
+% %         vX = t{flagIdx,'X'};
+% %         vY = t{flagIdx,'Y'};
+% %         if any(vX ~= vX(1)) || any(vY ~= vY(1))
+% %             error('相同ITEM,但X或Y坐标错位'); end
+% %         
+% %         v = t(flagIdx,{'Z','Weight','ITEMSEQ'});
+% %     else
+% %         v = t(flagIdx,{'Weight','ITEMSEQ'});
+% %     end
+% %     
+% %     v = sortrows(v,'ITEMSEQ');
+% %     
+% %     if any(strcmp('Y', t.Properties.VariableNames))
+% %         % 如果重量不是递减或Z高度不是递增
+% %         if ~issorted(v.Z,'ascend') || ~issorted(v.Weight,'descend')
+% %             issorted(v.Z,'ascend')  
+% %             issorted(v.Weight,'descend')
+% %             error('相同ITEM,但重量不是递减或Z高度不是递增'); end
+% %         else
+% %         if ~issorted(v.Weight,'descend')
+% %                                                             %             uniItemID(iItem)
+% %                                                             %             v
+% %             t = repairItemWeight(t,uniItemID(iItem)); % 调整t的LU_Item
+% %                                                             %             v = t(flagIdx,{'Weight','LU_Item'});
+% %                                                             %             v = sortrows(v,'LU_Item');
+% %         end
+% %     end
+% % end
+% % LU = t;
+% % 
+% % % 删除初始化获取的列
+% % if any(strcmp('ITEMID', LU.Properties.VariableNames))
+% %         LU.ITEMID = []; end
+% % if any(strcmp('ITEMSEQ', LU.Properties.VariableNames))
+% %         LU.ITEMSEQ = []; end
+% %     if any(strcmp('X', LU.Properties.VariableNames))
+% %         LU.X = []; end
+% %     if any(strcmp('Y', LU.Properties.VariableNames))
+% %         LU.Y = []; end
+% %     if any(strcmp('Z', LU.Properties.VariableNames))
+% %         LU.Z = []; end
+% %     
+% % if istable(LU)
+% %     LU = table2struct(LU,'ToScalar',true);
+% %     LU = (structfun(@(x) x',LU,'UniformOutput',false));
+% % end
+% % 
+% % end
 %% 函数2 : repairItemWeight: LU如不是上轻下重,进行修复
-% V2: 仅仅修改LU.LU_Item的第二行的值 LU.LU_Item(2,flagLU)
-function LU = repairItemWeight(oLU,itemIdx)
-if istable(oLU)
-    LU = table2struct(oLU,'ToScalar',true);
-    LU = (structfun(@(x) x',LU,'UniformOutput',false));
-else
-    LU = oLU;
+% V3: 不用struct还是用table修改 仅仅修改LU.LU_Item的第二行的值 LU.LU_Item(2,flagLU)
+function b = repairItemWeight(T,flagLUIdx)
+    tmpWeight=T.Weight(flagLUIdx);
+    [~,b] = sort(tmpWeight,'descend');
+    [~,b] = sort(b);
+    T.ITEMSEQ(flagLUIdx) = b;
 end
 
-flagLU = (LU.LU_Item(1,:)==itemIdx);   %找出本item对应的lu的index
-tmpWeight=LU.Weight(:,flagLU);
-[~,b] = sort(tmpWeight,'descend');
-[~,b] = sort(b);
-
-LU.LU_Item(2,flagLU) = b;
-
-if istable(oLU) %返回的也要是table
-    LU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
-end
-end
+% % %% 函数2 : repairItemWeight: LU如不是上轻下重,进行修复
+% % % V2: 仅仅修改LU.LU_Item的第二行的值 LU.LU_Item(2,flagLU)
+% % function LU = repairItemWeight(oLU,itemIdx)
+% %     if istable(oLU)
+% %         LU = table2struct(oLU,'ToScalar',true);
+% %         LU = (structfun(@(x) x',LU,'UniformOutput',false));
+% %     else
+% %         LU = oLU;
+% %     end
+% % 
+% %     flagLU = (LU.LU_Item(1,:)==itemIdx);   %找出本item对应的lu的index
+% %     tmpWeight=LU.Weight(:,flagLU);
+% %     [~,b] = sort(tmpWeight,'descend');
+% %     [~,b] = sort(b);
+% % 
+% %     LU.LU_Item(2,flagLU) = b;
+% % 
+% %     if istable(oLU) %返回的也要是table
+% %         LU = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
+% %     end
+% % end
 
 
 %% V1版 isWeightUpDown 无法找全所有上轻下重的case
