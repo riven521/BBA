@@ -634,25 +634,27 @@ V190219 V5 修改量大车头操作（重新对条带分车）
 1：Hstrip2bin：每次nextfit到新bin，重新对sStrip啊脾虚。不可用，暂时恢复原状，采用strip2binagain函数。
 
 
-
-
 TODO
-1 量大车头顺序
-2 不均衡与车辆高度满层？关系？
+1 DEMO-DOCUMENT-FLOWCHART （重难点函数及位置）
+2 TEST MR 
+3 修改量大车头？
+4 高度不均衡且高度满层（增加仅在单层的判定）？
 
-LU排序是否必须？ 特别是：LU考虑isNonMixed是否必须？（意义不大） 
 
-删除该排序后，意义何在（排序简化，不考虑isNonMixed）
+Q：
+1 LU排序是否必须？ 特别是：LU考虑isNonMixed是否必须？（意义不大，已删除） 
 
-LU层数限制 堆垛对于初步非甩尾 是否必须？ 增加TTT  层数意义大的。
+2 删除该排序后，意义何在（排序简化，不考虑isNonMixed）
 
-Next Fit 改为 其它Fit？ 仍然next fit
+3 LU层数限制 高低不同的托盘修改均为低托盘对应的最大层数
 
-LU的isNonMixed是如何计算的？ 不用关
+4 Lu2item和item2strip：均为Next Fit 改为 其它Fit？ 仍然next fit
 
-Stripbalance的规则？？ 可以不要
+5 LU的isNonMixed是如何计算的？ 不用管 已删除
 
-甩尾平铺和前面的关系？ 要调整，确保strip均衡此处解决(重点解决甩尾均衡问题)
+6 Stripbalance的规则？？ 已删除 甩尾产生
+
+7 甩尾平铺和前面的关系？ 要调整，确保strip均衡此处解决(重点解决甩尾均衡问题)
 
 
 

@@ -85,12 +85,12 @@ function [LU,Veh] = cpuVehLU(LU,Veh)
     if ~isfield(LU, 'maxHLayer') % 如不存在,直接以maxL指示; 如存在,以最小值取代
         LU.maxHLayer = LU.maxL(3,:); 
         
-        % 对于相同ID,高度不同高度LU,设置其maxHLayer为最大值
+        % 对于相同ID,高度不同高度LU,设置其maxHLayer为最大值 5555
         for i=1:length(LU.ID)
             idx = ismember(LU.ID, LU.ID(i) );
-            LU.maxHLayer(idx)
+%             LU.maxHLayer(idx)
             LU.maxHLayer(idx) = max(LU.maxHLayer(idx));
-            LU.maxHLayer(idx)
+%             LU.maxHLayer(idx)
         end
         
     else

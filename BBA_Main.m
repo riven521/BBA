@@ -30,6 +30,31 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 % rng('default');rng(1); % NOTE ÊÇ·ñËæ»úµÄ±êÖ¾
 close all;
 
+% È«¾Ö±äÁ¿0£º ×÷Í¼¿ª¹Ø
+% ISplotBBA£º ÊÇ·ñ×îºó¶ÔT×÷Í¼µÄ×Ü¿ª¹Ø£»  ISplotShowGapAdjust: ÊÇ·ñÏÔÊ¾gap¼äÏ¶µ÷Õû¹ı³ÌÍ¼
+% ISplotEachPingPuAll/ISplotEachPingPuShuaiWei£ºÕû³µÆ½ÆÌºÍË¦Î²Æ½ÆÌºó»­¶Ô±ÈÍ¼ 
+global ISplotBBA ISplotShowGapAdjust ISplotEachPingPuShuaiWei ISplotEachPingPuAll    
+
+ISplotBBA = 1;      % ÊÇ·ñÏÔÊ¾LU/Strip/BinµÄ½á¹û£¨¾ùÒÑÅÅĞò£©
+ISplotEachPingPuShuaiWei = 1;  % Ã¿´ÎË¦Î²Æ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
+ISplotEachPingPuAll = 1;             % Ã¿´ÎÕû³µÆ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
+ISplotShowGapAdjust = 0;         % ÊÇ·ñÏÔÊ¾Gapµ÷Õû¹ı³Ì
+
+% RunAlgorithmµÄplot¿ª¹Ø
+% ISplotshuaiwei: ÊÇ·ñÏÔÊ¾Ë¦Î²¶Ô±ÈÍ¼£»ISplotStripToBinAgain£ºÊÇ·ñÏÔÊ¾³µÍ·ÓÅÏÈ¶Ô±ÈÍ¼£»ISplotRunAlgo:ÊÇ·ñÏÔÊ¾RunAlgo¹ı³ÌÍ¼
+ global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotRunAlgo ISplotRunLIS
+ 
+ ISplotRunAlgo = 1;
+ 
+ ISplotRunLIS = 1;
+ ISplotshuaiwei = 1;
+ ISplotStripToBinAgain = 1;
+ 
+ % ISplotPause: plotSolutionT µÈÔİÍ£Ê±¼ä 0²»ÔİÍ£ ISplotShowType£º»ùÓÚÄ³ÖÖÀàĞÍÇø·ÖÑÕÉ«
+global ISplotPause ISplotShowType
+ISplotPause = 0.0;  %-0.05 % plot¼ä¸ôÊ±¼ä
+ISplotShowType = 1; % 1 LID 2 PID 3 ID ×÷Í¼µÄÑÕÉ«±ê¼ÇÑ¡Ïî 4 SID 5EID
+
 
 % È«¾Ö±äÁ¿1£º °æ±¾¿ØÖÆ
 % verMilkRun£º1 milkrun°æ±¾£¨°üº¬¶àÒ»¸öEIDÊäÈë£© 0 ·Çmilkrun£»
@@ -41,6 +66,8 @@ if nargin > 1 && length(varargin) < 9 %'LUEID',varargin{9});
 elseif nargin > 1
     verMilkRun = 1;  % 9¸öÊäÈë²ÎÊıÎªmilkrun°æ±¾
 end
+
+% *********  ¹¦ÄÜ¿ª¹Ø ******* Ä¬ÈÏ²»¶¯
 
 % È«¾Ö±äÁ¿2£º Æ½ÆÌ¿ª¹Ø
 %   ISpingpu : ÊÇ·ñË¦Î²Æ½ÆÌ ISpingpuall£ºÊÇ·ñÕû³µÆ½ÆÌ ISpingpuShuaiWei£ºÊÇ·ñË¦Î²Æ½ÆÌ ¶şÑ¡Ò» 
@@ -56,53 +83,24 @@ else
     ISpingpuShuaiWei = 1; % 555: Ë¦Î²Æ½ÆÌ
 end
 
-% È«¾Ö±äÁ¿3£º »ì×°¼äÏ¶¿ª¹Ø
+% È«¾Ö±äÁ¿3£º »ì×°¼äÏ¶¿ª¹Ø ±ØĞë¿ª×Å¶¼
 %   parGap £º ÊÇ·ñÔÊĞí¼äÏ¶µ÷Õû£¨½öÔÚË¦Î²Æ½ÆÌ»òÕû³µÆ½ÆÌ³É¹¦µÄ³µÄÚ½øĞĞ£©£»parMulipleGap£ºÊÇ·ñÔÚ¼äÏ¶µ÷Õû¹ı³ÌÖĞÔÊĞí¶à´Îµ÷Õû£¨±ØĞëÓĞ£©
 global  parGap parMulipleGap
 parGap = 1;  % ÊÇ·ñÔÊĞíÖ÷º¯ÊıµÄ¼äÏ¶µ÷Õû
 parMulipleGap = 1; % ±ØĞëÎª1£¬³ı·Ç²»ÏëÈÃÆäÊ¹ÓÃ ÊÇ·ñÔÊĞí¼äÏ¶µİ¹é¶à´Îµ÷Õû
 
-
-% * to add*
-
-% È«¾Ö±äÁ¿6£º ¸Ä±ä³µĞÍ¿ª¹Ø
-% ISlastVehType£º½«×îºó²»ÂúµÄÒ»³µ¸ÄÎª¸üĞ¡µÄ³µĞÍ
-global ISlastVehType
-ISlastVehType = 0;   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
-
-% È«¾Ö±äÁ¿7£º ×÷Í¼¿ª¹Ø
-% ISplotBBA£º ÊÇ·ñ×îºó¶ÔT×÷Í¼µÄ×Ü¿ª¹Ø£»  ISplotShowGapAdjust: ÊÇ·ñÏÔÊ¾gap¼äÏ¶µ÷Õû¹ı³ÌÍ¼
-% ISplotEachPingPuAll/ISplotEachPingPuShuaiWei£ºÕû³µÆ½ÆÌºÍË¦Î²Æ½ÆÌºó»­¶Ô±ÈÍ¼ 
-global ISplotBBA ISplotShowGapAdjust ISplotEachPingPuShuaiWei ISplotEachPingPuAll    
-ISplotBBA = 1; % ÊÇ·ñÏÔÊ¾LU/Strip/BinµÄ½á¹û£¨¾ùÒÑÅÅĞò£©
-ISplotEachPingPuShuaiWei = 1;  % Ã¿´ÎË¦Î²Æ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
-ISplotEachPingPuAll = 1;             % Ã¿´ÎÕû³µÆ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
-ISplotShowGapAdjust = 0;         % ÊÇ·ñÏÔÊ¾Gapµ÷Õû¹ı³Ì
-% RunAlgorithmµÄplot¿ª¹Ø
-% ISplotshuaiwei: ÊÇ·ñÏÔÊ¾Ë¦Î²¶Ô±ÈÍ¼£»ISplotStripToBinAgain£ºÊÇ·ñÏÔÊ¾³µÍ·ÓÅÏÈ¶Ô±ÈÍ¼£»ISplotRunAlgo:ÊÇ·ñÏÔÊ¾RunAlgo¹ı³ÌÍ¼
- global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotRunAlgo
- ISplotRunAlgo = 1;
- ISplotshuaiwei = 1;
- ISplotStripToBinAgain = 1;
- % ISplotPause: plotSolutionT µÈÔİÍ£Ê±¼ä 0²»ÔİÍ£ ISplotShowType£º»ùÓÚÄ³ÖÖÀàĞÍÇø·ÖÑÕÉ«
-global ISplotPause ISplotShowType
-ISplotPause = 0.0;  %-0.05 % plot¼ä¸ôÊ±¼ä
-ISplotShowType = 3; % 1 LID 2 PID 3 ID ×÷Í¼µÄÑÕÉ«±ê¼ÇÑ¡Ïî 4 SID 5EID
-     
-% RunAlgorithmÖĞ
-% global   ISplotStrip  % plotStrip
-% ISplotStrip = 0;             % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û ¿´Ï¸½Ú ºóÆÚÌæ»»ÎªplotSolutionT
-
-% * to modify*
-% ÏÂÃæ»¹²»ÍêÕû, ¿ÉÄÜÒªµ÷ Ä¿Ç°È«²¿Îª1
-
-
-global ISshuaiwei  ISreStripToBin    % RunAlgorithmÖĞ
-% ¿ª¹Ø + Gpreproc µÄV2°æ±¾ ĞŞ¸´ÒµÎñ3ÎÊÌâ(¼´ITEM·ÇÂú¶âÇÒÒ»²ãµÄ¾ùºâÎÊÌâ)
-
+% È«¾Ö±äÁ¿3£º Ë¦Î²¿ª¹Ø Á¿´ó³µÍ·¿ª¹Ø ±ØĞë¿ª×Å¶¼
+global ISshuaiwei  ISreStripToBin    % RunAlgorithmÖĞ  % ¿ª¹Ø + Gpreproc µÄV2°æ±¾ ĞŞ¸´ÒµÎñ3ÎÊÌâ(¼´ITEM·ÇÂú¶âÇÒÒ»²ãµÄ¾ùºâÎÊÌâ)
 ISreStripToBin = 1;   % ³µÍ·ÓÅÏÈLUÊıÁ¿ÅÅĞò²ÎÊı Ä¬ÈÏÎª1 ±ØĞë
 ISshuaiwei = 1;         % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊıĞèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Ë¦Î²Æ½ÆÌÎŞ·¨½øĞĞ*******
 
+% È«¾Ö±äÁ¿4£º ¸Ä±ä³µĞÍ¿ª¹Ø
+% ISlastVehType£º½«×îºó²»ÂúµÄÒ»³µ¸ÄÎª¸üĞ¡µÄ³µĞÍ
+global ISlastVehType
+ISlastVehType = 0;   % 555: ×îºóÒ»³µµÄµ÷Õû, ÓëÆäËüÎŞ¹Ø, Ôİ²»¿¼ÂÇ
+     
+
+% *********  Ï¸Î¢²ÎÊı¹¦ÄÜ¿ª¹Ø ******* Ä¬ÈÏ²»¶¯
 global ISdiagItem       %cpuItemÖĞ ÅĞ¶¨ItemÊÇ·ñisHeightFull¸ß¶ÈÂú²ã£¬Èô1£ºÒÀ¾İ¶Ô½ÇÏßÅĞ¶¨
 ISdiagItem = 0;          % Ä¬ÈÏÎª 0 °É Îª1 ×ÜÓĞĞ©¹ıÓÚµÍµÄ±»ÈÏÎªItem¸ß¶ÈÂú²ã, checkÔ­Òò°É
 
@@ -132,6 +130,11 @@ parBalance = 8/30;     % ×î¸ßµÄItemµÄ1/3£¬Èô¸ßÓÚ×î¸ß¶Ñ¶âItemµÄ1/3£»8/30£¬¼´Îª¸ß¶
 % global ISstripbalance  ISplotstripbalance
 % ISstripbalance = 1;     % µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø 555£ºÓĞÁËÍ¼ĞÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊı²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊıµİ¼õ; ÈçÎŞ·¨£© % ISstripbalance =0;  %¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
 %  ISplotstripbalance = 1;  
+
+% RunAlgorithmÖĞ
+% global   ISplotStrip  % plotStrip
+% ISplotStrip = 0;             % Ã¿´ÎRun algorithm Éú³ÉStrip¾ÍÏÔÊ¾½á¹û ¿´Ï¸½Ú ºóÆÚÌæ»»ÎªplotSolutionT
+
 
 %% Initialize Parameter Variable
 nAlg = 1;
@@ -174,12 +177,15 @@ structfun(@(x) validateattributes(x,{'numeric'},{'nonnegative','2d'}), d.Veh, 'U
 fprintf(1,'\nRunging Checking and preprocessing Input Data ...\n');
 
 d = chkInput(d);
+
 if ~isSameCol(d.LU) || ~isSameCol(d.Veh)
     error('LU»òVehµÄÁĞÊı²»Í¬');
 end
 
 %% 3£º¶ÔĞÂÔöºó½«½øĞĞÔËËãµÄÊı¾İ½øĞĞcheck Gpreproc=cpuLUVeh dÊÇĞèÒª±£ÁôµÄ
+
 [d.LU,d.Veh] = cpuVehLU(d.LU,d.Veh);
+
 d = chkInput(d);
 
 % ************* ±£ÁôÊäÈëÇÒ´¦Àí¹ıºóµÄÊı¾İ ***********
@@ -191,22 +197,7 @@ end
 if verMilkRun == 1 && (isscalar(unique(d.LU.SID)) && isscalar(unique(d.LU.EID)))
     error('Ä¿Ç°ÎªMilkRun°æ±¾,²»ÔÊĞíÖ»ÓĞµ¥¸ö¹©Ó¦ÉÌ±àºÅ/µ¥¸öEP LOCATION±àºÅ');
 end            % if verMilkRun == 1 && (~isscalar(unique(d.LU.SID)) && ~isscalar(unique(d.LU.EID))),  error('Ä¿Ç°ÎªMilkRun²âÊÔ°æ±¾,Ö»ÔÊĞí¶à¸ö¹©Ó¦ÉÌ±àºÅ »ò ¶à¸öEP LOCATION±àºÅ,²»ÄÜÍ¬Ê±´æÔÚ');  end
-%% Ã»ÓĞÊôĞÔµÄÁÙÊ±Ôö¼Ó - CAN DEL
-%     n = numel(d.LU.Weight);
-
-%     if ~isfield(d.LU, 'Index') %% ¸ø¸ö³õÊ¼½øÈëË³Ğò ÔİÊ±Ã»ÓĞÓÃ µÈÍ¬ÁõÇ¿ËùĞèindex²ÎÊı
-%         error('No index of LU');  %d.LU.Index = 1:n;
-%     end
-    
-%     % Æ½ÆÌÊ¹ÓÃÊôĞÔ
-%     if ~isfield(d.LU, 'maxL')
-%         d.LU.maxL(1,:) =  floor(d.Veh.LWH(1,1)./d.LU.LWH(1,:));
-%         d.LU.maxL(2,:) =  floor(d.Veh.LWH(2,1)./d.LU.LWH(2,:));
-%         d.LU.maxL(3,:) =  floor(d.Veh.LWH(3,1)./d.LU.LWH(3,:));   %¾ßÌåÃ¿¸öÍĞÅÌLUµÄ¸ß¶ÈµÄ×î´ó²ãÊı
-%     end
-    
-%     if ~isfield(d.LU, 'maxHLayer'),     d.LU.maxHLayer = d.LU.maxL(3,:); end% maximum given height layer
-                     
+      
 %% Simulate - All ALGORITHM
 
 for iAlg = 1:nAlg
@@ -215,36 +206,33 @@ for iAlg = 1:nAlg
     
     % 1.1 ĞŞ¶©LUµÄLWHÊı¾İ °üº¬margin ¿¼ÂÇRotaed
     d = maind;
-    %fprintf(1,'   Running setLULWHwithbuff...\n');
+    
     [d.LU] = setLULWHwithbuff(d.LU, d.Veh);
 
     % 1.2 Ö÷º¯ÊıRunAlgorithm
     do = RunAlgorithm(d,pA(iAlg));   %»ñÈ¡½â½á¹¹Ìådo ( ÊäÈëd£º¹Ì¶¨LU·½ÏòºÍ¹Ì¶¨LU´óĞ¡ºÍ¹Ì¶¨marginµÄLWH£©   % ¿ÉÉ¾ - ÒÑÔÚRunAlgorithmÖĞÉùÃ÷ do.LU.LU_VehType = ones(size(do.LU.ID)) * do.Veh.order(1); % Õë¶Ô³µĞÍÑ¡Ôñ,Ôö¼Ó±äÁ¿LU_VehType : ÓÉÓÚVehÄÚ²¿°´Ìå»ıµİ¼õÅÅĞò,»ñÈ¡orderµÄµÚÒ»¸ö×÷Îª×î´óÖµ
 
-    % 1.3 ĞŞ¶©LUºÍItemµÄLWH/CoordÊı¾İ É¾³ımargin
-    %fprintf(1,'   Running setLCwithoutbuff...\n');
+    % 1.3 ĞŞ¶©LUºÍItemµÄLWH/CoordÊı¾İ É¾³ımargin ±£Áôrotated
     [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
     
     % 1.4 CHECK ÊäÈëºÍÊä³öµÄLU
     chkLUnewold(d.LU,do.LU);  %ĞÂÀÏÊı¾İ¶Ô±È todo ÍêÉÆĞÂÀÏÊı¾İ¶Ô±È Ô¤·ÀËã·¨ÄÚ²¿´íÎó
-    chktLU(do.LU); %ºËÑéÊÇ·ñÊı¾İÊÇÉÏÇáÏÂÖØ£»ÊÇ·ñZ¸ß¶ÈÓëItemSEQÒ»ÖÂ£»ÊÇ·ñITEMIDÓëXY×ø±êÒ»ÖÂ; todo :ÍêÉÆ½á¹ûºË¶Ôº¯Êı
     
-%     ISmaxLayer = 0
-    
+    chktLU(do.LU); %ºËÑéLU/Item/StripÊı¾İ ÊÇ·ñÊı¾İÊÇÉÏÇáÏÂÖØ£»ÊÇ·ñZ¸ß¶ÈÓëItemSEQÒ»ÖÂ£»ÊÇ·ñITEMIDÓëXY×ø±êÒ»ÖÂ; todo :ÍêÉÆ½á¹ûºË¶Ôº¯Êı
     
     % 1.5 % dA(iAlg)=do; % ½öÔÚ¶àËã·¨°æ±¾Ê¹ÓÃ    
-              %     plotSolutionT(do.LU,do.Veh);
-              % plotSolution(do,pA(iAlg)); %¾¡Á¿²»ÓÃ
+
     ISplotRunAlgo = 0;
+    
     %% 2 ÔËĞĞ³µĞÍµ÷ÕûËã·¨,²»¸Ä±äd »ñÈ¡d1ºÍdo1, flaggetSmallVeh
-    if ISlastVehType
+    if ISlastVehType == 1
         fprintf(1,'\nRunning HBinChange with output do1 ...\n');
         [flaggetSmallVeh,do1] = HBinChange(maind,do,pA(iAlg));  
     end
 
     %% 3 ÔËĞĞ¶Ñ¶âÆ½ÆÌ£¨º¬Õı³£Æ½ÆÌºÍË¦Î²Æ½ÆÌ£©Ëã·¨,²»¸Ä±äd À´×Ômaind 
-    % »ñÈ¡ d2Array(Ë¦Î²Æ½ÆÌ£© d3Array£¨Õû³µÆ½ÆÌ£© µÄÊäÈëÊı¾İ£¬Ã¿¸öÊÇÒ»¸öbin
-    % »ñÈ¡ do2Array do3Array  µÄÊä³öÊı¾İ£¬Ã¿¸öÊÇÒ»¸öbin
+    % d2Array(Ë¦Î²Æ½ÆÌ£© d3Array£¨Õû³µÆ½ÆÌ£© µÄÊäÈëÊı¾İ£¬Ã¿¸öÊÇÒ»¸öbin
+    % »ñÈ¡ do2Array do3Array  µÄÊä³öÊı¾İ£¬Ã¿¸öÊı×éÊÇÒ»¸öbin
     % »ñÈ¡ flagTiledArray Âß¼­ÅĞ¶¨£¬1 ±¾binË¦Î²³É¹¦ 0 ²»³É¹¦
     if ISpingpu==1
         fprintf(1,'\nRunning HBinpingpu with output do2 and do3 ...\n');
@@ -310,9 +298,11 @@ end
 %% return±ØĞëµÄ²ÎÊı
 output_CoordLUBin=T.CoordLUBin';
 output_LU_LWH=T.LWH';
+
 % V2 get output_LU_Seq
 % ĞĞ1£ºÍĞÅÌËùÔÚ³µĞÍºÅ(±ØĞë»»)    ĞĞ2£ºÍĞÅÌËùÔÚ³µĞòºÅ(»á±ä,²»ÄÜ»»,»»¾Í´í) ĞĞ3£ºÍĞÅÌ³µÄÚ°²ÖÃË³Ğò(±ØĞë»») ĞĞ4£ºÍĞÅÌSID¹©Ó¦ÉÌ±àºÅ(²»»á±ä,²»ÓÃ±ä??)
 % ĞĞ5£ºÍĞÅÌIDĞÍºÅLID(²»»á±ä,²»ÓÃ±ä?) ĞĞ6£ºÍĞÅÌ¶Ñ¶âĞòºÅITEM(»á±ä,²»ÄÜ»»,»»¾Í´í,ÓÃÍ¾?) ĞĞ7£ºÍĞÅÌÁã²¿¼ş±àºÅPID(²»»á±ä,²»ÓÃ±ä?) Ôö¼ÓĞĞ8: Õ¹Ê¾Ë³Ğò(±ØĞë»»)
+
 if verMilkRun == 1 
 output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight','Index','OEID'}}'; %Ôö¼Ó·µ»ØĞĞ10: LuIndexÀ´×ÔÁõÇ¿Ö»ÒªÊÇÊı×Ö¾Í¿ÉÒÔ
 else % ´ø»ØÈ¥OPID OSID OEID µÈ ÆäÊµÓÃÍ¾Ò²²»´ó %ÓÃÍ¾´óµÄÊÇ
@@ -320,9 +310,7 @@ output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','S
 end
 % V1£º % output_LU_Seq=T{:,{'LU_VehType','BINID','BINSEQ','OSID','LID','ITEMID','OPID','ShowSEQ','Weight'}}'; % ITEMIDÒâÒå²»´ó    output_LU_Seq([2,3,5,8],:)
 
-% plot
 if ISplotBBA
-    %     plotSolutionBBA(output_CoordLUBin,output_LU_LWH,output_LU_Seq,do); 
     V = struct2table(structfun(@(x) x',do.Veh,'UniformOutput',false));%V = struct2table(structfun(@(x) x',d.Veh,'UniformOutput',false));
     plotSolutionT(T,V,0,0,0,1,3,'×îÖÕBIN'); 
 end

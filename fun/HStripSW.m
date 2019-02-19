@@ -5,8 +5,8 @@ function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
 % 3 哪些是高度不满:     
 
     tempStrip_Bin = Strip.Strip_Bin(2,:);
-    TF = false;    
-    %     TF = true;    
+%     TF = false;    
+        TF = true;    
     LUisShuaiWei = zeros(size(LU.Weight));      % 判断LU是否甩尾出来的,仅在作图时可能有用
     StripisShuaiWei = zeros(size(Strip.Weight));       % StripseqShuaiWei = zeros(size(Strip.Weight)); % seqShuaiWei越大,表明越早甩尾; 越小, 越晚甩尾, 即越放置在车头.  
        
