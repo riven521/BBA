@@ -147,8 +147,8 @@ if plotStrip
     for iStrip=1:nstrip
         % 从第1个Strip开始，计算Lu的x坐标(相同堆垛是一样）
         fidxStrip = T.LU_Strip(:,1)==order(iStrip);  %同一strip下的逻辑值(多个）
-        XYZ(fidxStrip,2) = sumL;  % Y = LWH'S L
-        sumL = sumL + unique(T.LWH(fidxStrip,2));       if numel(sumL) >  1 , error('e'); end
+        XYZ(fidxStrip,2) = sumL;                                % Y = LWH'S L
+        sumL = sumL + max(T.LWH(fidxStrip,2));       
         
         XYZ(fidxStrip,1) = T.CoordLUStrip(fidxStrip,1);  %
         XYZ(fidxStrip,3) = T.CoordLUStrip(fidxStrip,3);

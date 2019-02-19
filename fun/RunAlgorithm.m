@@ -114,9 +114,8 @@ function [d] = RunAlgorithm(d,p)
         % LW/Weight
         % ADD: isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
         % ADD: isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
-        
-%          [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
-         [d.Strip] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
+        % ADD: nLUID / nLULID
+         [d.Strip] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh); %          [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
 %         ISplotRunAlgo=1
 %         if ISplotRunAlgo 
@@ -158,7 +157,7 @@ function [d] = RunAlgorithm(d,p)
         % isNonmixed/ismixedtile
         % order/LU_Item
         % LU_Strip, LU.CoordLUStrip
-        % ADD: LU_Bin/CoordLUBin/ lbrt_A
+        % ADD: LU_Bin/CoordLUBin/ lbrt_A / nIDBin / nLIDBin 
         % Item:
         % isRota/Rotaed/HLayer/LWH/Weight
         % isHeightFull/MixOrder/nbItem/IDs
@@ -169,9 +168,10 @@ function [d] = RunAlgorithm(d,p)
         % isMixedIDs/nbIDs/isHeightFull/isHeightBalance/isWidthFull/nbItem/nbLU/nbLULID
         % isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
         % striporder/strip_bin
+        % ADD: nLUID / nLULID  / nLUIDBin / nLULIDBin  
         % Bin:
         % LW/Weight
-        [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
+        [d.LU,d.Item,d.Strip] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
 
         % LU:
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
@@ -195,17 +195,18 @@ function [d] = RunAlgorithm(d,p)
         % ADD: isTileNed/IDs
         [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内isTileNeed （高度，宽度不满）
         
-        ISplotRunAlgo=0
+        
         if ISplotRunAlgo
             %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU当前顺序
-%             plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU');     %LU排序后，因为Lu.order此时已知
-%             plotSolutionT(d.LU,d.Veh,0,1,0,0,3,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
-%             plotSolutionT(d.LU,d.Veh,0,2,0,0,3,'排序后Item',[],d.Item.itemorder,[]);
-%             plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
+            %             plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU');     %LU排序后，因为Lu.order此时已知
+            %             plotSolutionT(d.LU,d.Veh,0,1,0,0,3,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
+            %             plotSolutionT(d.LU,d.Veh,0,2,0,0,3,'排序后Item',[],d.Item.itemorder,[]);
+            %             plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
             plotSolutionT(d.LU,d.Veh,0,0,2,0,3,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
             plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'排序后Bin'); % Bin排序后
+            plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'排序后Bin'); % Bin排序后 
         end
-        
+        ISplotRunAlgo=0
                                                     
         %% 特殊：2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
@@ -258,10 +259,11 @@ function [d] = RunAlgorithm(d,p)
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);    %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
        
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin的isTileNeed
-
-                if TFHStripSW && ISplotshuaiwei && ISplotRunAlgo
                     plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 
-                    plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'甩尾后Bin'); % Bin排序后 
+                    plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'甩尾后Bin'); % Bin排序后 
+                if TFHStripSW && ISplotshuaiwei 
+%                     plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 
+%                     plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'甩尾后Bin'); % Bin排序后 
                 end                
         end
 

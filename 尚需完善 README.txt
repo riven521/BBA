@@ -610,6 +610,28 @@ V190219 V1
 1：去除ISstripbalance，均衡改为甩尾平铺
 2：修改cpuItem内的Item排序指标 ISisNonMixed ISisMixTile为1个 新指标MixOrder
 
+V190219 V2
+1:精炼HItemToStrip文件
+2：删除部分全局变量ISisNonMixed等
+3：整理cpustrip和strip2bin 最复杂 结合甩尾排序 结合量大车头
+4：plotsolutionT增加不同item和strip顺序，以及逐个作图的顺序
+
+
+V190219 V3
+1:新增函数：cpulu2strip：提取计算LU_coordstrip等。
+2：精简cpustrip函数
+3：增加stirp排序函数getorderoflid的可读性
+
+1：量大车头，是重新对条带分车
+
+1：修改甩尾：不只对高度，平铺甩尾，对量小对也甩尾（即重新对车内条带排序）
+条带重排序：
+1：正常条带（非甩尾条带），重排序规则：量大，高度。
+2：甩尾条带（高度不满，宽度不满，混合条带），重排序规则：非混，高度。
+
+1：精简HItemToBin函数
+2：HItem2Bin:增加子函数：getLUnIDs. 计算Lu.nID,nLID,nIDBin,nLIDBin;
+2：增加函数：getStripnID. 计算strip.nLUID,nLULID,nLUIDBin,nLULIDBin。
 
 TODO
 1 量大车头顺序

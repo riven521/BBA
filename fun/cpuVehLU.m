@@ -103,12 +103,7 @@ function [LU,Veh] = cpuVehLU(LU,Veh)
         LU.Rotaed = zeros(size(LU.ID));
     end
 
-    %% 5 计算LU同样ID/可堆垛ID下的个数
-    % V1"
-    %     for i=1:length(LU.Weight)
-    %         LU.nbID(i) = sum(LU.ID == LU.ID(i));
-    %     end
-    % V2: 直接计算
+    % 初始化计算
     LU.nbID = sum(LU.ID==LU.ID');
     LU.nbLID = sum(LU.LID==LU.LID');
     
