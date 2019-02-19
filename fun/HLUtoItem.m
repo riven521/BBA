@@ -237,16 +237,10 @@ T = getTableLU(LU);
 %     'W','ID','maxHLayer','LID','H','PID'},...
 %     {'ascend','ascend','descend','ascend','descend','ascend','descend','ascend','descend','descend'});  %NEW EID NEW maxHLayer
 
+% 简化版, 删除isNonMixed等排序
 [~,ord] = sortrows(T,{'SID','EID',...   % 离散: 相同SID/EID 递增排序 (顺序给定)
     'W','ID','maxHLayer','LID','H','PID'},...
     {'ascend','ascend','descend','ascend','ascend','ascend','descend','descend'});  %NEW EID NEW maxHLayer
-
-% 简化版,效果同上
-% [~,ord2] = sortrows(T,{'SID','EID',...   % 离散: 相同SID/EID 递增排序 (顺序给定)
-%     'isNonMixed','isMixedTile',...      % 离散: 不会出现非满垛 会出现非满垛时,属于非满垛的托盘标记1
-%     'W','ID','maxHLayer','LID','H','PID'},...
-%     {'ascend','ascend','descend','ascend','descend','ascend','descend','ascend','descend','descend'});  %NEW EID NEW maxHLayer
-
 
 if ~isrow(ord),    ord = ord';  end
 

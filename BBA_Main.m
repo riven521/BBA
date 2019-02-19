@@ -79,13 +79,12 @@ ISplotEachPingPuShuaiWei = 1;  % Ã¿´ÎË¦Î²Æ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
 ISplotEachPingPuAll = 1;             % Ã¿´ÎÕû³µÆ½ÆÌ³É¹¦ºó£¬Õ¹Ê¾Æ½ÆÌÇ°ºóµÄ¶Ô±ÈÍ¼
 ISplotShowGapAdjust = 0;         % ÊÇ·ñÏÔÊ¾Gapµ÷Õû¹ý³Ì
 % RunAlgorithmµÄplot¿ª¹Ø
-% ISplotshuaiwei: ÊÇ·ñÏÔÊ¾Ë¦Î²¶Ô±ÈÍ¼£»ISplotStripToBinAgain£ºÊÇ·ñÏÔÊ¾³µÍ·ÓÅÏÈ¶Ô±ÈÍ¼£»ISplotstripbalance£ºÊÇ·ñÏÔÊ¾×óÓÒ¾ùºâ¶Ô±ÈÍ¼ ISplotRunAlgo:ÊÇ·ñÏÔÊ¾RunAlgo¹ý³ÌÍ¼
- global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotstripbalance ISplotRunAlgo
+% ISplotshuaiwei: ÊÇ·ñÏÔÊ¾Ë¦Î²¶Ô±ÈÍ¼£»ISplotStripToBinAgain£ºÊÇ·ñÏÔÊ¾³µÍ·ÓÅÏÈ¶Ô±ÈÍ¼£»ISplotRunAlgo:ÊÇ·ñÏÔÊ¾RunAlgo¹ý³ÌÍ¼
+ global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotRunAlgo
  ISplotRunAlgo = 1;
  ISplotshuaiwei = 1;
  ISplotStripToBinAgain = 1;
- ISplotstripbalance = 1; 
-% ISplotPause: plotSolutionT µÈÔÝÍ£Ê±¼ä 0²»ÔÝÍ£ ISplotShowType£º»ùÓÚÄ³ÖÖÀàÐÍÇø·ÖÑÕÉ«
+ % ISplotPause: plotSolutionT µÈÔÝÍ£Ê±¼ä 0²»ÔÝÍ£ ISplotShowType£º»ùÓÚÄ³ÖÖÀàÐÍÇø·ÖÑÕÉ«
 global ISplotPause ISplotShowType
 ISplotPause = 0.0;  %-0.05 % plot¼ä¸ôÊ±¼ä
 ISplotShowType = 3; % 1 LID 2 PID 3 ID ×÷Í¼µÄÑÕÉ«±ê¼ÇÑ¡Ïî 4 SID 5EID
@@ -97,19 +96,10 @@ ISplotShowType = 3; % 1 LID 2 PID 3 ID ×÷Í¼µÄÑÕÉ«±ê¼ÇÑ¡Ïî 4 SID 5EID
 % * to modify*
 % ÏÂÃæ»¹²»ÍêÕû, ¿ÉÄÜÒªµ÷ Ä¿Ç°È«²¿Îª1
 
-% global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
-global ISisNonMixed ISisMixTile                 %ITEM2STRIP
-          
-% ISisNonMixedLU = 1; % 555: ÓÅÏÈ·Ç»ìºÏLUÐÎ³ÉITEM, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 £»1 LU¿ÉÒÔÐÎ³ÉÂú¶â 0 ±Ø¶¨ÓÐ·ÇÂú¶âÉú³É LUÅÅÐòÒÀ¾Ý
-% ISisMixTileLU = 1;       % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ÐÎ³ÉITEM, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 £»1 µ±isNonMixed=0Ê±, ½«·ÇÂú¶â¶ÔÓ¦µÄLU¸³ÖµÎª1£¨½áºÏLUÅÅÐòÉú³ÉITEMÖªÊ¶£©
 
-ISisNonMixed = 1;    % 555: ÓÅÏÈ·Ç»ìºÏItemÐÎ³ÉSTRIP, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1
-ISisMixTile  = 1;         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ÐÎ³ÉSTRIP, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
-
-global ISshuaiwei  ISstripbalance ISreStripToBin    % RunAlgorithmÖÐ
+global ISshuaiwei  ISreStripToBin    % RunAlgorithmÖÐ
 % ¿ª¹Ø + Gpreproc µÄV2°æ±¾ ÐÞ¸´ÒµÎñ3ÎÊÌâ(¼´ITEM·ÇÂú¶âÇÒÒ»²ãµÄ¾ùºâÎÊÌâ)
-ISstripbalance = 1;     % µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø 555£ºÓÐÁËÍ¼ÐÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊý²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊýµÝ¼õ; ÈçÎÞ·¨£©
-% ISstripbalance =0;  %¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
+
 ISreStripToBin = 1;   % ³µÍ·ÓÅÏÈLUÊýÁ¿ÅÅÐò²ÎÊý Ä¬ÈÏÎª1 ±ØÐë
 ISshuaiwei = 1;         % 555 : ¿í¶ÈºÍ¸ß¶È²»Âú, Ë¦Î²   ******  ¸Ã²ÎÊýÐèÒªºÍÏÂÃæµÄpingpu½áºÏÊ¹ÓÃ ²»Ë¦Î² Ë¦Î²Æ½ÆÌÎÞ·¨½øÐÐ*******
 
@@ -126,11 +116,22 @@ parBalance = 8/30;     % ×î¸ßµÄItemµÄ1/3£¬Èô¸ßÓÚ×î¸ß¶Ñ¶âItemµÄ1/3£»8/30£¬¼´Îª¸ß¶
 % ISreStripToBinMixed = 1   %³µÍ·ÓÅÏÈ·ÇAllPureÀàÐÍ, ÔÙ¿¼ÂÇÓÅÏÈLUÊýÁ¿ÅÅÐò²ÎÊý Ä¬ÈÏÎª1 Ó¦¸Ã¿ÉÒÔÉ¾³ýµÄ²ÎÊý
 % ISisMixedStrip = 1 ¿ÉÒÔÉ¾³ýÁË % 1±íÊ¾ÒÀ¾ÝLU.IDÅÐ¶ÏÊÇ·ñ»ìºÏ 0ÒÀ¾ÝLU.LIDÅÐ¶Ï NOTE: ËùÓÐSTRIP  NOTE: ITEM¾ùÎªIDÌæ»»LID
 
+% È«¾Ö±äÁ¿8£º ÒÑ×¢ÊÍ
+% global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
+% global ISisNonMixed ISisMixTile                 %ITEM2STRIP
+          
+% ISisNonMixedLU = 1; % 555: ÓÅÏÈ·Ç»ìºÏLUÐÎ³ÉITEM, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 £»1 LU¿ÉÒÔÐÎ³ÉÂú¶â 0 ±Ø¶¨ÓÐ·ÇÂú¶âÉú³É LUÅÅÐòÒÀ¾Ý
+% ISisMixTileLU = 1;       % 555: ÓÅÏÈ»ìºÏLUµÄµ¥´¿ITEM²¿·ÖÀ´ÐÎ³ÉITEM, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 £»1 µ±isNonMixed=0Ê±, ½«·ÇÂú¶â¶ÔÓ¦µÄLU¸³ÖµÎª1£¨½áºÏLUÅÅÐòÉú³ÉITEMÖªÊ¶£©
+
+% ISisNonMixed = 1;    % 555: ÓÅÏÈ·Ç»ìºÏItemÐÎ³ÉSTRIP, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1
+% ISisMixTile  = 1;         % 555: ÓÅÏÈ»ìºÏItemµÄµ¥´¿Strip²¿·ÖÀ´ÐÎ³ÉSTRIP, Í¼ºÃ¿´Ðí¶à ±ØÐëÓÐ Ä¬ÈÏÎª 1 µ«¿ÉÄÜ³öÏÖ»ìºÏÏÖÏó
 
 % global ISmaxLayer
 % ISmaxLayer = 1
-     
 
+% global ISstripbalance  ISplotstripbalance
+% ISstripbalance = 1;     % µ÷ÓÃ¸ß¶È¾ùºâ¿ª¹Ø 555£ºÓÐÁËÍ¼ÐÎºÃ¿´, ¶Ñ¶â¾ùºâÊ¹ÓÃ Í¬Ò»Strip·Ç»ìºÏÇÒ¸ß¶È²»¾ùºâÇÒLU²ãÊý²îÒìÖµ>1Ê±²Ù×÷ £¨·½·¨£º¶ÔÓ¦LUµÄ×î´ó²ãÊýµÝ¼õ; ÈçÎÞ·¨£© % ISstripbalance =0;  %¼´²»¾ùºâÊ±,¿ÉÒÔISisGpreprocLU1=0; ±íÊ¾LUÊ¹¾¢¸ß¶È¶Ñ,¸ü¶àµÄISisNonMixedLU=0.
+%  ISplotstripbalance = 1;  
 
 %% Initialize Parameter Variable
 nAlg = 1;
@@ -357,6 +358,10 @@ fprintf(1,'\nSimulation done.\n');
 % TLUIN.Properties.VariableNames{'SID'} = 'OSID';
 % s = table2struct(TLUIN,'ToScalar',true)
 % t = struct2table(l,'AsArray',true)
+
+                                                        %         [match, er1, er2] = comp_struct(ti,d.Strip,1);
+                                                        %         [match, er1, er2] = comp_struct(tl,d.Bin,1);
+                                                        %         list_struct(er1)
 %%
 % t = [d.LU.ID;d.LU.LWH]
 % sortrows(t',[1,4],{'ascend','descend'})

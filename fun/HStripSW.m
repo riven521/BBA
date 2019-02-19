@@ -12,23 +12,18 @@ function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
     
 %% 1: ********************** 甩尾 ********************************** 
 % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
-if any(~Strip.isWidthFull | ~Strip.isHeightFull)% | ~Strip.isHeightBalance)
+if any(~Strip.isWidthFull | ~Strip.isHeightFull) % | ~Strip.isHeightBalance)
     
     fprintf(1,'       Exsiting 甩尾需求 in HStripSW (Strip宽高不满)...\n');
     TF = true;
-    
-%             Strip.isWidthFull 
-%             Strip.isHeightFull
-%             Strip.isHeightBalance
-%             ~Strip.isWidthFull | ~Strip.isHeightFull
     
     % Get b : strip index to be move to end of Vehicle
     [~,bNOTheightfull] = find(Strip.isHeightFull == 0);
     [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);
     [~,bNOTheightbalance] = find(Strip.isHeightBalance == 0);
     
-%     b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
-b = unique([bNOTheightfull, bNOTwidthfull, bNOTheightbalance],'stable');    % 最后摆放车尾的顺序完全看order
+    b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
+% b = unique([bNOTheightfull, bNOTwidthfull, bNOTheightbalance],'stable');   
 
 % 2 如果有满足甩尾的Strip, 要如何排序? 看order
    if ~isempty(b)       

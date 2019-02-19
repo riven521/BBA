@@ -49,56 +49,14 @@ end
 %% 局部函数 %%
 function TF = computeisTileNeedofBin(n,Strip,Item)
 
-% V2: 考虑宽度/高度约束(即甩尾条件的,可以甩尾平铺), 且考虑已经单层的Strip, 可运行后向增加strip
-[TF] = deal(zeros(1,n));   
-
-for ibin=1:n
-    
-    % 2.1 找处ibin中的宽度不满的strip    (宽度不满: 横向间隙 > 单个Item的宽度)
-    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0 ;
-    if any(fS)
-        % itemidx:fS中的item
-        fiS = find(fS);
-        itemidx = ismember(Item.Item_Strip(1,:), fiS); %itemidx:fiS个Strip对应的Item逻辑值 luidx = ismember(LU.LU_Strip(1,:), fiS);
-        %         Item.HLayer(itemidx)
-        %         Item.HLayer(itemidx)>1
-        %如果所有Strip对应的Item有>1层的,则平铺.  即ibin: isTileNeed
-        if any(Item.HLayer(itemidx)>1)
-            TF(ibin) = 1;
-        end
-    end
-    
-     % 2.2 找处ibin中的高度不满的strip     (高度不满: 竖向间隙 > 单个Item的宽度)
-    fS = Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0 ;
-    if any(fS)
-        % itemidx:fS中的item
-        fiS = find(fS);
-        itemidx = ismember(Item.Item_Strip(1,:), fiS); % luidx = ismember(LU.LU_Strip(1,:), fiS);
-         %如果所有Strip对应的Item有>1层的,则平铺.  即ibin: isTileNeed
-        if any(Item.HLayer(itemidx)>1)
-            TF(ibin) = 1;
-        end
-    end
-
-end
-
-% 防错语句
-if any(TF==-1), error('存在TF未分配!'); end
-TFV2 = TF;
-
-
-
-
-
-
 % V3: 考虑宽度/高度约束(即甩尾条件的,可以甩尾平铺), 且考虑已经单层的Strip, 可运行后向增加strip
-[TF] = deal(zeros(1,n));   
+[TF] = deal(zeros(1,n));
 
 for ibin=1:n
     
     % 2.1 找处ibin中的宽度不满 OR 高度不满的strip    (宽度不满: 横向间隙 > 单个Item的宽度)  (高度不满: 竖向间隙 > 单个Item的宽度)
-    fS = (Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0) | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0) %...
-%         | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightBalance==0);
+    fS = (Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0) | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0); %...
+                                                        %         | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightBalance==0);
     if any(fS)
         % itemidx:fS中的item
         fiS = find(fS);
@@ -110,15 +68,6 @@ for ibin=1:n
     end
 end
 
-% 防错语句
-if any(TF==-1), error('存在TF未分配!'); end
-
-TFV3 = TF;
-
-
-
-
-if any(TFV2~=TFV3),  error('两个version不一致!'); end
     
 % V1: 仅考虑宽度/高度约束, 不考虑已经单层
 % iBin = Strip.Strip_Bin(1,~Strip.isWidthFull);
@@ -127,6 +76,7 @@ if any(TFV2~=TFV3),  error('两个version不一致!'); end
 % Bin.isTileNeed(iBin) = 1;
 % Bin.isTileNeed
 end
+
 
 %% 函数1: v1 computeLoadingRate2DBin
 function Bin = computeLoadingRate2DBin1(Bin,Item,Veh)

@@ -1,4 +1,3 @@
-% function [d] = HItemToStrip(d,p)
 function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % ÖØÒªº¯Êı:Item·ÅÈëStripÖĞ %  ĞĞÊı:³¤¿í¸ß(row);  ÁĞÊı:ÍĞÅÌÊıÁ¿(coloum);
 % Input ---  ITEM:  ID LWH Weight
@@ -10,60 +9,22 @@ function [Item,Strip]= HItemToStrip(LU,Item,Veh,p)
 % Item (4 itemo rder º¯ÊıÄÚItemÅÅĞòË³Ğò)
 % Strip (1 LW )
 % tmpStrip_Item         (2,n): % ĞĞ1£ºÃ¿¸öStripÄÚµÄItemÊıÁ¿ £» ĞĞ2£ºÃ¿¸öStripÄÚµÄ²»Í¬LUIDÊıÁ¿
-%% ³õÊ¼»¯
-% nDim ItemÎ¬¶È(2) nItem ItemÊıÁ¿ nStrip StripÊıÁ¿ 
-% widthStrip Strip×î´ó¿í¶È
-    % nDim = size(Item.LWH,1); if nDim ==3, nDim = nDim-1;end
+
+% ³õÊ¼»¯
 sz = size(Item.LWH);
 nItem = sz(2);
 wStrip = Veh.LWH(1,1);
 
-%% ÏÈÅĞ¶ÏITEMÊÇÒÔHorizontal/Vertical ·½Ê½°Ú·Å£¨Á¬´øÊÇ·ñĞı×ª£©£»ÔÙÅĞ¶Ï½øÈëËã·¨µÄË³Ğò
-% ÎŞÂÛÊÇ·ñÔÊĞíĞı×ª, Ö»¿´ÊÇ·ñĞèÒªÒÔHorizontal/Vertical·½Ê½°Ú·Å
+%% ITEMÅÅĞò 555
+% »ñÈ¡ItemµÄË³Ğò % ITEMÁ½ÖÖÅÅĞò·½Ê½ ¸ß¶È/×î¶Ì±ß
+[Item.itemorder] = getITEMorder(Item,p.whichSortItemOrder );
 
-% »ñµÃÔ­·â²»¶¯µÄ·µ»ØÖµ:¸³³õÊ¼Öµ
-%  [ItemLWRota, ItemRotaed] = placeItemHori(Item,1);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯
-% [Item.Rotaed] = placeItemHori(Item.LWH,Item.isRota,2);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯
-% Item.LWH = getRotaedLWH(Item.LWH, Item.Rotaed, LU.buff); 
-
-    %% ITEMÅÅĞò 555
-    % »ñÈ¡ItemµÄË³Ğò % ITEMÁ½ÖÖÅÅĞò·½Ê½ ¸ß¶È/×î¶Ì±ß
-%     printstruct(Item)    
-    [Item.itemorder] = getITEMorder(Item,p.whichSortItemOrder );
-
-    % »ñÈ¡°´orderÅÅĞòºóµÄITEM: sItem
-    if isSameCol(Item)
-        sItem = structfun(@(x) x(:,Item.itemorder),Item,'UniformOutput',false);
-    else
-        error('²»ÄÜÊ¹ÓÃstructfun');
-    end
-%     printstruct(sItem)
-
-% plotSolutionT(sItem,Veh)
-%  1
-    % ÏÂÃæÓÃÍ¾²»´ó£¬Ö÷ÒªÔ­ÒòÔÚÓÚÔÚGpreprocÖĞÒÔ¼°×öÁËH/V·ÅÖÃ´¦ÀíÁË
-% %     % 1ºÍ2ÒÔÄÚµÄ, sortedItemArray¶ÔÓ¦µÄLWHRotaºÍRotaed¸üĞÂÁË->ĞèÇó·µ»Øµ½Ô­¾ØÕóItemArryÖĞ
-% %     if p.whichRotationHori == 1 % ÎŞÂÛÄÄ¸ölevel,¶¼°´ÕÕhorizontally·½Ê½°Ú·Å
-% %          x = sItem.Rotaed;
-% %          sItem.LWH
-% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,1);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯       
-% % %          if any(x~=sItem.Rotaed),                 error('111111111111');         end    
-% %     end
-% %     if p.whichRotationHori == 2 % ÎŞÂÛÄÄ¸ölevel,¶¼°´ÕÕvertical·½Ê½°Ú·Å
-% %                     x = sItem.Rotaed
-% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,0);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯
-% % %                     if any(x~=sItem.Rotaed),                                  error('111111111111');         end
-% %     end
-% %     sItem.LWH = getRotaedLWH(sItem.LWH, sItem.Rotaed, LU.buff); 
-% %     sItem.LWH
-%% 55 LU->Item->Strip×ª»» 
-% ÌáÈ¡±äÁ¿ ´Ë´¦Ö»Ê¹ÓÃLWHRotaºÍRotaed; ²»Ê¹ÓÃLWH
-% ItemLWRotaSort = sItem.LWH(1:2,:); %ItemLWSortHori
-% ItemRotaedSort = sItem.Rotaed; % ItemRotaSortHori % itemRotaSort = zeros(1,size(Item.LWH,2));
-% ItemisRotaSort = sItem.isRota;
-% ItemWeightSort = sItem.Weight;
-
-% Itemorder = Item.itemorder;
+% »ñÈ¡°´orderÅÅĞòºóµÄITEM: sItem
+if isSameCol(Item)
+    sItem = structfun(@(x) x(:,Item.itemorder),Item,'UniformOutput',false);
+else
+    error('²»ÄÜÊ¹ÓÃstructfun');
+end
 
 %%
 % 1 Strip³õÊ¼»¯
@@ -81,7 +42,6 @@ tmpStrip_Item = zeros(2,nItem);  % ĞĞ1£ºÃ¿¸öStripÄÚµÄItemÊıÁ¿ £» ĞĞ2£ºÃ¿¸öStripÄ
 sItem.Item_Strip = zeros(2,nItem); %dim1:ÊôÓÚµÚ¼¸¸ölevel dim2:ÊôÓÚ¸ÃlevelµÚ¼¸¸öÅÅ·Å 555
 sItem.CoordItemStrip = zeros(2,nItem); %ItemÔÚstripµÄ×ø±êÖµ
 
-
 iLevel = 1; iItem = 1; %iStrip´ú±íitemÊµÖÊ
 while 1
     if iItem > nItem, break; end
@@ -91,34 +51,10 @@ while 1
 
     insertItemToStrip(thisLevel,iItem);
 
-%           plot2DStrip(); %µü´ú»­Í¼    
     iItem = iItem + 1;
 end
 
 
-%%  LU.CoordLUStri LU.LU_Strip µÄ¼ÆËã Ó¦ÔÚcpustripÖĞ
-% % nbLU = size(LU.LWH,2);
-% % LU.LU_Strip = zeros(2,nbLU);
-% % LU.CoordLUStrip = zeros(3,nbLU);
-% % 
-% % % ¸üĞÂLU_Strip
-% % for iLU=1:nbLU
-% %     % ¸üĞÂLU_StripµÚÒ»ĞĞ
-% %     iItem = LU.LU_Item(1,iLU);   %iLUÊôÓÚµÚ¼¸¸öItem, ItemÊôÓÚµÚ¼¸¸öStrip,ÔòLuÊôÓÚµÚ¼¸¸öStrip
-% %     LU.LU_Strip(1,iLU)= sItem.Item_Strip(1,iItem);
-% %     % ¸üĞÂLU_StripµÚ¶şĞĞ
-% %     fiItem = find(sItem.Item_Strip(1,:) == sItem.Item_Strip(1,iItem) & sItem.Item_Strip(2,:) < sItem.Item_Strip(2,iItem));
-% %     nbLUfiItem = sum(ismember(LU.LU_Item(1,:),fiItem));
-% %     LU.LU_Strip(2,iLU) = nbLUfiItem+LU.LU_Item(2,iLU); % ½øÈëStripË³Ğò: Í¬Ò»StripÄÚÏÈÇ°½øÈë¸öÊınbLUfiItem + ±¾iLUÔÚItemµÄË³Ğò
-% %     % ¸üĞÂLU.CoordLUStrip
-% %     LU.CoordLUStrip(1,iLU) = sItem.CoordItemStrip(1,iItem);
-% %     LU.CoordLUStrip(2,iLU) = sItem.CoordItemStrip(2,iItem);
-% %         % fLU: ÓëiLUÍ¬ÊôiItem ÇÒ Ë³ĞòÍíÓÚ±¾iLU; ¿ÉÄÜÎª¿Õ, ²»Ó°Ïì.
-% %     fLU = LU.LU_Item(1,:) == iItem & LU.LU_Item(2,:) < LU.LU_Item(2,iLU);
-% %     LU.CoordLUStrip(3,iLU) = sum(LU.LWH(3,fLU));
-% % end
-
-%%
 % ItemÏà¹Ø£º¸üĞÂµÄ°´Ë³Ğò·µ»Ø£¨ÎŞ¸üĞÂµÄ²»Ğè·µ»Ø£©Êµ¼Ê×îÖÕ»ñÈ¡µÄStripË³Ğò²¢²»ÖØÒª
 % LUÄÚ²¿¸üĞÂ,sLUÒÀ¾İorder±ä»¯»ØÀ´(Ö÷ÒªÎªÁËsLUÖĞĞÂÔöµÄ¼¸¸ö±äÁ¿,Òª°´Ë³Ğò×ª»ØÀ´)
 if isSameCol(sItem)
@@ -126,98 +62,20 @@ if isSameCol(sItem)
 else
     error('²»ÄÜÊ¹ÓÃstructfun');
 end
-
-                    % »ñÈ¡Item_Strip : Ã¿¸öItemÔÚÄÄ¸öStripÄÚ  ÒÔ¼°Ë³Ğò
-                    % »ñÈ¡CoordItemStrip : Ã¿¸öItemÔÚStripµÄ×ø±ê
-                    %     Item.Item_Strip(:,Item.itemorder) = sItem.Item_Strip;
-                    %     Item.CoordItemStrip(:,Item.itemorder) = sItem.CoordItemStrip;    
-                    % ItemArrayĞı×ªÏà¹Ø
-                    %         Item.Rotaed(:,Item.itemorder) = sItem.Rotaed;
-                    %     ItemLWRota(:,Item.itemorder) = sItem.LWH(1:2,:);
-                    %     Item.LWH = [ItemLWRota; Item.LWH(3,:)];             % ·µ»ØÔ­Ê¼Ë³ĞòµÄĞı×ªºóµÄItemArray
-
-
-                    % LUArrayĞı×ªÏà¹Ø,¼°Ê±¸üĞÂ    ÒÑÇ¶Èëµ½rotateItem
-                %     nbItem=length(Item.Rotaed);
-                %     % Ñ­»·Ã¿¸öitem
-                %     for idxItem=1:nbItem
-                %         tmpflagThisItem = (LU.LU_Item(1,:)==idxItem );
-                %         % ¶ÔÓ¦Î»ÖÃLU.Rotaed¸üĞÂ
-                %         if Item.Rotaed(idxItem)
-                %             LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
-                %             % ¶ÔÓ¦Î»ÖÃLU.LWH¸üĞÂ
-                %             LU.LWH(1, tmpflagThisItem) = Item.LWH(1, idxItem);
-                %             LU.LWH(2, tmpflagThisItem) = Item.LWH(2, idxItem);
-                %         end
-                %     end
     
 % StripÏà¹Ø: ÎŞË³Ğò¸ÅÄî(È¥³ı³õÊ¼»¯µÄ¶àÓàÁĞ)
-% Strip.LW
 % »ñÈ¡LWStrip:  ĞÂÉú³ÉµÄstripµÄ³¤¿í
 % »ñÈ¡StripWeight:  ĞÂÉú³ÉµÄstripµÄÖØÁ¿
-% Èç¹ûStripµÄÁĞÊıÈ«²¿ÏàÍ¬
+
 if isSameCol(Strip)
     Strip = structfun(@(x) x( : , Strip.Weight(1,:)>0 ), Strip, 'UniformOutput', false);
 else
     error('²»ÄÜÊ¹ÓÃstructfun');
 end
-                 
-
-%% ²âÊÔscript
-%     printscript();
     
     %% Ç¶Ì×º¯Êı        
-    function insertItemToStrip(thisLevel,iItem)       
-   
-% %         % V2 °´ÕÕItemµÄ¸ß¶È£¬¸ßµÄÓÅÏÈ½øÈëStrip £¨´Ë°æ±¾´æÔÚbug£¬4¸ö¼äÏ¶µ÷Õû¾ÍÓĞÎÊÌâ£ºÓĞ´ıµ÷Õû£©
-% %         % ÅĞ¶¨±¾Strip(thisLevel)ÊÇ·ñÒÑÓĞ¶Ñ¶âÇÒÊÇ·ñÓĞ±Èµ±Ç°¶Ñ¶âµÍµÄ¶Ñ¶â, ÈçÓĞ£¬½øĞĞ±¾stripµÄÊı¾İ¸üĞÂ
-% %         if tmpStrip_Item(1,thisLevel) > 0 && any(sItem.LWH(3,sItem.Item_Strip(1,:) == thisLevel) < sItem.LWH(3,iItem))
-% %             % ÕÒ³ö²¢ÅÅĞò±¾stripÄÚµÄ¶Ñ¶â
-% %             idxItem = find(sItem.Item_Strip(1,:) == thisLevel);    if tmpStrip_Item(1,thisLevel) ~= length(idxItem), error('±¾level°üº¬¶Ñ¶âÊıÁ¿ÓëÖ¸¶¨ÊıÁ¿²»Ò»ÖÂ'); end
-% %             warning('´æÔÚ¸ß¶ÈË³Ğò²»Ò»ÖÂµÄstrip£¬ĞèÒªµ÷Õû');
-% %             idxIteminThisLevel = [idxItem,iItem];  % sItem.LWH(3,[idxItem])
-% %             [~,ordItem] = sort(sItem.LWH(3,idxIteminThisLevel),'descend');            
-% %             idxItemOrdinThisLevel = idxIteminThisLevel(ordItem);
-% %             
-% %             %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ1 ±¾stripÄÚ°üº¬¼¸¸öItem    (Ïà±ÈV1²»±ä)
-% %             tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %Ö»Òª¸Ãlevel°²·ÅÒ»¸öitem,ÊıÁ¿¾ÍÔö¼Ó1
-% %             %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort      (Ïà±ÈV1 ¸Ä±ä)
-% %             sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel  sItem.Item_Strip(1,idxItem) = thisLevel;
-% %             sItem.Item_Strip(2,idxIteminThisLevel) = ordItem; %±¾levelÏÂµÚ¼¸´Î°²ÖÃÖØ¼ÆËã
-% %             %  2.1 ¸üĞÂLWStrip   (Ïà±ÈV1 ¸Ä±ä)
-% %             Strip.LW(1,thisLevel) = wStrip - sum(sItem.LWH(1,idxIteminThisLevel)); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)  555
-% %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); % Ò²¿É  % Strip.LW(2,thisLevel) = max(sItem.LWH(2,[idxItem])); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ) ¸ÄÎªÈ¡stripÄÚËùÓĞItemµÄ×î´óÖµ
-% %             %  1.1 ¸üĞÂCoordItemStripSort     (Ïà±ÈV1 ¸Ä±ä)
-% %             for i=1:length(idxItemOrdinThisLevel)
-% %                 sItem.CoordItemStrip(1,idxItemOrdinThisLevel(i)) = sum(sItem.LWH(1,idxItemOrdinThisLevel(1:i-1))); % wStrip - Strip.LW(1,thisLevel);         %¸üĞÂx×ø±ê 5555555555
-% %                 sItem.CoordItemStrip(2,idxItemOrdinThisLevel(i)) = sum(Strip.LW(2,1:thisLevel-1)); %¸üĞÂy×ø±ê %Èç¹ûiLevel=1,³¤£¨¸ß£©×ø±êÎª0£»·ñÔòÎªÇóºÍ
-% %             end
-% %             %  2.3 ¸üĞÂ±¾level¶ÔÓ¦µÄStripWeight:   (Ïà±ÈV1²»±ä)
-% %             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
-% %             
-% %         else
-% %             %  1.1 ¸üĞÂCoordItemStripSort     (Ïà±ÈV1¸Ä±ä)
-% %             sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %¸üĞÂx×ø±ê
-% %             sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %¸üĞÂy×ø±ê %Èç¹ûiLevel=1,³¤£¨¸ß£©×ø±êÎª0£»·ñÔòÎªÇóºÍ
-% %             
-% %             % 2 ¸üĞÂStripÏà¹ØÊı¾İ£¨·ÇÅÅĞò£© (Ïà±ÈV1²»±ä)
-% %             %  2.1 ¸üĞÂLWStrip
-% %             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)
-% %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ)
-% %             
-% %             %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ1 ±¾stripÄÚ°üº¬¼¸¸öItem    (Ïà±ÈV1²»±ä)
-% %             tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %Ö»Òª¸Ãlevel°²·ÅÒ»¸öitem,ÊıÁ¿¾ÍÔö¼Ó1
-% %             
-% %             %  2.3 ¸üĞÂ±¾level¶ÔÓ¦µÄStripWeight:   (Ïà±ÈV1²»±ä)
-% %             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
-% %             
-% %             %         %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort      (Ïà±ÈV1¸Ä±ä)
-% %             sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel
-% %             sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %±¾levelÏÂµÚ¼¸´Î°²ÖÃ
-% %         end
-        
-        
-        % V1 ´«Í³°´ÕÕItemµÄË³Ğò½øÈëStrip        
+        function insertItemToStrip(thisLevel,iItem)       
+       
         % 1 ¸üĞÂItemÏà¹ØSortÊı¾İ
         %  1.1 ¸üĞÂCoordItemStripSort
         sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %¸üĞÂx×ø±ê
@@ -236,153 +94,16 @@ end
         
         %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort
         sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel
-        sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %±¾levelÏÂµÚ¼¸´Î°²ÖÃ
+        sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %±¾levelÏÂµÚ¼¸´Î°²ÖÃ        
         
-        
-        
-        %         updateLWStrip(); %²»ÔÚÅĞ¶ÏÊÇ·ñÔÊĞíĞı×ª£»²»ÔÙÅĞ¶ÏÊÇ·ñÊôÓÚĞÂLevel£»²»ÔÙÅĞ¶ÏÊÇ·ñµ±Ç°¿É·ÅÈë
-        
-                % % %         if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
-                % % %             % ÅĞ¶ÏÓï¾ä: 2¸ö
-                % % %             isflagCurr = Strip.LW(1,thisLevel) >=  sItem.LWH(1,iItem); %ÅĞ¶ÏÊÇ·ñcurrent's stripÊ£Óà¿í¶È >= µ±Ç°¸ß¶È£¨·ÇĞı×ª£©
-                % % %             isNewLevel = Strip.LW(1,thisLevel) == wStrip; % ÅĞ¶ÏÊÇ·ñ new Level            
-                % % %             % ¸üĞÂstripĞÅÏ¢
-                % % %             if isNewLevel %ÎŞÂÛÈçºÎ,¾ù¿ÉÒÔ·ÅÈë,ÎŞÂÛºÎÖÖ°Ú·Å,Òò´Ë:Ö±½Ó¸üĞÂ£¨ItemÒÑ°´Hori/Vert°Ú·Å¹ı£©
-                % % %                     updateLWStrip();
-                % % %             else % Èç¹û·ÇĞÂlevel Èç¿ÉÒÔ°Ú·Å,·ÅÈë; ·ñÔò,µ÷»»³¤¿í£¨Ğı×ª£©ºó·ÅÈë
-                % % %                     if isflagCurr
-                % % %                         updateLWStrip();
-                % % %                     else
-                % % %                         error('11111111');
-                % % % %                         rotateItem(); %²»ÄÜÖ±½Ó×¢ÊÍ
-                % % % %                         updateLWStrip();
-                % % %                     end
-                % % %              end            
-                % % %         elseif sItem.isRota(iItem) == 0 %´ËItem²»¿ÉÒÔĞı×ª
-                % % %             % ¸üĞÂstripĞÅÏ¢
-                % % %             updateLWStrip();
-                % % %         end
-        
-
-        
-                        %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ2 ±¾stripÄÚ°üº¬¼¸ÖÖItem
-                %         itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
-                %         Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
-
-        % 4 ¶ş¼¶Ç¶Ì×º¯Êı- »ù±¾²»ÔÙĞèÒª
-% %         function rotateItem()
-% %             %  1 ²»½ö±ê¼ÇRotaed±ä»¯ »¹Òª°ÑITEMÕæÕıµÄrotate(·´)¹ıÈ¥
-% %             sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
-% %             tep = sItem.LWH(1,iItem);
-% %             sItem.LWH(1,iItem) = sItem.LWH(2,iItem);
-% %             sItem.LWH(2,iItem) = tep;
-% %             sItem.LWH(3,iItem) = sItem.LWH(3,iItem);
-% %             
-% %             %  2 ItemÄÚ²¿µÄLuÒ²ÒªËæÖ®¸üĞÂ
-% %             tmpflagThisItem = (LU.LU_Item(1,:)==iItem);
-% %             % ¶ÔÓ¦Î»ÖÃLU.Rotaed¸üĞÂ
-% %             if Item.Rotaed(iItem)
-% %                 LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
-% %                 % ¶ÔÓ¦Î»ÖÃLU.LWHµÄ³¤¿í¸üĞÂ£¬¸ß¶È²»¸üĞÂ
-% %                 LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
-% %                 LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
-% %             end
-% %         end
-        
-%         function updateLWStrip()
-% %             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)
-% %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ)
-            
-            % ¸üĞÂStripÖĞ°üº¬IDÀàÓë·ñ
-%             Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
-%             Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
-%             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % ÊıÖµÎª³öÏÖÓë·ñ
-
-%              Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % ÊıÖµÎª³öÏÖ´ÎÊı
-%              Strip.PID(Strip.PID>0) = 1; % ÊıÖµ¸ÄÎª³öÏÖÓë·ñ
-            
-%             Strip.SID(sItem.SID(1,iItem),thisLevel) = 1;         % 555 ¸üĞÂ¶àĞĞPID
-%             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 555 ¸üĞÂ¶àĞĞPID
-%             Item.PID(sLU.PID(1,iLU),thisItem) = 1;         % 555 ¸üĞÂ¶àĞĞPID
-            
-%         end
-        
-    end
+        end
     
-% %     function printscript()
-% %         % ²âÊÔ´úÂë
-% %         % % LWHStrip
-% %         % % sItem.Item_Strip
-% %         % % ItemLWSort
-% %         % % itemCoordMatrixSort
-% %         % % Item_Strip
-% %         % % LWHItem
-% %         % % itemCoordMatrix
-% %         %  printstruct(d);
-% %         
-% %         % Êä³öÖ÷Òª½á¹û:»ñµÃ´Ó1¿ªÊ¼Ã¿¸östrip°üº¬µÄÊı¾İ
-% %         for iStrip = 1:max(Item.Item_Strip(1,:))
-% %             [~,idx] = find(Item.Item_Strip(1,:)==iStrip);
-% %             fprintf('strip %d µÄÊ£Óà¿í+×î´ó³¤Îª:  ',iStrip);
-% %             fprintf('( %d ) ',Strip.LW(:,iStrip));
-% %             fprintf('\n');
-% %             fprintf('strip %d °üº¬ original Item Ë÷ÒıºÅ(³¤¿í)[Ğı×ª±êÖ¾]{×ø±ê}Îª  \n  ',iStrip);
-% %             fprintf('%d ',idx);
-% %             fprintf('( %d ) ', Item.LWH(1:nDim,idx));fprintf('\n');
-% %             fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %sItem.Rotaed
-% %             fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
-% %             fprintf('\n');
-% %         end
-% %     end
-% % 
-% %     function plot2DStrip()
-% %         %% ³õÊ¼»¯
-% %         wStrip = wStrip;        
-% %         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
-% %         nstrip = sum(sItem.Item_Strip(2,:)>0);
-% % 
-% %         tmpLID = cellfun(@(x)x(1), sItem.LID);        
-% %         nIDType = unique(tmpLID);
-% %         nColors = hsv(length(nIDType)); %²»Í¬ÀàĞÍLU¸³Óè²»Í¬ÑÕÉ«
-% %         
-% %         %% »­Í¼
-% %         % 1 »­Í¼£º»­±¾´ÎStrip
-% %         DrawRectangle([wStrip/2 hStrip/2 wStrip hStrip 0],'--', [0.5 0.5 0.5]);
-% %         hold on;
-% %         % 2 »­Í¼£ºÖğ¸östrip/item »­Í¼
-% %         for istrip = 1:nstrip
-% %             % ÕÒ³öµ±Ç°istripµÄÎïÆ·Ë÷Òı
-% %             idxDrawItem = find(sItem.Item_Strip(1,:)==istrip);
-% %             % »ñÈ¡¸ÃË÷ÒıÏÂµÄ±äÁ¿
-% %             drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
-% %             drawItemLWH = sItem.LWH(:,idxDrawItem);
-% %             drawItemId = tmpLID(:,idxDrawItem);
-% % 
-% %             % »­Í¼£ºÖğ¸öitem
-% %             nThisItem = size(drawItemLWH,2);
-% %             for iplotItem = 1:nThisItem
-% %                 % »­Í¼£º»­±¾´ÎiItem
-% %                 itemWidth = drawItemLWH(1,iplotItem);
-% %                 itemLength = drawItemLWH(2,iplotItem);
-% %                 itemCenter = [drawItemCoordMatrix(1,iplotItem)+itemWidth/2 ...
-% %                     drawItemCoordMatrix(2,iplotItem)+itemLength/2 ];
-% %                 
-% %                 % Ôö¼Ó¶Ô±¾´ÎiItemµÄÀàĞÍ£¨ÑÕÉ«£©ÅĞ¶Ï
-% %                 itemID = drawItemId(iplotItem);
-% %                 itemColor = 0.8*nColors(nIDType==itemID, : );
-% %                 
-% %                 DrawRectangle([itemCenter itemWidth itemLength 0],  '-',itemColor);
-% %                 hold on;
-% %             end
-% %         end
-% %         % hold off;
-% %     end
 end
 
 %% ¾Ö²¿º¯Êı %%
 
 %% º¯Êı1: getITEMorder
-% ¸ø¶¨ITEMµÄË³Ğò,°´NEXT FITµÄ·½Ê½²åÈëSTRIP£¨ÏÈ²åÈëSIDĞ¡µÄ; ºóĞø¸ß¶È/¿í¶È£º ºóĞøLID£©
+%% getITEMorder V2 % ¸ø¶¨ITEMµÄË³Ğò,°´NEXT FITµÄ·½Ê½²åÈëSTRIP
 function order = getITEMorder(Item,~)
 
 %¶ÔSID/EID ÅÅĞò: SID/EID °´¸ø¶¨Ë³ĞòÅÅĞò,ĞòºÅĞ¡µÄÔÚÇ°Ãæ
@@ -404,40 +125,120 @@ ItemEIDord = getItemOrd(ItemEID);
 szRow = cellfun(@(x)size(x,1), Item.LID);  if (max(szRow)~=min(szRow)),  error('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öLID');  end %Í¬Ò»ItemÓ¦¸ÃÖ»ÓĞÒ»¸öID ±ØÈ»µÄ
 ItemLID = cell2mat(Item.LID);   %Ö±½Ócell2mat×ª»»; %ITEM°´SID 1-nµÄË³Ğò·µ»Ø 
 
-% V2: ********** ¿¼ÂÇisNonMixed
-global ISisNonMixed ISisMixTile
-% Ä¿Ç°Ë³Ğò : 1: SID ; 2: isNonMixed;(ÏàÍ¬LIDÏÂ) Ò»°ãÕıÕæ¿ªÊ¼:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,¶àÊıÒ»Ñù) 6: Height
-% tmpItem = [ItemSID; Item.MixOrder; Item.isMixedTile; ...                     % SINGLE VERSION    todo ¶şÕßÇø±ğÊÇÊ²Ã´????
+[T] = getTableLU(Item);
+T.ItemSIDord = ItemSIDord';
+T.ItemEIDord = ItemEIDord';
+T.ItemLID = ItemLID';
+
+% V2 É¾³ıisNonMixedµÈÅÅĞò
+[~,order] = sortrows(T,{'ItemSIDord','ItemEIDord',...   % ÀëÉ¢: ÏàÍ¬SID/EID µİÔöÅÅĞò (Ë³Ğò¸ø¶¨)
+    'MixOrder','W','L','ItemLID','H'},...
+    {'ascend','ascend','ascend','descend','descend','descend','descend'});
+
+% V1 Ä¿Ç°Ë³Ğò : 1: SID ; 2: isNonMixed;(ÏàÍ¬LIDÏÂ) Ò»°ãÕıÕæ¿ªÊ¼:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,¶àÊıÒ»Ñù) 6: Height
+% tmpItem = [ItemSID; Item.MixOrder; Item.MixOrder; ...                     % SINGLE VERSION    todo ¶şÕßÇø±ğÊÇÊ²Ã´????
 %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-% tmpItem = [ItemSIDord; Item.MixOrder; Item.isMixedTile; ...                % MILKRUN VERSION ËÆºõÒ²Ê¹ÓÃsingle version
+% tmpItem = [ItemSIDord; Item.MixOrder; Item.MixOrder; ...                % MILKRUN VERSION ËÆºõÒ²¿ÉÓÃÔÚ single version
 %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-tmpItem = [ItemSID; Item.MixOrder; Item.MixOrder; ...                     % SINGLE VERSION    todo ¶şÕßÇø±ğÊÇÊ²Ã´????
-    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-tmpItem = [ItemSIDord; Item.MixOrder; Item.MixOrder; ...                % MILKRUN VERSION ËÆºõÒ²Ê¹ÓÃsingle version
-    Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-
-if ISisNonMixed==1    
-    if ISisMixTile==1
-        [~,order] = sortrows(tmpItem',[1, 8, 2, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend','descend','descend'}); %Ôö¼ÓEID
-%         [~,order] = sortrows(tmpItem',[1, 8, 2, 3, 4, 5, 6, 7 ],{'ascend','ascend','descend','ascend','descend','descend','descend','descend'}); %Ôö¼ÓEID
-%         [~,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','descend','descend','descend'});
-    else
-        [~,order] = sortrows(tmpItem',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend','descend'});
-    end
-else
-    [~,order] = sortrows(tmpItem',[1, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend'});
-end
-
-
-%%
-% itemPriority = getPriorityofItem(SIDorder,Item.isNonMixed, Item.isHeightFull, Item.LWH)
-% tmpSort = [SIDorder; itemPriority];
-% [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+% [~,order] = sortrows(tmpItem',[1, 8, 2, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend','descend','descend'}); %Ôö¼ÓEID
 
 if ~isrow(order), order=order'; end
+
 end
 
 
+%% º¯Êı2: getThisLevel
+function [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU,p)
+
+% ²»Í¬whichStripHÏÂ,»ñµÃ¹²Í¬µÄthisLevel Ä¬ÈÏ3 nextfit
+if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
+%     % Ôö¶ÔRotationÔö¼Ó±äÁ¿
+%     if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
+%         %             if ParaArray.whichRotation == 1
+%         % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
+%         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+%             Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+%     else %´ËItem²»¿ÉÒÔĞı×ª
+%         % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚ×îĞ¡Ê£ÓàË®Æ½¿í¶ÈµÄ
+%         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+%     end
+%     if isempty(flag)
+%         iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+%         [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem,  Strip, LU, p);
+%     else
+%         % »ñÈ¡thisLevel: Î¨Ò»ÓëFFÇø±ğ´ÓÕâµ½thisLevelµÄ¼ÆËã£¨Ñ¡ÖĞÂú×ãÌõ¼şÇÒ×îĞ¡µÄ£©
+%         tmpLevels = Strip.LW(1,1:iLevel);   %»ñÈ¡ËùÓĞÒÑ°²ÅÅ»òĞÂ°²ÅÅµÄlevelµÄÊ£ÓàË®Æ½Æ½¿í¶ÈÏòÁ¿tmpLevels
+%         tepMinLeftWdith = min(tmpLevels(flag));                      %ÕÒ³ötepAvailableLevelArrayÖĞ¿ÉÈİÄÉ±¾iITemµÄÊ£ÓàË®Æ½¿í¶ÈµÄ×îĞ¡Öµ£¬¸üĞÂÎªtepMinLeftWdith
+%         thisLevel = find(tmpLevels==tepMinLeftWdith);            %ÕÒ³öÓë×îĞ¡Öµ¶ÔÓ¦µÄÄÇ¸ö/Ğ©level
+%         if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
+%         if length(thisLevel)>1
+%             thisLevel = thisLevel(1);
+%         end
+%     end
+elseif p.whichStripH == 2 % firstfit  % firstfitÏÂÄÜ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë?
+%     % Ôö¶ÔRotationÔö¼Ó±äÁ¿
+%     if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
+%         % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
+%         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+%             Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+%     else
+%         % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚµÚÒ»¸öÓöµ½µÄ Î¨Ò»Çø±ğÊÇthisLevelµÄ»ñÈ¡
+%         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+%     end
+%     if isempty(flag)
+%         iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+%         [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p);
+%     else
+%         thisLevel = flag(1);
+%         if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
+%     end
+elseif p.whichStripH == 3 % nextfit
+    % Ôö¶ÔRotationÔö¼Ó±äÁ¿  sItem.itemorder;    
+    if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª % nextfitÏÂ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë
+        % V2: iItemÒÑ¾­ÊÇĞı×ªºóµÄ,×î¼Ñ°Ú·ÅÎ»ÖÃ,ÎŞĞèÅĞ¶ÏĞı×ªºóµÄÈİÄÉÇé¿ö
+        % ÅĞ¶¨µ±Ç°levelÊÇ·ñ¿ÉÒÔÔÚÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItem flaged: ÓĞÄÚÈİ±íÊ¾¿ÉÒÔ£¬·ñÔò²»¿ÉÒÔ        
+        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+    else
+        % ²»Í¬Ìõ¼şÏÂµÄÑ¡Ôñ£ºÈç¹ûµ±Ç°itemµÄ¿í<=µ±Ç°stripµÄµ±Ç°levelµÄ¿í
+        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+    end
+        
+    if  isempty(flaged)  %×¢ÒâÓëÖ®Ç°~flagµÄÇø±ğ
+        iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+        [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p) ;
+    else
+        if  isempty(flaged) ,   error(' ²»¿ÉÄÜµÄ´íÎó ');      end
+        thisLevel = iLevel; % µ±Ç°levelÒ»¶¨·ÅµÄÏÂ
+    end
+
+end
+
+end
+
+%% getItemOrd
+function ItemIDord = getItemOrd(ItemID)
+
+priority = 1;
+ItemIDord = zeros(1,size(ItemID,2));
+
+fmix        = sum(~isnan(ItemID),1)   >  1;     % ITEM»ìºÏ¶à¸öEIDµÄÂß¼­ÅĞ¶¨
+fnonmix = sum(~isnan(ItemID),1) == 1;     % ITEM·Ç»ìºÏ¶à¸öEIDµÄÂß¼­ÅĞ¶¨
+uniEID = unique(ItemID(~isnan(ItemID)));
+
+for u=1:length(uniEID)
+    feid = any(ItemID == uniEID(u),1);
+    if any(feid&~ItemIDord&fnonmix),
+        ItemIDord(feid&~ItemIDord&fnonmix) = priority;   priority=priority+1; end
+    if any(feid&~ItemIDord&fmix),
+        ItemIDord(feid&~ItemIDord&fmix) = priority;  priority=priority+1; end
+end
+
+end
+
+%% ÒÔÏÂÎª×¢ÊÍ
+
+
+%% getITEMorder V0
 % % function itemPriority = getPriorityofItem(SIDorder, isNonMixed, isHeightFull, LWH)
 % % 
 % % itemPriority = zeros(1,size(isNonMixed,2));
@@ -532,160 +333,430 @@ end
 % % if ~isrow(order), order=order'; end
 % % end
 
-%% º¯Êı2: getThisLevel
-function [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU,p)
-% ²»Í¬whichStripHÏÂ,»ñµÃ¹²Í¬µÄthisLevel
-if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
-    % Ôö¶ÔRotationÔö¼Ó±äÁ¿
-    if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
-        %             if ParaArray.whichRotation == 1
-        % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
-        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
-            Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
-    else %´ËItem²»¿ÉÒÔĞı×ª
-        % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚ×îĞ¡Ê£ÓàË®Æ½¿í¶ÈµÄ
-        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
-    end
-    if isempty(flag)
-        iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
-        [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem,  Strip, LU, p);
-    else
-        % »ñÈ¡thisLevel: Î¨Ò»ÓëFFÇø±ğ´ÓÕâµ½thisLevelµÄ¼ÆËã£¨Ñ¡ÖĞÂú×ãÌõ¼şÇÒ×îĞ¡µÄ£©
-        tmpLevels = Strip.LW(1,1:iLevel);   %»ñÈ¡ËùÓĞÒÑ°²ÅÅ»òĞÂ°²ÅÅµÄlevelµÄÊ£ÓàË®Æ½Æ½¿í¶ÈÏòÁ¿tmpLevels
-        tepMinLeftWdith = min(tmpLevels(flag));                      %ÕÒ³ötepAvailableLevelArrayÖĞ¿ÉÈİÄÉ±¾iITemµÄÊ£ÓàË®Æ½¿í¶ÈµÄ×îĞ¡Öµ£¬¸üĞÂÎªtepMinLeftWdith
-        thisLevel = find(tmpLevels==tepMinLeftWdith);            %ÕÒ³öÓë×îĞ¡Öµ¶ÔÓ¦µÄÄÇ¸ö/Ğ©level
-        if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
-        if length(thisLevel)>1
-            thisLevel = thisLevel(1);
-        end
-    end
-elseif p.whichStripH == 2 % firstfit  % firstfitÏÂÄÜ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë?
-    % Ôö¶ÔRotationÔö¼Ó±äÁ¿
-    if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
-        % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
-        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
-            Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
-    else
-        % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚµÚÒ»¸öÓöµ½µÄ Î¨Ò»Çø±ğÊÇthisLevelµÄ»ñÈ¡
-        flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
-    end
-    if isempty(flag)
-        iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
-        [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p);
-    else
-        thisLevel = flag(1);
-        if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
-    end
-elseif p.whichStripH == 3 % nextfit
-    % Ôö¶ÔRotationÔö¼Ó±äÁ¿
-    sItem.itemorder;
-    if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª % nextfitÏÂ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë
-        % V2: iItemÒÑ¾­ÊÇĞı×ªºóµÄ,×î¼Ñ°Ú·ÅÎ»ÖÃ,ÎŞĞèÅĞ¶ÏĞı×ªºóµÄÈİÄÉÇé¿ö
-        % ÅĞ¶¨µ±Ç°levelÊÇ·ñ¿ÉÒÔÔÚÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItem flaged: ÓĞÄÚÈİ±íÊ¾¿ÉÒÔ£¬·ñÔò²»¿ÉÒÔ        
-        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-        
-% %         global ISsItemAdjust
-% %         if ISsItemAdjust==1
-% %         % Èç¹û¸ÃiLevel·Ç¿Õ,ÇÒ·ÅµÄÏÂ±¾´ÎiITem, ½øÈë
-% %         if  ~isempty(flaged) && Strip.LW(1,iLevel) < 2400 
-% % %         Strip.LW(1,iLevel)%         sItem.LWH(1,iItem)%         sItem.isHeightFull(iItem)%         sItem.HLayer(iItem)%         sItem.LWH(3,iItem) 
-% %         tmpLIDmat = cell2mat(sItem.LID);
+
+%% getITEMorder V1
+% % % ¸ø¶¨ITEMµÄË³Ğò,°´NEXT FITµÄ·½Ê½²åÈëSTRIP£¨ÏÈ²åÈëSIDĞ¡µÄ; ºóĞø¸ß¶È/¿í¶È£º ºóĞøLID£©
+% % function order = getITEMorder(Item,~)
+% % 
+% % %¶ÔSID/EID ÅÅĞò: SID/EID °´¸ø¶¨Ë³ĞòÅÅĞò,ĞòºÅĞ¡µÄÔÚÇ°Ãæ
+% % % V1 : ½öÍ¬Ò»¶Ñ¶â ²»»ìºÏSID/EID CASE
+% % % szRow = cellfun(@(x)size(x,1), Item.SID);   if (max(szRow)~=min(szRow)),  error('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öSID');  end %Í¬Ò»ItemÓ¦¸ÃÖ»ÓĞÒ»¸öSID,¼´²»Í¬SIDµÄÄ¿Ç°²»ÔÊĞí¶Ñ¶âµ½Ò»Æğ
+% % % ItemSID = cell2mat(Item.SID);   %Ö±½Ócell2mat×ª»»; %ITEM°´SID 1-nµÄË³Ğò·µ»Ø 
+% % 
+% % % szRow = cellfun(@(x)size(x,1), Item.EID);   if (max(szRow)~=min(szRow)),  warning('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öEID');  end %Í¬Ò»ItemÓ¦¸ÃÖ»ÓĞÒ»¸öEID,¼´²»Í¬SIDµÄÄ¿Ç°²»ÔÊĞí¶Ñ¶âµ½Ò»Æğ
+% % % ItemEID = cell2mat(Item.EID);   %Ö±½Ócell2mat×ª»»; %ITEM°´SID 1-nµÄË³Ğò·µ»Ø 
+% % 
+% % % V2: Í¬Ò»¶Ñ¶â ¿É»ìºÏSID/EID CASE  end;  MILKRUN VERSION Ó¦¸Ãsingle°æ±¾Ò²¿ÉÓÃ
+% % [ItemSID,~]=padcat(Item.SID{:});  if iscolumn(ItemSID), ItemSID = ItemSID'; end; if size(ItemSID,1)>1,  warning('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öSID');  end 
+% % ItemSIDord = getItemOrd(ItemSID);
+% % 
+% % [ItemEID,~]=padcat(Item.EID{:});  if iscolumn(ItemEID), ItemEID = ItemEID'; end; if size(ItemEID,1)>1,  warning('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öEID');  end %Í¬Ò»ItemÓ¦¸ÃÖ»ÓĞÒ»¸öEID,¼´²»Í¬SIDµÄÄ¿Ç°²»ÔÊĞí¶Ñ¶âµ½Ò»Æğ
+% % ItemEIDord = getItemOrd(ItemEID);
+% % 
+% % %¶ÔLIDÅÅĞò: LIDÎŞÖ¸¶¨Ë³Ğò, ½öÔÚSID³¤¿íÈ«²¿Ò»ÖÂ,ÔÙ°´LIDÓÉĞ¡µ½´ïÅÅĞò,ÆäÊµÃ»ÓĞÒâÒå(ÎŞSID/LIDÊôÓÚÍ¬Ò»ITEM),×îºó¿´¸ß¶È 
+% % szRow = cellfun(@(x)size(x,1), Item.LID);  if (max(szRow)~=min(szRow)),  error('Í¬Ò»ITEM²»Ó¦¸ÃÓĞ¶à¸öLID');  end %Í¬Ò»ItemÓ¦¸ÃÖ»ÓĞÒ»¸öID ±ØÈ»µÄ
+% % ItemLID = cell2mat(Item.LID);   %Ö±½Ócell2mat×ª»»; %ITEM°´SID 1-nµÄË³Ğò·µ»Ø 
+% % 
+% % % V2: ********** ¿¼ÂÇisNonMixed
+% % global ISisNonMixed ISisMixTile
+% % % Ä¿Ç°Ë³Ğò : 1: SID ; 2: isNonMixed;(ÏàÍ¬LIDÏÂ) Ò»°ãÕıÕæ¿ªÊ¼:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,¶àÊıÒ»Ñù) 6: Height
+% % % tmpItem = [ItemSID; Item.MixOrder; Item.isMixedTile; ...                     % SINGLE VERSION    todo ¶şÕßÇø±ğÊÇÊ²Ã´????
+% % %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+% % % tmpItem = [ItemSIDord; Item.MixOrder; Item.isMixedTile; ...                % MILKRUN VERSION ËÆºõÒ²Ê¹ÓÃsingle version
+% % %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+% % tmpItem = [ItemSID; Item.MixOrder; Item.MixOrder; ...                     % SINGLE VERSION    todo ¶şÕßÇø±ğÊÇÊ²Ã´????
+% %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+% % tmpItem = [ItemSIDord; Item.MixOrder; Item.MixOrder; ...                % MILKRUN VERSION ËÆºõÒ²Ê¹ÓÃsingle version
+% %     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+% % 
+% % if ISisNonMixed==1    
+% %     if ISisMixTile==1
+% %         [~,order] = sortrows(tmpItem',[1, 8, 2, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend','descend','descend'}); %Ôö¼ÓEID
+% % %         [~,order] = sortrows(tmpItem',[1, 8, 2, 3, 4, 5, 6, 7 ],{'ascend','ascend','descend','ascend','descend','descend','descend','descend'}); %Ôö¼ÓEID
+% % %         [~,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','descend','descend','descend'});
+% %     else
+% %         [~,order] = sortrows(tmpItem',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend','descend'});
+% %     end
+% % else
+% %     [~,order] = sortrows(tmpItem',[1, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend'});
+% % end
+% % 
+% % 
+% % %%
+% % % itemPriority = getPriorityofItem(SIDorder,Item.isNonMixed, Item.isHeightFull, Item.LWH)
+% % % tmpSort = [SIDorder; itemPriority];
+% % % [~,order] = sortrows(tmpSort',[1,2],{'ascend','ascend'});
+% % 
+% % if ~isrow(order), order=order'; end
+% % end
+
+
+%% º¯Êı2: getThisLevel V1
+% % function [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU,p)
+% % % ²»Í¬whichStripHÏÂ,»ñµÃ¹²Í¬µÄthisLevel
+% % if p.whichStripH == 1 % 1 bestfit 2 firstfit 3 nextfit
+% %     % Ôö¶ÔRotationÔö¼Ó±äÁ¿
+% %     if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
+% %         %             if ParaArray.whichRotation == 1
+% %         % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
+% %         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+% %             Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+% %     else %´ËItem²»¿ÉÒÔĞı×ª
+% %         % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚ×îĞ¡Ê£ÓàË®Æ½¿í¶ÈµÄ
+% %         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+% %     end
+% %     if isempty(flag)
+% %         iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+% %         [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem,  Strip, LU, p);
+% %     else
+% %         % »ñÈ¡thisLevel: Î¨Ò»ÓëFFÇø±ğ´ÓÕâµ½thisLevelµÄ¼ÆËã£¨Ñ¡ÖĞÂú×ãÌõ¼şÇÒ×îĞ¡µÄ£©
+% %         tmpLevels = Strip.LW(1,1:iLevel);   %»ñÈ¡ËùÓĞÒÑ°²ÅÅ»òĞÂ°²ÅÅµÄlevelµÄÊ£ÓàË®Æ½Æ½¿í¶ÈÏòÁ¿tmpLevels
+% %         tepMinLeftWdith = min(tmpLevels(flag));                      %ÕÒ³ötepAvailableLevelArrayÖĞ¿ÉÈİÄÉ±¾iITemµÄÊ£ÓàË®Æ½¿í¶ÈµÄ×îĞ¡Öµ£¬¸üĞÂÎªtepMinLeftWdith
+% %         thisLevel = find(tmpLevels==tepMinLeftWdith);            %ÕÒ³öÓë×îĞ¡Öµ¶ÔÓ¦µÄÄÇ¸ö/Ğ©level
+% %         if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');          end
+% %         if length(thisLevel)>1
+% %             thisLevel = thisLevel(1);
+% %         end
+% %     end
+% % elseif p.whichStripH == 2 % firstfit  % firstfitÏÂÄÜ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë?
+% %     % Ôö¶ÔRotationÔö¼Ó±äÁ¿
+% %     if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
+% %         % ÕÒµ½¿ÉÒÔrotationÏÂµÄlevel:ÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItemµÄlevel
+% %         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem) |  ...
+% %             Strip.LW(1, 1 : iLevel) >= sItem.LWH(2,iItem));
+% %     else
+% %         % ³£¹æÌõ¼şÏÂµÄÑ¡Ôñ£ºfind¿í¶È×ã¹»µÄ¶à¸ölevel,²¢°²ÖÃÔÚµÚÒ»¸öÓöµ½µÄ Î¨Ò»Çø±ğÊÇthisLevelµÄ»ñÈ¡
+% %         flag = find(Strip.LW(1, 1 : iLevel) >= sItem.LWH(1,iItem));
+% %     end
+% %     if isempty(flag)
+% %         iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+% %         [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p);
+% %     else
+% %         thisLevel = flag(1);
+% %         if ~all(ismember(thisLevel,flag)),     error('Not all thisLevel belongs to flag ');       end
+% %     end
+% % elseif p.whichStripH == 3 % nextfit
+% %     % Ôö¶ÔRotationÔö¼Ó±äÁ¿
+% %     sItem.itemorder;
+% %     if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª % nextfitÏÂ²»ÄÜÖ±½ÓÌ×ÓÃbestfitµÄ´úÂë
+% %         % V2: iItemÒÑ¾­ÊÇĞı×ªºóµÄ,×î¼Ñ°Ú·ÅÎ»ÖÃ,ÎŞĞèÅĞ¶ÏĞı×ªºóµÄÈİÄÉÇé¿ö
+% %         % ÅĞ¶¨µ±Ç°levelÊÇ·ñ¿ÉÒÔÔÚÈÎÒ»°Ú·Å·½Ïò¿É·ÅÈë¸ÃiItem flaged: ÓĞÄÚÈİ±íÊ¾¿ÉÒÔ£¬·ñÔò²»¿ÉÒÔ        
+% %         flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
 % %         
-% %         fIarray = sItem.Item_Strip(1,:) == iLevel; %ÒÑ°²ÅÅÔÚiLvelÄÚµÄItem
-% %         fIscalar =  fIarray & sItem.Item_Strip(2,:) == max(sItem.Item_Strip(2,fIarray)) %ÒÑ°²ÅÅÔÚiLvelÄÚ¿¼ÂÇ×î½ü(ĞòºÅ×î´ó)µÄÒ»¸ö        
+% % % %         global ISsItemAdjust
+% % % %         if ISsItemAdjust==1
+% % % %         % Èç¹û¸ÃiLevel·Ç¿Õ,ÇÒ·ÅµÄÏÂ±¾´ÎiITem, ½øÈë
+% % % %         if  ~isempty(flaged) && Strip.LW(1,iLevel) < 2400 
+% % % % %         Strip.LW(1,iLevel)%         sItem.LWH(1,iItem)%         sItem.isHeightFull(iItem)%         sItem.HLayer(iItem)%         sItem.LWH(3,iItem) 
+% % % %         tmpLIDmat = cell2mat(sItem.LID);
+% % % %         
+% % % %         fIarray = sItem.Item_Strip(1,:) == iLevel; %ÒÑ°²ÅÅÔÚiLvelÄÚµÄItem
+% % % %         fIscalar =  fIarray & sItem.Item_Strip(2,:) == max(sItem.Item_Strip(2,fIarray)) %ÒÑ°²ÅÅÔÚiLvelÄÚ¿¼ÂÇ×î½ü(ĞòºÅ×î´ó)µÄÒ»¸ö        
+% % % %         
+% % % %         fLIDfIscalar = tmpLIDmat == sItem.LID{fIscalar} % ÓëfIscalarÍ¬LIDµÄfÖµ
+% % % %         fLIDiItem = tmpLIDmat == sItem.LID{iItem}        % ÓëiItemÍ¬LIDµÄfÖµ
+% % % %         
+% % % %         if sum(fIscalar)~=1, error('fff'); end
+% % % %         % ½ö¶ÔÓëiLevelÄÚ×î½üĞòºÅµÄItem½øĞĞ¶Ô±È, ËüÃÇ±ØĞëÊôÓÚ²»Í¬µÄLIDÖµ; ÈçÏàÍ¬IdÖµ, Ö±½ÓÍË³ö
+% % % %         if sItem.LID{fIscalar} ~= sItem.LID{iItem} 
+% % % %             % ¼ÈÈ»×ª»»LID, Ôò±íÃ÷fIscalarºóÃæÃ»ÓĞÏàÍ¬ÓëÆäÏàÍ¬IDÁË
+% % % %             if ismember(sItem.LID{fIscalar},tmpLIDmat(~fLIDfIscalar))    error('¼ÈÈ»×ª»»LID, Ôò±íÃ÷fIscalarºóÃæÃ»ÓĞÏàÍ¬ÓëÆäÏàÍ¬IDÁË');   end 
+% % % %             
+% % % %                             %     iItemsLID = ismember(tmpLIDmat(~fIarray),sItem.LID{iItem}); % ¿¼ÂÇiItemÊÇ·ñ»¹ÓĞÏàÍ¬ID, Èç¹ûÃ»ÓĞ, ¾ÍÉ¶Ò²±ğËµÁË, °²ÅÅiItemµ½´Ëlevel
+% % % %             if sum(fLIDiItem) > 0,  % Èç¹û±¾iItem¶ÔÓ¦LID½öÓĞ1¸ö, É¶Ò²±ğËµÁË, Ö±½ÓÍË³ö
+% % % %                     %     sItem.LWH(3,fIscalar) % sItem.LWH(3,iItem)                            
+% % % %                 ItemHeightwithSameLIDofiItem = sItem.LWH(3,fLIDiItem)
+% % % %                 
+% % % %                 if ~issorted(ItemHeightwithSameLIDofiItem,'descend') || isempty(ItemHeightwithSameLIDofiItem)
+% % % %                     error('Í¬Ò»LIDÏÂµÄItem¸ß¶È·Çµİ¼õÅÅĞò»òÎª¿ÕÖµ, ³¬Ô¤ÆÚ´íÎó')
+% % % %                 end
+% % % %                 
+% % % %                 %Èç¹û¾àÀë×îĞ¡Öµ¸ü½ü, ÔòµôÍ·°Ú·Å
+% % % %                 if abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(1)) > abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(end)) 
+% % % %                    ord = 1:length(sItem.Weight);
+% % % %                    ord(:,fLIDiItem)= fliplr(ord(:,fLIDiItem)); % µ÷»»ÓëiItemÏàÍ¬LIDµÄItemsµÄË³Ğò
+% % % %                    ord(:,fLIDiItem)
+% % % %                    sItem.LWH(3,iItem) 
+% % % %                    % ³ıÁËItemÒª±ä, ¶ÔÓ¦µÄLUÒ²Òª±ä
+% % % %                    zzz = sItem.itemorder
+% % % %                    sItem = structfun(@(x) x(:,ord),sItem,'UniformOutput',false);
+% % % %                    sItem.itemorder  = zzz               
+% % % %                    
+% % % %                    fLIDiItemIdx = find(fLIDiItem);
+% % % %                    FLIPfLIDiItemIdx = fliplr(fLIDiItemIdx);
+% % % %                    tmpLU_Item = LU.LU_Item(1,:);
+% % % %                    for i=1:length(fLIDiItemIdx)
+% % % %                        fLIDLU = tmpLU_Item == fLIDiItemIdx(i); %SAME : fLIDLU = ismember(LU.LU_Item(1,:) ,fLIDiItemIdx(i))                       
+% % % %                        LU.LU_Item(1, fLIDLU )  = FLIPfLIDiItemIdx(i);
+% % % %                    end
+% % % %                    % Í¬Ê±¸üĞÂLU.DOC
+% % % %                    LU.DOC(end-1:end,:) = LU.LU_Item;
+% % % %                         LU
+% % % %                         sItem
+% % % %                         sItem.Item_Strip
+% % % %                         sItem.CoordItemStrip
+% % % %                    % ·À´íÓï¾ä
+% % % %                    flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+% % % %                    if isempty(flaged), error('Í¬LIDµ«¿í¶È²»Í¬, ³¬Ô¤ÆÚ´íÎó'); end
+% % % %                    
+% % % %                 end
+% % % %                 
+% % % %             end
+% % % %         end
+% % % %         %     sItem.LWH(3,fIscalar)  %ÒÑ°²ÅÅÔÚiLvelÄÚ (×î½üµÄÒ»¸öµÄItem¸ß¶È) %         sItem.LWH(1,iItem) %         sItem.isHeightFull(fI)         sItem.isHeightFull(iItem)
+% % % %         end
+% % % %         end % END OF ISsItemAdjust
 % %         
-% %         fLIDfIscalar = tmpLIDmat == sItem.LID{fIscalar} % ÓëfIscalarÍ¬LIDµÄfÖµ
-% %         fLIDiItem = tmpLIDmat == sItem.LID{iItem}        % ÓëiItemÍ¬LIDµÄfÖµ
 % %         
-% %         if sum(fIscalar)~=1, error('fff'); end
-% %         % ½ö¶ÔÓëiLevelÄÚ×î½üĞòºÅµÄItem½øĞĞ¶Ô±È, ËüÃÇ±ØĞëÊôÓÚ²»Í¬µÄLIDÖµ; ÈçÏàÍ¬IdÖµ, Ö±½ÓÍË³ö
-% %         if sItem.LID{fIscalar} ~= sItem.LID{iItem} 
-% %             % ¼ÈÈ»×ª»»LID, Ôò±íÃ÷fIscalarºóÃæÃ»ÓĞÏàÍ¬ÓëÆäÏàÍ¬IDÁË
-% %             if ismember(sItem.LID{fIscalar},tmpLIDmat(~fLIDfIscalar))    error('¼ÈÈ»×ª»»LID, Ôò±íÃ÷fIscalarºóÃæÃ»ÓĞÏàÍ¬ÓëÆäÏàÍ¬IDÁË');   end 
-% %             
-% %                             %     iItemsLID = ismember(tmpLIDmat(~fIarray),sItem.LID{iItem}); % ¿¼ÂÇiItemÊÇ·ñ»¹ÓĞÏàÍ¬ID, Èç¹ûÃ»ÓĞ, ¾ÍÉ¶Ò²±ğËµÁË, °²ÅÅiItemµ½´Ëlevel
-% %             if sum(fLIDiItem) > 0,  % Èç¹û±¾iItem¶ÔÓ¦LID½öÓĞ1¸ö, É¶Ò²±ğËµÁË, Ö±½ÓÍË³ö
-% %                     %     sItem.LWH(3,fIscalar) % sItem.LWH(3,iItem)                            
-% %                 ItemHeightwithSameLIDofiItem = sItem.LWH(3,fLIDiItem)
+% %                 % V1 : ÅĞ¶ÏĞı×ªÓë·ñ
+% %                 %                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
+% %                 %                                       Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
+% %     else
+% %         % ²»Í¬Ìõ¼şÏÂµÄÑ¡Ôñ£ºÈç¹ûµ±Ç°itemµÄ¿í<=µ±Ç°stripµÄµ±Ç°levelµÄ¿í
+% %         flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
+% %     end
+% %     
+% %         
+% %     if  isempty(flaged)  %×¢ÒâÓëÖ®Ç°~flagµÄÇø±ğ
+% %         iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
+% %         [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p) ;
+% %     else
+% %         if  isempty(flaged) ,   error(' ²»¿ÉÄÜµÄ´íÎó ');      end
+% %         thisLevel = iLevel; % µ±Ç°levelÒ»¶¨·ÅµÄÏÂ
+% %     end
+% %     %             end
+% %     
+% % end
+% % end
+
+%% printscript
+% %     function printscript()
+% %         % ²âÊÔ´úÂë
+% %         % % LWHStrip
+% %         % % sItem.Item_Strip
+% %         % % ItemLWSort
+% %         % % itemCoordMatrixSort
+% %         % % Item_Strip
+% %         % % LWHItem
+% %         % % itemCoordMatrix
+% %         %  printstruct(d);
+% %         
+% %         % Êä³öÖ÷Òª½á¹û:»ñµÃ´Ó1¿ªÊ¼Ã¿¸östrip°üº¬µÄÊı¾İ
+% %         for iStrip = 1:max(Item.Item_Strip(1,:))
+% %             [~,idx] = find(Item.Item_Strip(1,:)==iStrip);
+% %             fprintf('strip %d µÄÊ£Óà¿í+×î´ó³¤Îª:  ',iStrip);
+% %             fprintf('( %d ) ',Strip.LW(:,iStrip));
+% %             fprintf('\n');
+% %             fprintf('strip %d °üº¬ original Item Ë÷ÒıºÅ(³¤¿í)[Ğı×ª±êÖ¾]{×ø±ê}Îª  \n  ',iStrip);
+% %             fprintf('%d ',idx);
+% %             fprintf('( %d ) ', Item.LWH(1:nDim,idx));fprintf('\n');
+% %             fprintf('[ %d ] ', Item.Rotaed(:,idx));fprintf('\n');  %sItem.Rotaed
+% %             fprintf('{ %d } ', Item.CoordItemStrip(:,idx));fprintf('\n');
+% %             fprintf('\n');
+% %         end
+% %     end
+% % 
+% %     function plot2DStrip()
+% %         %% ³õÊ¼»¯
+% %         wStrip = wStrip;        
+% %         hStrip = sum(Strip.LW(2,sItem.Item_Strip(2,:)>0));        
+% %         nstrip = sum(sItem.Item_Strip(2,:)>0);
+% % 
+% %         tmpLID = cellfun(@(x)x(1), sItem.LID);        
+% %         nIDType = unique(tmpLID);
+% %         nColors = hsv(length(nIDType)); %²»Í¬ÀàĞÍLU¸³Óè²»Í¬ÑÕÉ«
+% %         
+% %         %% »­Í¼
+% %         % 1 »­Í¼£º»­±¾´ÎStrip
+% %         DrawRectangle([wStrip/2 hStrip/2 wStrip hStrip 0],'--', [0.5 0.5 0.5]);
+% %         hold on;
+% %         % 2 »­Í¼£ºÖğ¸östrip/item »­Í¼
+% %         for istrip = 1:nstrip
+% %             % ÕÒ³öµ±Ç°istripµÄÎïÆ·Ë÷Òı
+% %             idxDrawItem = find(sItem.Item_Strip(1,:)==istrip);
+% %             % »ñÈ¡¸ÃË÷ÒıÏÂµÄ±äÁ¿
+% %             drawItemCoordMatrix = sItem.CoordItemStrip(:,idxDrawItem);
+% %             drawItemLWH = sItem.LWH(:,idxDrawItem);
+% %             drawItemId = tmpLID(:,idxDrawItem);
+% % 
+% %             % »­Í¼£ºÖğ¸öitem
+% %             nThisItem = size(drawItemLWH,2);
+% %             for iplotItem = 1:nThisItem
+% %                 % »­Í¼£º»­±¾´ÎiItem
+% %                 itemWidth = drawItemLWH(1,iplotItem);
+% %                 itemLength = drawItemLWH(2,iplotItem);
+% %                 itemCenter = [drawItemCoordMatrix(1,iplotItem)+itemWidth/2 ...
+% %                     drawItemCoordMatrix(2,iplotItem)+itemLength/2 ];
 % %                 
-% %                 if ~issorted(ItemHeightwithSameLIDofiItem,'descend') || isempty(ItemHeightwithSameLIDofiItem)
-% %                     error('Í¬Ò»LIDÏÂµÄItem¸ß¶È·Çµİ¼õÅÅĞò»òÎª¿ÕÖµ, ³¬Ô¤ÆÚ´íÎó')
-% %                 end
+% %                 % Ôö¼Ó¶Ô±¾´ÎiItemµÄÀàĞÍ£¨ÑÕÉ«£©ÅĞ¶Ï
+% %                 itemID = drawItemId(iplotItem);
+% %                 itemColor = 0.8*nColors(nIDType==itemID, : );
 % %                 
-% %                 %Èç¹û¾àÀë×îĞ¡Öµ¸ü½ü, ÔòµôÍ·°Ú·Å
-% %                 if abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(1)) > abs(sItem.LWH(3,fIscalar) - ItemHeightwithSameLIDofiItem(end)) 
-% %                    ord = 1:length(sItem.Weight);
-% %                    ord(:,fLIDiItem)= fliplr(ord(:,fLIDiItem)); % µ÷»»ÓëiItemÏàÍ¬LIDµÄItemsµÄË³Ğò
-% %                    ord(:,fLIDiItem)
-% %                    sItem.LWH(3,iItem) 
-% %                    % ³ıÁËItemÒª±ä, ¶ÔÓ¦µÄLUÒ²Òª±ä
-% %                    zzz = sItem.itemorder
-% %                    sItem = structfun(@(x) x(:,ord),sItem,'UniformOutput',false);
-% %                    sItem.itemorder  = zzz               
-% %                    
-% %                    fLIDiItemIdx = find(fLIDiItem);
-% %                    FLIPfLIDiItemIdx = fliplr(fLIDiItemIdx);
-% %                    tmpLU_Item = LU.LU_Item(1,:);
-% %                    for i=1:length(fLIDiItemIdx)
-% %                        fLIDLU = tmpLU_Item == fLIDiItemIdx(i); %SAME : fLIDLU = ismember(LU.LU_Item(1,:) ,fLIDiItemIdx(i))                       
-% %                        LU.LU_Item(1, fLIDLU )  = FLIPfLIDiItemIdx(i);
-% %                    end
-% %                    % Í¬Ê±¸üĞÂLU.DOC
-% %                    LU.DOC(end-1:end,:) = LU.LU_Item;
-% %                         LU
-% %                         sItem
-% %                         sItem.Item_Strip
-% %                         sItem.CoordItemStrip
-% %                    % ·À´íÓï¾ä
-% %                    flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-% %                    if isempty(flaged), error('Í¬LIDµ«¿í¶È²»Í¬, ³¬Ô¤ÆÚ´íÎó'); end
-% %                    
-% %                 end
-% %                 
+% %                 DrawRectangle([itemCenter itemWidth itemLength 0],  '-',itemColor);
+% %                 hold on;
 % %             end
 % %         end
-% %         %     sItem.LWH(3,fIscalar)  %ÒÑ°²ÅÅÔÚiLvelÄÚ (×î½üµÄÒ»¸öµÄItem¸ß¶È) %         sItem.LWH(1,iItem) %         sItem.isHeightFull(fI)         sItem.isHeightFull(iItem)
+% %         % hold off;
+% %     end
+
+%% Ç¶Ì×º¯Êı insertItemToStrip v1
+%     function insertItemToStrip(thisLevel,iItem)       
+%    
+% % %         % V2 °´ÕÕItemµÄ¸ß¶È£¬¸ßµÄÓÅÏÈ½øÈëStrip £¨´Ë°æ±¾´æÔÚbug£¬4¸ö¼äÏ¶µ÷Õû¾ÍÓĞÎÊÌâ£ºÓĞ´ıµ÷Õû£©
+% % %         % ÅĞ¶¨±¾Strip(thisLevel)ÊÇ·ñÒÑÓĞ¶Ñ¶âÇÒÊÇ·ñÓĞ±Èµ±Ç°¶Ñ¶âµÍµÄ¶Ñ¶â, ÈçÓĞ£¬½øĞĞ±¾stripµÄÊı¾İ¸üĞÂ
+% % %         if tmpStrip_Item(1,thisLevel) > 0 && any(sItem.LWH(3,sItem.Item_Strip(1,:) == thisLevel) < sItem.LWH(3,iItem))
+% % %             % ÕÒ³ö²¢ÅÅĞò±¾stripÄÚµÄ¶Ñ¶â
+% % %             idxItem = find(sItem.Item_Strip(1,:) == thisLevel);    if tmpStrip_Item(1,thisLevel) ~= length(idxItem), error('±¾level°üº¬¶Ñ¶âÊıÁ¿ÓëÖ¸¶¨ÊıÁ¿²»Ò»ÖÂ'); end
+% % %             warning('´æÔÚ¸ß¶ÈË³Ğò²»Ò»ÖÂµÄstrip£¬ĞèÒªµ÷Õû');
+% % %             idxIteminThisLevel = [idxItem,iItem];  % sItem.LWH(3,[idxItem])
+% % %             [~,ordItem] = sort(sItem.LWH(3,idxIteminThisLevel),'descend');            
+% % %             idxItemOrdinThisLevel = idxIteminThisLevel(ordItem);
+% % %             
+% % %             %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ1 ±¾stripÄÚ°üº¬¼¸¸öItem    (Ïà±ÈV1²»±ä)
+% % %             tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %Ö»Òª¸Ãlevel°²·ÅÒ»¸öitem,ÊıÁ¿¾ÍÔö¼Ó1
+% % %             %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort      (Ïà±ÈV1 ¸Ä±ä)
+% % %             sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel  sItem.Item_Strip(1,idxItem) = thisLevel;
+% % %             sItem.Item_Strip(2,idxIteminThisLevel) = ordItem; %±¾levelÏÂµÚ¼¸´Î°²ÖÃÖØ¼ÆËã
+% % %             %  2.1 ¸üĞÂLWStrip   (Ïà±ÈV1 ¸Ä±ä)
+% % %             Strip.LW(1,thisLevel) = wStrip - sum(sItem.LWH(1,idxIteminThisLevel)); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)  555
+% % %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); % Ò²¿É  % Strip.LW(2,thisLevel) = max(sItem.LWH(2,[idxItem])); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ) ¸ÄÎªÈ¡stripÄÚËùÓĞItemµÄ×î´óÖµ
+% % %             %  1.1 ¸üĞÂCoordItemStripSort     (Ïà±ÈV1 ¸Ä±ä)
+% % %             for i=1:length(idxItemOrdinThisLevel)
+% % %                 sItem.CoordItemStrip(1,idxItemOrdinThisLevel(i)) = sum(sItem.LWH(1,idxItemOrdinThisLevel(1:i-1))); % wStrip - Strip.LW(1,thisLevel);         %¸üĞÂx×ø±ê 5555555555
+% % %                 sItem.CoordItemStrip(2,idxItemOrdinThisLevel(i)) = sum(Strip.LW(2,1:thisLevel-1)); %¸üĞÂy×ø±ê %Èç¹ûiLevel=1,³¤£¨¸ß£©×ø±êÎª0£»·ñÔòÎªÇóºÍ
+% % %             end
+% % %             %  2.3 ¸üĞÂ±¾level¶ÔÓ¦µÄStripWeight:   (Ïà±ÈV1²»±ä)
+% % %             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);       
+% % %             
+% % %         else
+% % %             %  1.1 ¸üĞÂCoordItemStripSort     (Ïà±ÈV1¸Ä±ä)
+% % %             sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %¸üĞÂx×ø±ê
+% % %             sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %¸üĞÂy×ø±ê %Èç¹ûiLevel=1,³¤£¨¸ß£©×ø±êÎª0£»·ñÔòÎªÇóºÍ
+% % %             
+% % %             % 2 ¸üĞÂStripÏà¹ØÊı¾İ£¨·ÇÅÅĞò£© (Ïà±ÈV1²»±ä)
+% % %             %  2.1 ¸üĞÂLWStrip
+% % %             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)
+% % %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ)
+% % %             
+% % %             %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ1 ±¾stripÄÚ°üº¬¼¸¸öItem    (Ïà±ÈV1²»±ä)
+% % %             tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %Ö»Òª¸Ãlevel°²·ÅÒ»¸öitem,ÊıÁ¿¾ÍÔö¼Ó1
+% % %             
+% % %             %  2.3 ¸üĞÂ±¾level¶ÔÓ¦µÄStripWeight:   (Ïà±ÈV1²»±ä)
+% % %             Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
+% % %             
+% % %             %         %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort      (Ïà±ÈV1¸Ä±ä)
+% % %             sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel
+% % %             sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %±¾levelÏÂµÚ¼¸´Î°²ÖÃ
+% % %         end
+%         
+%         
+%         % V1 ´«Í³°´ÕÕItemµÄË³Ğò½øÈëStrip        
+%         % 1 ¸üĞÂItemÏà¹ØSortÊı¾İ
+%         %  1.1 ¸üĞÂCoordItemStripSort
+%         sItem.CoordItemStrip(1,iItem) = wStrip - Strip.LW(1,thisLevel);        %¸üĞÂx×ø±ê
+%         sItem.CoordItemStrip(2,iItem) = sum(Strip.LW(2,1:thisLevel-1));      %¸üĞÂy×ø±ê %Èç¹ûiLevel=1,³¤£¨¸ß£©×ø±êÎª0£»·ñÔòÎªÇóºÍ
+%         
+%         % 2 ¸üĞÂStripÏà¹ØÊı¾İ£¨·ÇÅÅĞò£©
+%         %  2.1 ¸üĞÂLWStrip
+%         Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)
+%         Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ)
+%         
+%         %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ1 ±¾stripÄÚ°üº¬¼¸¸öItem
+%         tmpStrip_Item(1,thisLevel) = tmpStrip_Item(1,thisLevel) + 1; %Ö»Òª¸Ãlevel°²·ÅÒ»¸öitem,ÊıÁ¿¾ÍÔö¼Ó1
+%         
+%         %  2.3 ¸üĞÂ±¾level¶ÔÓ¦µÄStripWeight: 
+%         Strip.Weight(thisLevel) =  Strip.Weight(thisLevel) + sItem.Weight(iItem);
+%         
+%         %  1.3 ¸üĞÂitem¹éÊôstripĞÅÏ¢itemBeStripMatrixSort
+%         sItem.Item_Strip(1,iItem) = thisLevel;    %µÚ¼¸¸ölevel
+%         sItem.Item_Strip(2,iItem) = tmpStrip_Item(1,thisLevel); %±¾levelÏÂµÚ¼¸´Î°²ÖÃ
+%         
+%         
+%         
+%         %         updateLWStrip(); %²»ÔÚÅĞ¶ÏÊÇ·ñÔÊĞíĞı×ª£»²»ÔÙÅĞ¶ÏÊÇ·ñÊôÓÚĞÂLevel£»²»ÔÙÅĞ¶ÏÊÇ·ñµ±Ç°¿É·ÅÈë
+%         
+%                 % % %         if sItem.isRota(iItem) == 1 %´ËItem¿ÉÒÔĞı×ª
+%                 % % %             % ÅĞ¶ÏÓï¾ä: 2¸ö
+%                 % % %             isflagCurr = Strip.LW(1,thisLevel) >=  sItem.LWH(1,iItem); %ÅĞ¶ÏÊÇ·ñcurrent's stripÊ£Óà¿í¶È >= µ±Ç°¸ß¶È£¨·ÇĞı×ª£©
+%                 % % %             isNewLevel = Strip.LW(1,thisLevel) == wStrip; % ÅĞ¶ÏÊÇ·ñ new Level            
+%                 % % %             % ¸üĞÂstripĞÅÏ¢
+%                 % % %             if isNewLevel %ÎŞÂÛÈçºÎ,¾ù¿ÉÒÔ·ÅÈë,ÎŞÂÛºÎÖÖ°Ú·Å,Òò´Ë:Ö±½Ó¸üĞÂ£¨ItemÒÑ°´Hori/Vert°Ú·Å¹ı£©
+%                 % % %                     updateLWStrip();
+%                 % % %             else % Èç¹û·ÇĞÂlevel Èç¿ÉÒÔ°Ú·Å,·ÅÈë; ·ñÔò,µ÷»»³¤¿í£¨Ğı×ª£©ºó·ÅÈë
+%                 % % %                     if isflagCurr
+%                 % % %                         updateLWStrip();
+%                 % % %                     else
+%                 % % %                         error('11111111');
+%                 % % % %                         rotateItem(); %²»ÄÜÖ±½Ó×¢ÊÍ
+%                 % % % %                         updateLWStrip();
+%                 % % %                     end
+%                 % % %              end            
+%                 % % %         elseif sItem.isRota(iItem) == 0 %´ËItem²»¿ÉÒÔĞı×ª
+%                 % % %             % ¸üĞÂstripĞÅÏ¢
+%                 % % %             updateLWStrip();
+%                 % % %         end
+%         
+% 
+%         
+%                         %  2.2 ¸üĞÂStrip.Strip_Item ĞĞ2 ±¾stripÄÚ°üº¬¼¸ÖÖItem
+%                 %         itemThisLevel = sItem.Item_Strip(1,:) == thisLevel;
+%                 %         Strip.Strip_Item(2,thisLevel) = numel(unique(sItem.LID(1,itemThisLevel)));
+% 
+%         % 4 ¶ş¼¶Ç¶Ì×º¯Êı- »ù±¾²»ÔÙĞèÒª
+% % %         function rotateItem()
+% % %             %  1 ²»½ö±ê¼ÇRotaed±ä»¯ »¹Òª°ÑITEMÕæÕıµÄrotate(·´)¹ıÈ¥
+% % %             sItem.Rotaed(iItem) = ~sItem.Rotaed(iItem);
+% % %             tep = sItem.LWH(1,iItem);
+% % %             sItem.LWH(1,iItem) = sItem.LWH(2,iItem);
+% % %             sItem.LWH(2,iItem) = tep;
+% % %             sItem.LWH(3,iItem) = sItem.LWH(3,iItem);
+% % %             
+% % %             %  2 ItemÄÚ²¿µÄLuÒ²ÒªËæÖ®¸üĞÂ
+% % %             tmpflagThisItem = (LU.LU_Item(1,:)==iItem);
+% % %             % ¶ÔÓ¦Î»ÖÃLU.Rotaed¸üĞÂ
+% % %             if Item.Rotaed(iItem)
+% % %                 LU.Rotaed(tmpflagThisItem) = ~LU.Rotaed(tmpflagThisItem);
+% % %                 % ¶ÔÓ¦Î»ÖÃLU.LWHµÄ³¤¿í¸üĞÂ£¬¸ß¶È²»¸üĞÂ
+% % %                 LU.LWH(1, tmpflagThisItem) = Item.LWH(1, iItem);
+% % %                 LU.LWH(2, tmpflagThisItem) = Item.LWH(2, iItem);
+% % %             end
+% % %         end
+%         
+% %         function updateLWStrip()
+% % %             Strip.LW(1,thisLevel) = Strip.LW(1,thisLevel) - sItem.LWH(1,iItem); %¸üĞÂwleft (°Ú·Å·½ÏòÇ°ÃæÒ»¶¨)
+% % %             Strip.LW(2,thisLevel) = max(Strip.LW(2,thisLevel), sItem.LWH(2,iItem)); %¸üĞÂstrip¸ß¶Èlleft(È¡×î´óÖµ)
+%             
+%             % ¸üĞÂStripÖĞ°üº¬IDÀàÓë·ñ
+% %             Strip.LID(sItem.LID(1,iItem),thisLevel) =  1;         
+% %             Strip.SID(sItem.SID(1,iItem),thisLevel) =  1;        
+% %             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % ÊıÖµÎª³öÏÖÓë·ñ
+% 
+% %              Strip.PID(:,thisLevel) = Strip.PID(:,thisLevel) + sItem.PID(:,iItem); % ÊıÖµÎª³öÏÖ´ÎÊı
+% %              Strip.PID(Strip.PID>0) = 1; % ÊıÖµ¸ÄÎª³öÏÖÓë·ñ
+%             
+% %             Strip.SID(sItem.SID(1,iItem),thisLevel) = 1;         % 555 ¸üĞÂ¶àĞĞPID
+% %             Strip.UID(sItem.UID(1,iItem),thisLevel) = 1;         % 555 ¸üĞÂ¶àĞĞPID
+% %             Item.PID(sLU.PID(1,iLU),thisItem) = 1;         % 555 ¸üĞÂ¶àĞĞPID
+%             
 % %         end
-% %         end % END OF ISsItemAdjust
-        
-        
-                % V1 : ÅĞ¶ÏĞı×ªÓë·ñ
-                %                 flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) |  ...
-                %                                       Strip.LW(1,iLevel) >= sItem.LWH(2,iItem));
-    else
-        % ²»Í¬Ìõ¼şÏÂµÄÑ¡Ôñ£ºÈç¹ûµ±Ç°itemµÄ¿í<=µ±Ç°stripµÄµ±Ç°levelµÄ¿í
-        flaged = find(Strip.LW(1,iLevel) >= sItem.LWH(1,iItem) );
-    end
-    
-        
-    if  isempty(flaged)  %×¢ÒâÓëÖ®Ç°~flagµÄÇø±ğ
-        iLevel = iLevel + 1;% Èç¹û¿í¶È²»Âú×ã£¬ÔòlevelÉı¼¶
-        [thisLevel,iLevel,sItem, LU] = getThisLevel( iItem, iLevel, sItem, Strip, LU, p) ;
-    else
-        if  isempty(flaged) ,   error(' ²»¿ÉÄÜµÄ´íÎó ');      end
-        thisLevel = iLevel; % µ±Ç°levelÒ»¶¨·ÅµÄÏÂ
-    end
-    %             end
-    
-end
-end
+%         
+%     end
 
 
-function ItemEIDord = getItemOrd(ItemID)
 
-priority = 1;
-ItemEIDord = zeros(1,size(ItemID,2));
-
-fmix        = sum(~isnan(ItemID),1)   >  1;     % ITEM»ìºÏ¶à¸öEIDµÄÂß¼­ÅĞ¶¨
-fnonmix = sum(~isnan(ItemID),1) == 1;     % ITEM·Ç»ìºÏ¶à¸öEIDµÄÂß¼­ÅĞ¶¨
-uniEID = unique(ItemID(~isnan(ItemID)));
-
-for u=1:length(uniEID)
-    feid = any(ItemID == uniEID(u),1);
-    if any(feid&~ItemEIDord&fnonmix),
-        ItemEIDord(feid&~ItemEIDord&fnonmix) = priority;   priority=priority+1; end
-    if any(feid&~ItemEIDord&fmix),
-        ItemEIDord(feid&~ItemEIDord&fmix) = priority;  priority=priority+1; end
-end
-
-end
+%% 
+    % ÏÂÃæÓÃÍ¾²»´ó£¬Ö÷ÒªÔ­ÒòÔÚÓÚÔÚGpreprocÖĞÒÔ¼°×öÁËH/V·ÅÖÃ´¦ÀíÁË
+% %     % 1ºÍ2ÒÔÄÚµÄ, sortedItemArray¶ÔÓ¦µÄLWHRotaºÍRotaed¸üĞÂÁË->ĞèÇó·µ»Øµ½Ô­¾ØÕóItemArryÖĞ
+% %     if p.whichRotationHori == 1 % ÎŞÂÛÄÄ¸ölevel,¶¼°´ÕÕhorizontally·½Ê½°Ú·Å
+% %          x = sItem.Rotaed;
+% %          sItem.LWH
+% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,1);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯       
+% % %          if any(x~=sItem.Rotaed),                 error('111111111111');         end    
+% %     end
+% %     if p.whichRotationHori == 2 % ÎŞÂÛÄÄ¸ölevel,¶¼°´ÕÕvertical·½Ê½°Ú·Å
+% %                     x = sItem.Rotaed
+% %         [ sItem.Rotaed] = placeItemHori(sItem.LWH,sItem.isRota,0);  %µÚ¶ş¸ö²ÎÊı£º1: Hori; 0: Vert£»ÆäËü: Ô­·â²»¶¯
+% % %                     if any(x~=sItem.Rotaed),                                  error('111111111111');         end
+% %     end
+% %     sItem.LWH = getRotaedLWH(sItem.LWH, sItem.Rotaed, LU.buff); 
+% %     sItem.LWH

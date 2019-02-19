@@ -2,7 +2,6 @@
 % 1: Item.isHeightFull ( Item内最大LU高度 * 0.95 >= 顶层间隙, 视为满层)  computeisHeightFullItem
 % 4: Item.isNonMixed  计算每个Item是否为不需要混拼的可能
 % 5: Item.nbItem 计算每个Item包含同LU/ID的数量
-%% 函数
 function   [Item] = cpuItem(Item,LU,Veh)
 
     %% 初始化
@@ -46,6 +45,10 @@ function   [Item] = cpuItem(Item,LU,Veh)
     Item.nbItem = sum(tmpItemLID == tmpItemLID');
 
 end
+
+
+
+
 
 %% 局部函数 %%
 function TF = computeisHeightFullItem(Item,LU)

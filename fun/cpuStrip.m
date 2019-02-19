@@ -16,7 +16,6 @@
 
 % Strip.LID
 
-%% º¯Êý cpuStrip 
 function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
 
 %% ³õÊ¼»¯
