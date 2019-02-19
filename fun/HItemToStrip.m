@@ -407,14 +407,19 @@ ItemLID = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回
 % V2: ********** 考虑isNonMixed
 global ISisNonMixed ISisMixTile
 % 目前顺序 : 1: SID ; 2: isNonMixed;(相同LID下) 一般正真开始:    3: Longth/Height; 4:Width; 5: LID; (3,4,5,多数一样) 6: Height
-tmpItem = [ItemSID; Item.isNonMixed; Item.isMixedTile; ...                     % SINGLE VERSION    todo 二者区别是什么????
+% tmpItem = [ItemSID; Item.MixOrder; Item.isMixedTile; ...                     % SINGLE VERSION    todo 二者区别是什么????
+%     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+% tmpItem = [ItemSIDord; Item.MixOrder; Item.isMixedTile; ...                % MILKRUN VERSION 似乎也使用single version
+%     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
+tmpItem = [ItemSID; Item.MixOrder; Item.MixOrder; ...                     % SINGLE VERSION    todo 二者区别是什么????
     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
-tmpItem = [ItemSIDord; Item.isNonMixed; Item.isMixedTile; ...                % MILKRUN VERSION
+tmpItem = [ItemSIDord; Item.MixOrder; Item.MixOrder; ...                % MILKRUN VERSION 似乎也使用single version
     Item.LWH(2,:); Item.LWH(1,:); ItemLID; Item.LWH(3,:); ItemEIDord; ];
 
 if ISisNonMixed==1    
     if ISisMixTile==1
-        [~,order] = sortrows(tmpItem',[1, 8, 2, 3, 4, 5, 6, 7 ],{'ascend','ascend','descend','ascend','descend','descend','descend','descend'}); %增加EID
+        [~,order] = sortrows(tmpItem',[1, 8, 2, 4, 5, 6, 7 ],{'ascend','ascend','ascend','descend','descend','descend','descend'}); %增加EID
+%         [~,order] = sortrows(tmpItem',[1, 8, 2, 3, 4, 5, 6, 7 ],{'ascend','ascend','descend','ascend','descend','descend','descend','descend'}); %增加EID
 %         [~,order] = sortrows(tmpItem',[1, 2, 3, 4, 5, 6, 7 ],{'ascend','descend','ascend','descend','descend','descend','descend'});
     else
         [~,order] = sortrows(tmpItem',[1, 2, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend','descend'});
@@ -423,19 +428,7 @@ else
     [~,order] = sortrows(tmpItem',[1, 4, 5, 6, 7 ],{'ascend','descend','descend','descend','descend'});
 end
 
-%%
-% % % clc
-% % % s = [1 1 1 2 2;
-% % %        10 10 10 12 12;
-% % %        8 8  8 7 7;
-% % %        10 9 6 6 8]
-% % %    d=(diff(s(4,:)))
-% % %     s=[s;[100,d]]
-% % % %     [x,order] = sortrows(s',[1, 2, 3, 4,5 ],{'ascend','ascend','descend','descend','ascend'});
-% % %     [x,order] = sortrows(s',[1, 2, 3, 5 ],{'ascend','ascend','descend','ascend'});
-% % %     x'
-% % %     order'
-% % %    1
+
 %%
 % itemPriority = getPriorityofItem(SIDorder,Item.isNonMixed, Item.isHeightFull, Item.LWH)
 % tmpSort = [SIDorder; itemPriority];

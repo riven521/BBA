@@ -1,6 +1,6 @@
 function [d] = RunAlgorithm(d,p)
-        global ISshuaiwei ISreStripToBin ISstripbalance %重新执行HStripToBin方案
-        global  ISplotshuaiwei  ISplotStripToBinAgain  ISplotstripbalance ISplotRunAlgo ISplotStrip
+        global ISshuaiwei ISreStripToBin  %重新执行HStripToBin方案
+        global  ISplotshuaiwei  ISplotStripToBinAgain   ISplotRunAlgo ISplotStrip ISplotstripbalance ISstripbalance
 
         %% 预处理:检验Input输入数据
         fprintf(1,'   Running RunAlgorithm  ...\n');
@@ -10,7 +10,7 @@ function [d] = RunAlgorithm(d,p)
         
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
-        [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做 in case 意外错误
+%         [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做 in case 意外错误
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
         
@@ -22,7 +22,7 @@ function [d] = RunAlgorithm(d,p)
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
         % ADD: isNonmixed/ismixedtile
-        [d.LU] = cpuLU(d.LU,d.Veh);     
+%         [d.LU] = cpuLU(d.LU,d.Veh);     
         
         
         %fprintf(1,'     Running HLUtoItem...\n');
@@ -108,6 +108,8 @@ function [d] = RunAlgorithm(d,p)
         % ADD: isAllPured/isSingleItem/mlmdHeight/IDs/~Limit
         [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
+        sum(~d.Strip.isHeightBalance & d.Strip.isHeightFull)
+        ISplotRunAlgo=1
         if ISplotRunAlgo & 0
 %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU原始
             plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU'); %LU排序后
@@ -188,8 +190,8 @@ function [d] = RunAlgorithm(d,p)
         % ADD: isTileNed/IDs
         [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
 
-        list_struct(d.LU)
-        list_struct(d.Bin)        
+%         list_struct(d.LU)
+%         list_struct(d.Bin)        
         
         if ISplotRunAlgo
             plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'排序后Bin'); % Bin排序后
@@ -200,7 +202,12 @@ function [d] = RunAlgorithm(d,p)
                                                         %         ti = d.Strip;  tl = d.Bin;
         if ISreStripToBin==1
                 fprintf(1,'     Running HStripToBinAgain...\n');
+                
+                sum(~d.Strip.isHeightBalance & d.Strip.isHeightFull)
+                
                 [d.Strip,d.Bin,TFHStripToBinAgain] = HStripToBinAgain(d.Bin,d.Strip,d.Item,d.LU,d.Veh,p); 
+                
+                sum(~d.Strip.isHeightBalance & d.Strip.isHeightFull)
                 
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip); % 计算LU在Bin内坐标and顺序   %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
 

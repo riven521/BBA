@@ -117,6 +117,10 @@ if sum(tmpisHeightBalance ~= Strip.isHeightBalance) > 0
 %% 2: STRIP.isHeightFullStrip: STRIP增加判断是否Strip时高度满层/或不满(包含非Full的Item. )
 Strip.isHeightFull = isHeightFullStrip(Strip,Item);
 
+ if sum(~Strip.isHeightBalance & Strip.isHeightFull)
+%   plotSolutionT(LU,Veh,0,0,1,1,3,'量大车头后Bin'); % Bin排序后
+ end
+ 1
 %% 3: STRIP.isWidthFull : STRIP增加判断是否包含宽度width非Full的Item. 
 % Strip = isWidthFullStrip(Strip,Item);
 Strip.isWidthFull = isWidthFullStrip(Strip,Item);
@@ -277,7 +281,8 @@ function isHeightFull = isHeightFullStrip(Strip,Item)
             else
                 isHeightFull(i) = 1;
                 if Strip.isHeightBalance(i) == 0
-                    error('高度满层的条带,居然也会高度不均衡');
+%                     LU.LU_Strip(1,:) == i ??
+                    warning('高度满层的条带,居然也会高度不均衡');
                 end
             end
         

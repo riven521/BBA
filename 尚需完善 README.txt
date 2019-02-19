@@ -602,10 +602,19 @@ V190218 V3
 1：repairItem放到cputItem后，
 2：修复chktLU的LWH核验
 3: 删除cpuItem的输出二(lu)和HItemToStrip的输出lu和cpuBin的lu输出  
-4：Hbinpingpu降低高度，从堆垛层数>1且堆垛最高的进行降低，直接降低到当前层-1
 5：修改Strip.是否需要甩尾平铺。 高度均衡需要甩尾，但不需要平铺
+6：独立Strip.isHeightFull与isHeightbalance的关系
+4：Hbinpingpu降低高度，从堆垛层数>1且堆垛最高的进行降低，直接降低到当前层-1，且只对某个条带（宽度高度不满且非均衡）的最高堆垛的单一堆垛降低层数。由快速降低改为慢速降低。
+
+V190219 V1
+1：去除ISstripbalance，均衡改为甩尾平铺
+2：修改cpuItem内的Item排序指标 ISisNonMixed ISisMixTile为1个 新指标MixOrder
+
 
 TODO
+1 量大车头顺序
+2 不均衡与车辆高度满层？关系？
+
 LU排序是否必须？ 特别是：LU考虑isNonMixed是否必须？（意义不大） 
 
 删除该排序后，意义何在（排序简化，不考虑isNonMixed）

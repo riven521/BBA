@@ -97,7 +97,8 @@ TFV2 = TF;
 for ibin=1:n
     
     % 2.1 找处ibin中的宽度不满 OR 高度不满的strip    (宽度不满: 横向间隙 > 单个Item的宽度)  (高度不满: 竖向间隙 > 单个Item的宽度)
-    fS = (Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0) | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0);
+    fS = (Strip.Strip_Bin(1,:) == ibin & Strip.isWidthFull==0) | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightFull==0) %...
+%         | (Strip.Strip_Bin(1,:) == ibin & Strip.isHeightBalance==0);
     if any(fS)
         % itemidx:fS中的item
         fiS = find(fS);

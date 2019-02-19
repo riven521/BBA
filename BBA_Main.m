@@ -59,7 +59,7 @@ end
 % 全局变量3： 混装间隙开关
 %   parGap ： 是否允许间隙调整（仅在甩尾平铺或整车平铺成功的车内进行）；parMulipleGap：是否在间隙调整过程中允许多次调整（必须有）
 global  parGap parMulipleGap
-parGap = 0;  % 是否允许主函数的间隙调整
+parGap = 1;  % 是否允许主函数的间隙调整
 parMulipleGap = 1; % 必须为1，除非不想让其使用 是否允许间隙递归多次调整
 
 
@@ -91,18 +91,17 @@ ISplotPause = 0.0;  %-0.05 % plot间隔时间
 ISplotShowType = 3; % 1 LID 2 PID 3 ID 作图的颜色标记选项 4 SID 5EID
      
 % RunAlgorithm中
-global   ISplotStrip  % plotStrip
-ISplotStrip = 0;             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为plotSolutionT
-
+% global   ISplotStrip  % plotStrip
+% ISplotStrip = 0;             % 每次Run algorithm 生成Strip就显示结果 看细节 后期替换为plotSolutionT
 
 % * to modify*
 % 下面还不完整, 可能要调 目前全部为1
 
-global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
+% global ISisNonMixedLU ISisMixTileLU         %LU2ITEM
 global ISisNonMixed ISisMixTile                 %ITEM2STRIP
           
-ISisNonMixedLU = 1; % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1 ；1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
-ISisMixTileLU = 1;       % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1 ；1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
+% ISisNonMixedLU = 1; % 555: 优先非混合LU形成ITEM, 图好看许多 必须有 默认为 1 ；1 LU可以形成满垛 0 必定有非满垛生成 LU排序依据
+% ISisMixTileLU = 1;       % 555: 优先混合LU的单纯ITEM部分来形成ITEM, 图好看许多 必须有 默认为 1 ；1 当isNonMixed=0时, 将非满垛对应的LU赋值为1（结合LU排序生成ITEM知识）
 
 ISisNonMixed = 1;    % 555: 优先非混合Item形成STRIP, 图好看许多 必须有 默认为 1
 ISisMixTile  = 1;         % 555: 优先混合Item的单纯Strip部分来形成STRIP, 图好看许多 必须有 默认为 1 但可能出现混合现象

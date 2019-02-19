@@ -67,7 +67,7 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         do3Array(ibin) = do3inIbin;
                                    
                         if ISplotEachPingPuAll  % plot 整车平铺前和整车平铺后的bin图
-                            plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'整车平铺前 Bin'); 
+%                             plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'整车平铺前 Bin'); 
                             plotSolutionT(do3inIbin.LU,do3inIbin.Veh,  0, 0, 0 , 1 ,3,'整车平铺后 Bin');   % plot整车平铺后的bin % do3 修改到d中？？？目前保留到do2Array中，未与d合并
                         end
                        
@@ -109,7 +109,11 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         i1 = ~do2inIbin.Strip.isWidthFull(fstrip); %宽度不满
                         i2 = ~do2inIbin.Strip.isHeightFull(fstrip) && ~do2inIbin.Strip.isHeightBalance(fstrip); %高度不满且非均衡
                         
-                        if ~(i1 || i2) % 如二者满足任意一个, 就可有进行降低层数算法
+                        i3 = do2inIbin.Strip.isHeightFull(fstrip) &&  ~do2inIbin.Strip.isHeightBalance(fstrip); %高度满层 , 但高度非均衡
+                        if i3
+                            error('impossible');
+                        end
+                        if ~(i1 || i2 ) % 如二者满足任意一个, 就可有进行降低层数算法
                             continue;
                         end
 
