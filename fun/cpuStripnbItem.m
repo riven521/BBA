@@ -53,7 +53,7 @@
             nbItem(1,iStrip) = unique(Item.nbItem(flagItem)); % NOTE: Òª¸üÐÂItem.nbItem
         end
     end
-            
+end
     
 
 % % for iStrip=1:length(Strip.Weight)    
@@ -153,4 +153,4 @@
 % %     end
 % % end
 
-end
+

@@ -18,6 +18,11 @@ lVeh  = Veh.LWH(2,1);
         error('不能使用structfun');
     end
     
+    Strip.striporder
+    sStrip.striporder()
+   
+    [T2] = getTableLU(Strip)
+    
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
 % 获取LWBin:  新生成的Bin的剩余长宽
@@ -34,7 +39,6 @@ sStrip.Strip_Bin = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
 % 循环往bin中安置strip,即固定strip,变化选择不同bin(thisBin),基于next fit，只能选择当前bin，若当前bin满。重新strip排序后，再放，或者甩尾时修改车内bin顺序
 % 注释：获取 FLAG        可放下当前iStrip的至少一个bin的集合 
 % 注释：获取 thisBin   从FLAG中找到按规则的那个thisBin, 并执行 insert函数
-
 
 
 iStrip=1; iBin=1;
@@ -80,7 +84,7 @@ EIDorder = getOrderofSID(Strip.EID); %EID一定是从1-n的过程(因为EID的idExchange预
         if ~issorted(unique(EIDorder),'strictascend'), error('EID未由小到大严格递增排序，请检查'); end  
         
 %对LID排序: 相邻摆放的重要原则 5555555 
-IDorder = getOrderofLID(SIDorder, EIDorder, Strip);                                 % STRIP的顺序至关重要
+IDorder = getOrderofLID(SIDorder, EIDorder, Strip);             % STRIP的顺序至关重要(量大车头看着儿 5555 )
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
 
 % 555 纠错语句 Single版本：V1: 同一SIDorder下,不允许有重复的 IDorder 即同一供应商下，必须有不同的顺序，不考虑EID
@@ -142,6 +146,19 @@ end
         flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & ...
             Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );
         if  isempty(flaged)  %注意与之前~flag的区别
+            
+% %             % todo 若改到下一个bin，重新对strip排序
+% % %             Strip = getReorderStruct(sort(sStrip.striporder), sStrip);
+% %             
+% %             [T] = getTableLU(sStrip);       T(1:iStrip-1,:) = [];          tmpStrip = getSturctT(T);
+% %             
+% %             [tmpStrip.striporder] = getStriporder(tmpStrip);
+% % %             o = 
+% %             sStrip = structfun(@(x) x(:,tmpStrip.striporder),tmpStrip,'UniformOutput',false);
+% % %             Strip.striporder
+% % %             T
+% % %             1
+            
             iBin = iBin + 1;
             [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
         else

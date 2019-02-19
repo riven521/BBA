@@ -13,39 +13,33 @@
 % 8 Strip.loadingrate           % 每个strip的装载比率
 % 9 Strip.loadingrateLimit   % 每个strip的有限装载比率
 
-
-% Strip.LID
-
-function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
+function   [Strip] = cpuStrip(Strip,Item,LU,Veh)
 
 %% 初始化
-
-    % nStrip = length(Strip.Weight);
     
-    Strip.isMixed = ones(size(Strip.Weight))*-1;         %是否为混合型,包含多个LID 
-    Strip.isMixedSID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个SID 
-    Strip.isMixedEID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个EID 
-    
-    Strip.nbLID = ones(size(Strip.Weight))*-1;   %STRIP内LID数量
-    Strip.nbSID= ones(size(Strip.Weight))*-1;   %STRIP内SID数量
-    Strip.nbEID= ones(size(Strip.Weight))*-1;   %STRIP内EID数量
-    
-     
     Strip.isHeightFull = ones(size(Strip.Weight))*-1;   %是否包含非Full的Item
     Strip.isHeightBalance = ones(size(Strip.Weight))*-1;   %是否Item的高度差异不大
-    
-    Strip.nbItem = ones(size(Strip.Weight))*-1;            %单STRIP内部ITEM类型个数, 混合型默认为-1
-    Strip.isAllPured = ones(size(Strip.Weight))*-1;       %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
-    Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
     Strip.isWidthFull = ones(size(Strip.Weight))*-1;     %是否为宽度非Full的Item  若 宽度间隙 >= 本Strip包含的Item的宽度最小值， 则宽度不满，取值0
+        
+    Strip.isMixed = ones(size(Strip.Weight))*-1;         %是否为混合型,包含多个LID 
+    Strip.isMixedSID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个SID   暂时用不到 注释
+    Strip.isMixedEID = ones(size(Strip.Weight))*-1;   %是否为混合型,包含多个EID   暂时用不到 注释
     
+%     Strip.nbLID = ones(size(Strip.Weight))*-1;   %STRIP内LID种类数量,非实际托盘个数
+%     Strip.nbSID= ones(size(Strip.Weight))*-1;    %STRIP内SID种类数量
+%     Strip.nbEID= ones(size(Strip.Weight))*-1;    %STRIP内EID种类数量
+         
+    Strip.nbItem = ones(size(Strip.Weight))*-1;            %单STRIP内部ITEM类型个数, 混合型默认为-1
+%     Strip.isAllPured = ones(size(Strip.Weight))*-1;       %单STRIP对应LID是否包含混合STRIP, 包含混合型默认为-1
+%     Strip.isSingleItem = ones(size(Strip.Weight))*-1;   %单Strip内对应只有1个ITEM
+        
     Strip.maxHeight = ones(size(Strip.Weight))*-1;     %Strip的最高高度.
     Strip.lowestHeight = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
     Strip.meanHeight = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
  
-    Strip.Stripvolume = ones(size(Strip.Weight))*-1;  %每个strip的可用体积 = 高度*宽度(车辆的宽度)
-    Strip.StripvolumeLimit = ones(size(Strip.Weight))*-1; % %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
-    Strip.Itemvolume = ones(size(Strip.Weight))*-1; %每个strip包含的Item装载体积
+%     Strip.Stripvolume = ones(size(Strip.Weight))*-1;  %每个strip的可用体积 = 高度*宽度(车辆的宽度)
+%     Strip.StripvolumeLimit = ones(size(Strip.Weight))*-1; % %每个strip的有限可用体积 = 高度*宽度(strip使用宽度=车辆宽度-strip剩余宽度)
+%     Strip.Itemvolume = ones(size(Strip.Weight))*-1; %每个strip包含的Item装载体积
     Strip.loadingrate = ones(size(Strip.Weight))*-1; % 每个strip的装载比率
     Strip.loadingrateLimit = ones(size(Strip.Weight))*-1;     % 每个strip的有限装载比率
     
@@ -58,30 +52,8 @@ function   [Strip,LU] = cpuStrip(Strip,Item,LU,Veh)
 %     Strip.meanLUWidth = ones(size(Strip.Weight))*-1;     %Strip的最低高度.
 %     Strip.seqSW = ones(size(Strip.Weight))*-1;     %Strip的??? 暂未用
 
-%% 1 计算LU.LU_Strip, LU.CoordLUStrip
-% 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
-    nbLU = size(LU.LWH,2);
-    LU.LU_Strip = zeros(2,nbLU);
-    LU.CoordLUStrip = zeros(3,nbLU);
-
-% 更新LU_Strip
-for iLU=1:nbLU
-    % 更新LU_Strip第一行
-    iItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item, Item属于第几个Strip,则Lu属于第几个Strip
-    LU.LU_Strip(1,iLU)= Item.Item_Strip(1,iItem);
-    % 更新LU_Strip第二行
-    fiItem = find(Item.Item_Strip(1,:) == Item.Item_Strip(1,iItem) & Item.Item_Strip(2,:) < Item.Item_Strip(2,iItem));
-    nbLUfiItem = sum(ismember(LU.LU_Item(1,:),fiItem));
-    LU.LU_Strip(2,iLU) = nbLUfiItem+LU.LU_Item(2,iLU); % 进入Strip顺序: 同一Strip内先前进入个数nbLUfiItem + 本iLU在Item的顺序
-    % 更新LU.CoordLUStrip
-    LU.CoordLUStrip(1,iLU) = Item.CoordItemStrip(1,iItem);
-    LU.CoordLUStrip(2,iLU) = Item.CoordItemStrip(2,iItem);
-        % fLU: 与iLU同属iItem 且 顺序晚于本iLU; 可能为空, 不影响.
-    fLU = LU.LU_Item(1,:) == iItem & LU.LU_Item(2,:) < LU.LU_Item(2,iLU);
-    LU.CoordLUStrip(3,iLU) = sum(LU.LWH(3,fLU));
-end
-
-%% 2 V2 计算STRIP的PID,LID,SID
+%% 1 V2 计算STRIP的PID,LID,SID
+    % 由混合的LU.DOC新增LU_STRIP, 计算STRIP内包含的PID,LID,SID等数据 1808新增
     % 由TABLE计算,方便知道什么是什么,不用1,2,3数字替换
     t = struct2table(structfun(@(x) x',LU,'UniformOutput',false));
     
@@ -96,16 +68,17 @@ end
     end    
     %  t2 = struct2table(structfun(@(x) x',Strip,'UniformOutput',false));
 
-%% 3: 计算strip装载率Strip.loadingrate,Strip.loadingrateLimit]  cpuBin使用
+%% 2: 计算strip装载率Strip.loadingrate,Strip.loadingrateLimit]  cpuBin使用
 [Strip.loadingrate,Strip.loadingrateLimit] = computeLoadingRateStrip(Strip,Item,Veh); 
 
-%% 4: 计算STRIP.maxHeight等 : 计算Strip的高度的最大,最小,差值和 均值高度 HStripSW使用
+%% 3: 计算STRIP.maxHeight等 : 计算Strip的高度的最大,最小,差值和 均值高度 HStripSW使用
 [Strip.maxHeight,Strip.lowestHeight,Strip.meanHeight,Strip.diffHeight] = computeStripHeight(Strip,Item);
 
-%% 1: STRIP.isMixed: STRIP增加判断是否单纯型/混合型判断 HStripSW使用
-[Strip.isMixed,Strip.isMixedSID,Strip.isMixedEID,Strip.nbLID,Strip.nbSID,Strip.nbEID] = isMixedStrip(Strip);
+%% 4: STRIP.isMixed: STRIP增加判断是否单纯型/混合型判断 HStripSW使用
+[Strip.isMixed,Strip.isMixedSID,Strip.isMixedEID] = isMixedStrip(Strip);
+% [Strip.nbLID,Strip.nbSID,Strip.nbEID] = computeStripnbIDs(Strip);   % 暂时不用
 
-%% 2: STRIP.isHeightBalance: STRIP增加判断是否isHeightBalance(高度均衡判定):  HStripBalnace使用 
+%% 5: STRIP.isHeightBalance: STRIP增加判断是否isHeightBalance(高度均衡判定):  HStripBalnace使用 
 Strip.isHeightBalance = isHeightBalanceStrip(Strip);
 
 % 备用函数,前一个版本
@@ -113,19 +86,26 @@ tmpisHeightBalance = isHeightBalanceStrip1(Strip,Item);
 if sum(tmpisHeightBalance ~= Strip.isHeightBalance) > 0 
     error('isHeightBalanceStrip计算可能错误'); end
 
-%% 2: STRIP.isHeightFullStrip: STRIP增加判断是否Strip时高度满层/或不满(包含非Full的Item. )
+%% 6: STRIP.isHeightFullStrip: STRIP增加判断是否Strip时高度满层/或不满(包含非Full的Item. )
 Strip.isHeightFull = isHeightFullStrip(Strip,Item);
 
- if sum(~Strip.isHeightBalance & Strip.isHeightFull)
+%  if sum(~Strip.isHeightBalance & Strip.isHeightFull)
 %   plotSolutionT(LU,Veh,0,0,1,1,3,'量大车头后Bin'); % Bin排序后
- end
- 1
-%% 3: STRIP.isWidthFull : STRIP增加判断是否包含宽度width非Full的Item. 
-% Strip = isWidthFullStrip(Strip,Item);
+%  end
+ 
+%% 7: STRIP.isWidthFull : STRIP增加判断是否包含宽度width非Full的Item. 
 Strip.isWidthFull = isWidthFullStrip(Strip,Item);
 
+%% 8：cpuStripnbItem
+%Strip.nbItem: 混合:-; 单纯: 对应Strip内部该Item的nbLID类型个数,数值越大,即该LU类型越多
+[Strip.nbItem, Strip.nbLU, Strip.nbLULID] = cpuStripnbItem(Strip,Item,LU);
 
-%% 暂时无用 4.1 STRIP.GapValue 和 isGAPBalance(条带的宽度W,沿车厢场边的差值)的计算
+
+
+
+
+
+%% 暂时无用 注释 4.1 STRIP.GapValue 和 isGAPBalance(条带的宽度W,沿车厢场边的差值)的计算
 
 % fmix = Strip.isMixed==1;
 % fwid = Strip.isWidthFull==0;
@@ -145,53 +125,50 @@ Strip.isWidthFull = isWidthFullStrip(Strip,Item);
 % Strip.LID
 % printstruct(Strip)
 
-%% 5,6
+%% 5,6 暂时注释
 %Strip.isAllPured：混合:-1; 单纯: 1 (混合strip内没有改ID) ; 0 (混合strip内含有该单纯strip的ID)
 %Strip.isSingleItem: 混合: -1; 单纯: Strip内仅有一个Item,必定是单纯的.
-LIDinItemsArray = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
-mixedStrip = find(Strip.isMixed(1,:) == 1);
-mixedLID = [];
-for m=1:length(mixedStrip)
-     f = Item.Item_Strip(1,:) == mixedStrip(m);
-     mixedLID = [mixedLID, LIDinItemsArray(f)];
-end
-mixedLID = unique(mixedLID);
+% % % LIDinItemsArray = cellfun(@(x) x(1), Item.LID); % arrayAllLID: 所有ITEM对应的LID值 向量形式
+% % % mixedStrip = find(Strip.isMixed(1,:) == 1);
+% % % mixedLID = [];
+% % % for m=1:length(mixedStrip)
+% % %      f = Item.Item_Strip(1,:) == mixedStrip(m);
+% % %      mixedLID = [mixedLID, LIDinItemsArray(f)];
+% % % end
+% % % mixedLID = unique(mixedLID);
+% % % 
+% % % uniItem = unique(Item.Item_Strip(1,:));
+% % % for i=1:length(Strip.isAllPured)
+% % %     if ~Strip.isMixed(1,i) %如是单纯型        
+% % %         cellLID = Item.LID(Item.Item_Strip(1,:) == uniItem(i)); % cellLID: 本Strip内的ITEM对应的LID值
+% % %             %         cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
+% % %         LIDinThisItemArray = cellfun(@(x)x(1), cellLID);
+% % %         if isscalar(unique(LIDinThisItemArray)) 
+% % %             
+% % %             if isscalar(LIDinThisItemArray)
+% % %                 Strip.isSingleItem(1,i) = 1;
+% % %             else
+% % %                 Strip.isSingleItem(1,i) = 0;
+% % %             end
+% % %             
+% % %             if ismember(unique(LIDinThisItemArray),mixedLID)
+% % %                 Strip.isAllPured(1,i) = 0;
+% % %             else
+% % %                 Strip.isAllPured(1,i) = 1;
+% % %             end
+% % %             
+% % %             % Strip.nbItem(1,i) = sum(LIDinItemsArray ==
+% % %             % unique(LIDinThisItemArray)); %单独放入函数计算
+% % %             
+% % %         else
+% % %              error('单纯型STRIP内的ITEM的类型不同'); %arrayLID            
+% % %         end
+% % %     else % strip如是混合型     
+% % %         Strip.isSingleItem(1,i) = 0;
+% % %         Strip.isAllPured(1,i) = 0;
+% % %     end
+% % % end
 
-uniItem = unique(Item.Item_Strip(1,:));
-for i=1:length(Strip.isAllPured)
-    if ~Strip.isMixed(1,i) %如是单纯型        
-        cellLID = Item.LID(Item.Item_Strip(1,:) == uniItem(i)); % cellLID: 本Strip内的ITEM对应的LID值
-            %         cellLID = Item.LID(Item.Item_Strip(1,:) == i); % cellLID: 本Strip内的ITEM对应的LID值
-        LIDinThisItemArray = cellfun(@(x)x(1), cellLID);
-        if isscalar(unique(LIDinThisItemArray)) 
-            
-            if isscalar(LIDinThisItemArray)
-                Strip.isSingleItem(1,i) = 1;
-            else
-                Strip.isSingleItem(1,i) = 0;
-            end
-            
-            if ismember(unique(LIDinThisItemArray),mixedLID)
-                Strip.isAllPured(1,i) = 0;
-            else
-                Strip.isAllPured(1,i) = 1;
-            end
-            
-            % Strip.nbItem(1,i) = sum(LIDinItemsArray ==
-            % unique(LIDinThisItemArray)); %单独放入函数计算
-            
-        else
-             error('单纯型STRIP内的ITEM的类型不同'); %arrayLID            
-        end
-    else % strip如是混合型     
-        Strip.isSingleItem(1,i) = 0;
-        Strip.isAllPured(1,i) = 0;
-    end
-end
-
-%% 7
-%Strip.nbItem: 混合:-; 单纯: 对应Strip内部该Item的nbLID类型个数,数值越大,即该LU类型越多
-[Strip.nbItem, Strip.nbLU, Strip.nbLULID] = cpuStripnbItem(Strip,Item,LU);
 
 end
 
@@ -225,42 +202,6 @@ function isHeightBalance = isHeightBalanceStrip(Strip)
     
 end
 
-%% 函数1.2: V3: %  isHeightBalanceStrip1     Strip.diffHeight 备用
-function isHeightBalance = isHeightBalanceStrip1(Strip,Item) 
-    global parBalance
-    
-    n = length(Strip.Weight);
-    isHeightBalance = deal(zeros(1,n));    
-    
-    % 1 获取所有的Strip向量
-    StripArray = unique(Item.Item_Strip(1,:));
-
-    % 2 循环判断Strip内部Item之间的最大差值, 是否<= 最小的对角线或一共绝对值, 如是,均为Full; 
-    for i=1:n
-        fItem = Item.Item_Strip(1,:) == StripArray(i);        
-        % 本strip内的堆垛高度差: 高度间隙
-        maxHeightDiff = max(abs(diff(Item.LWH(3,fItem))));
-
-        % 对比2: 本strip内的最高的Item的1/3
-        oneThirdsHeightItem = max(Item.LWH(3,fItem))*parBalance;
-        
-        % 对比2: 最大差值, 是否<= 1/3最高Item (Item高度平行, 即使很低,  也认为是满层)
-        if ~isempty(maxHeightDiff)
-            if maxHeightDiff <= oneThirdsHeightItem                 
-                     isHeightBalance(i) = 1;
-            else
-                     isHeightBalance(i) = 0;       
-            end
-        else %均为空值, 即只有Strip一个堆垛, 算是均衡的
-            if sum(fItem)~=1, error('该strip包含不是一个堆垛!'); end
-            isHeightBalance(i) = 1;
-        end
-    end
-    
-    % 防错语句
-    if any(isHeightBalance==-1), error('存在Strip.isHeightBalance未分配!'); end
-end
-
 %% V3 isHeightFullStrip: 若高度均衡,通过内堆垛是否高度满层判定 Item.isHeightFull; 否则不满层
 % getOrderofLID / cpuBIn / HStripSW 使用(用途广泛) 555
 function isHeightFull = isHeightFullStrip(Strip,Item)
@@ -281,7 +222,7 @@ function isHeightFull = isHeightFullStrip(Strip,Item)
                 isHeightFull(i) = 1;
                 if Strip.isHeightBalance(i) == 0
 %                     LU.LU_Strip(1,:) == i ??
-                    warning('高度满层的条带,居然也会高度不均衡');
+                    warning('高度满层的条带,居然也会高度不均衡'); % todo fixme 
                 end
             end
         
@@ -326,37 +267,24 @@ function TF = isWidthFullStrip(Strip,Item)
     
 end
 
-%% 函数3: 判断STRIP是否混合型isMixedStrip
-function [isMixed,isMixedSID,isMixedEID,nbLID,nbSID,nbEID] = isMixedStrip(Strip)
 
-    n = length(Strip.Weight);
-    [isMixed,isMixedSID,isMixedEID,nbLID,nbSID,nbEID] = deal(zeros(1,n));
-        
-    % 循环判断Strip是否为不同LU.ID的混合型
-    for i=1:n
-        
-         if numel(Strip.LID{i}) > 1
-             isMixed(i) = 1;             
-         else
-             isMixed(i) = 0;
-         end
-         nbLID(i) = numel(Strip.LID{i});
-
-         if numel(Strip.SID{i}) > 1
-             isMixedSID(i) = 1;
-         else
-             isMixedSID(i) = 0;
-         end
-         nbSID(i) = numel(Strip.LID{i});
-         
-         if numel(Strip.EID{i}) > 1
-             isMixedEID(i) = 1;
-         else
-             isMixedEID(i) = 0;
-         end
-         nbEID(i) = numel(Strip.LID{i});
-    end
-end
+% computeStripnbIDs
+% function [nbLID,nbSID,nbEID] = computeStripnbIDs(Strip)
+% 
+%     n = length(Strip.Weight);
+%     [nbLID,nbSID,nbEID] = deal(zeros(1,n));
+%         
+%     % 循环判断Strip是否为不同LU.ID的混合型
+%     for i=1:n        
+% 
+%          nbLID(i) = numel(Strip.LID{i});
+% 
+%          nbSID(i) = numel(Strip.SID{i});
+%          
+%          nbEID(i) = numel(Strip.EID{i});
+%     end
+%     
+% end
 
 %% 函数4: 计算computeLoadingRateStrip
 function [loadingrate,loadingrateLimit] = computeLoadingRateStrip(Strip,Item,Veh)
@@ -409,7 +337,69 @@ function [maxHeight,lowestHeight,meanHeight,diffHeight] = computeStripHeight(Str
 end
 
 
+
+
+%% 函数1.2: V3: %  isHeightBalanceStrip1     Strip.diffHeight 备用
+function isHeightBalance = isHeightBalanceStrip1(Strip,Item) 
+    global parBalance
+    
+    n = length(Strip.Weight);
+    isHeightBalance = deal(zeros(1,n));    
+    
+    % 1 获取所有的Strip向量
+    StripArray = unique(Item.Item_Strip(1,:));
+
+    % 2 循环判断Strip内部Item之间的最大差值, 是否<= 最小的对角线或一共绝对值, 如是,均为Full; 
+    for i=1:n
+        fItem = Item.Item_Strip(1,:) == StripArray(i);        
+        % 本strip内的堆垛高度差: 高度间隙
+        maxHeightDiff = max(abs(diff(Item.LWH(3,fItem))));
+
+        % 对比2: 本strip内的最高的Item的1/3
+        oneThirdsHeightItem = max(Item.LWH(3,fItem))*parBalance;
+        
+        % 对比2: 最大差值, 是否<= 1/3最高Item (Item高度平行, 即使很低,  也认为是满层)
+        if ~isempty(maxHeightDiff)
+            if maxHeightDiff <= oneThirdsHeightItem                 
+                     isHeightBalance(i) = 1;
+            else
+                     isHeightBalance(i) = 0;       
+            end
+        else %均为空值, 即只有Strip一个堆垛, 算是均衡的
+            if sum(fItem)~=1, error('该strip包含不是一个堆垛!'); end
+            isHeightBalance(i) = 1;
+        end
+    end
+    
+    % 防错语句
+    if any(isHeightBalance==-1), error('存在Strip.isHeightBalance未分配!'); end
+end
+
+
 %% 如下全部为注释
+
+%% %% 1 计算LU.LU_Strip, LU.CoordLUStrip  期待拿到外面（或许已经拿到外面）
+% % nbLU = size(LU.LWH,2);
+% % LU.LU_Strip = zeros(2,nbLU);
+% % LU.CoordLUStrip = zeros(3,nbLU);
+% % 
+% % % 更新LU_Strip
+% % for iLU=1:nbLU
+% %     % 更新LU_Strip第一行
+% %     iItem = LU.LU_Item(1,iLU);   %iLU属于第几个Item, Item属于第几个Strip,则Lu属于第几个Strip
+% %     LU.LU_Strip(1,iLU)= Item.Item_Strip(1,iItem);
+% %     % 更新LU_Strip第二行
+% %     fiItem = find(Item.Item_Strip(1,:) == Item.Item_Strip(1,iItem) & Item.Item_Strip(2,:) < Item.Item_Strip(2,iItem));
+% %     nbLUfiItem = sum(ismember(LU.LU_Item(1,:),fiItem));
+% %     LU.LU_Strip(2,iLU) = nbLUfiItem+LU.LU_Item(2,iLU); % 进入Strip顺序: 同一Strip内先前进入个数nbLUfiItem + 本iLU在Item的顺序
+% %     % 更新LU.CoordLUStrip
+% %     LU.CoordLUStrip(1,iLU) = Item.CoordItemStrip(1,iItem);
+% %     LU.CoordLUStrip(2,iLU) = Item.CoordItemStrip(2,iItem);
+% %         % fLU: 与iLU同属iItem 且 顺序晚于本iLU; 可能为空, 不影响.
+% %     fLU = LU.LU_Item(1,:) == iItem & LU.LU_Item(2,:) < LU.LU_Item(2,iLU);
+% %     LU.CoordLUStrip(3,iLU) = sum(LU.LWH(3,fLU));
+% % end
+
 
 %% % V2: 修改输出 isHeightBalanceStrip
 % % function Strip = isHeightBalanceStrip(Strip,Item) 

@@ -7,9 +7,11 @@ else
 end
                                                                             % TLU = TLU(:,{'CoordLUBin','LWH','LID','SID','PID','Weight','LU_VehType','LU_Bin','LU_Item','isShuaiWei','Rotaed'});
 % splitvar 获取多维列变量->单变量
+if any(strcmp('LWH', TLU.Properties.VariableNames))
 TLU.L = TLU.LWH(:,1); 
 TLU.W = TLU.LWH(:,2); 
 TLU.H = TLU.LWH(:,3);  %增加长宽高单列
+end
 
 
 if any(strcmp('LU_Bin', TLU.Properties.VariableNames))
