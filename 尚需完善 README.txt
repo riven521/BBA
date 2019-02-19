@@ -622,16 +622,19 @@ V190219 V3
 2：精简cpustrip函数
 3：增加stirp排序函数getorderoflid的可读性
 
-1：量大车头，是重新对条带分车
-
-1：修改甩尾：不只对高度，平铺甩尾，对量小对也甩尾（即重新对车内条带排序）
-条带重排序：
-1：正常条带（非甩尾条带），重排序规则：量大，高度。
-2：甩尾条带（高度不满，宽度不满，混合条带），重排序规则：非混，高度。
-
+V190219 V4 修改甩尾操作
 1：精简HItemToBin函数
 2：HItem2Bin:增加子函数：getLUnIDs. 计算Lu.nID,nLID,nIDBin,nLIDBin;
-2：增加函数：getStripnID. 计算strip.nLUID,nLULID,nLUIDBin,nLULIDBin。
+3：增加函数：getStripnID. 计算strip.nLUID,nLULID,nLUIDBin,nLULIDBin。
+4: 甩尾分两部分：异常条带甩尾、正常条带重排序。（需要对strip.nIDBin计算）
+    4.1：正常条带（非甩尾条带），重排序规则：量大，高度。
+    4.2：甩尾条带（高度不满，宽度不满，混合条带），重排序规则：非混，高度。
+
+V190219 V5 修改量大车头操作（重新对条带分车）
+1：Hstrip2bin：每次nextfit到新bin，重新对sStrip啊脾虚。不可用，暂时恢复原状，采用strip2binagain函数。
+
+
+
 
 TODO
 1 量大车头顺序

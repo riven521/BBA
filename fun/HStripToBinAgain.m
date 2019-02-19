@@ -32,9 +32,9 @@ function [Strip,Bin,TF] = HStripToBinAgain(Bin,Strip,Item,LU,Veh,p)
                 l1 = LU;      l1.f = fLu;
 
                 % 3 进入cpuStripnbItem给了全部,增加了flag标记
-                [s1.nbItem,s1.nbLU, s1.nbLULID] = cpuStripnbItem(s1,i1,l1);                
+                [s1.nbItem,s1.nbLU, s1.nbLULID] = cpuStripnbItem(s1,i1,l1);           
                 
-                [s1.isMixed,s1.isMixedSID,s1.isMixedEID] = isMixedStrip(s1);  % 增加了也没鸟用？
+%                 [s1.isMixed,s1.isMixedSID,s1.isMixedEID] = isMixedStrip(s1);  % 增加了也没鸟用？
                 
                 % 4 获取新s2和b2 and 重新执行启发式S2B (进入HStripToBin只能给剩余部分的 x(:,f) )
                 s1 = structfun(@(x) x(:,fStrip),s1,'UniformOutput',false);    % 排除已经确定入bin的剩余Strip

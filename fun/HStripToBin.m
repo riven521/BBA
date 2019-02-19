@@ -18,10 +18,10 @@ lVeh  = Veh.LWH(2,1);
         error('不能使用structfun');
     end
     
-    Strip.striporder
-    sStrip.striporder()
+%     Strip.striporder
+%     sStrip.striporder()
    
-    [T2] = getTableLU(Strip)
+%     [T2] = getTableLU(Strip)
     
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
@@ -148,17 +148,24 @@ end
         if  isempty(flaged)  %注意与之前~flag的区别
             
 % %             % todo 若改到下一个bin，重新对strip排序
-% % %             Strip = getReorderStruct(sort(sStrip.striporder), sStrip);
+% %             [originT] = getTableLU(sStrip); 
+% %             T = originT; 
+% %             subT = T(1:iStrip-1,:);
+% % %             subT.LID 
+% % %             subT = 
+% % %             sum(subT.ID==subT.ID')
 % %             
-% %             [T] = getTableLU(sStrip);       T(1:iStrip-1,:) = [];          tmpStrip = getSturctT(T);
+% %             T(1:iStrip-1,:) = [];  
 % %             
-% %             [tmpStrip.striporder] = getStriporder(tmpStrip);
-% % %             o = 
-% %             sStrip = structfun(@(x) x(:,tmpStrip.striporder),tmpStrip,'UniformOutput',false);
-% % %             Strip.striporder
-% % %             T
-% % %             1
-            
+% %             S = getSturctT(T);            
+% %             
+% %             [S.striporder] = getStriporder(S);            
+% %             sssStrip = structfun(@(x) x(:,S.striporder),S,'UniformOutput',false);   
+% %             
+% %             [ssssT] = getTableLU(sssStrip); 
+% %             originT(iStrip:end,:) = ssssT;
+% %             sStrip = getSturctT(originT); 
+                       
             iBin = iBin + 1;
             [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
         else

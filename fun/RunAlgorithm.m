@@ -5,12 +5,12 @@ function [d] = RunAlgorithm(d,p)
         %% 预处理:检验Input输入数据
         fprintf(1,'   Running RunAlgorithm  ...\n');
         
-        %         d = GcheckInput(d);    %可以不做   因为main做一下即可          
+        %         d = GcheckInput(d);    %可以不做   因为main做一下即可
                 
         % 数据预处理：重点：获取LU.Rotaed,托盘是否排序 类似cpuLU函数 增加了许多LU的属性  （进入之前LWH已经时包含margin的）        
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
-        %         [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做>??  in case 意外错误
+                [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做>??  in case 意外错误
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
         
@@ -202,15 +202,15 @@ function [d] = RunAlgorithm(d,p)
             %             plotSolutionT(d.LU,d.Veh,0,1,0,0,3,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
             %             plotSolutionT(d.LU,d.Veh,0,2,0,0,3,'排序后Item',[],d.Item.itemorder,[]);
             %             plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
-            plotSolutionT(d.LU,d.Veh,0,0,2,0,3,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
+%             plotSolutionT(d.LU,d.Veh,0,0,2,0,3,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
             plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'排序后Bin'); % Bin排序后
-            plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'排序后Bin'); % Bin排序后 
+%             plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'排序后Bin'); % Bin排序后 
         end
         ISplotRunAlgo=0
                                                     
         %% 特殊：2 量大车头方案2: 每个剩余strip全体内比较量 better than 方案1 有故障
         % 特别是对第三辆车及以后
-        ISreStripToBin = 0
+        ISreStripToBin = 1
         if ISreStripToBin==1
                 fprintf(1,'     Running HStripToBinAgain...\n');
                 
@@ -242,7 +242,7 @@ function [d] = RunAlgorithm(d,p)
 
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
 
-%                 plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'量大车头后Bin'); % Bin排序后
+                plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'量大车头后Bin'); % Bin排序后
                 if TFHStripToBinAgain &&  ISplotStripToBinAgain && ISplotRunAlgo
                       plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'量大车头后Bin'); % Bin排序后
                 end %if ISplotStrip==1,      plot3DBPP(d,p);      end    % igure(111);   plot3DStrip(d.LU,d.Item,d.Veh,'Item');  % 基于LU.CoordLUBin
@@ -259,8 +259,7 @@ function [d] = RunAlgorithm(d,p)
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);    %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
        
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin的isTileNeed
-                    plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 
-                    plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'甩尾后Bin'); % Bin排序后 
+
                 if TFHStripSW && ISplotshuaiwei 
 %                     plotSolutionT(d.LU,d.Veh,0,0,0,1,3,'甩尾后Bin'); % Bin排序后 
 %                     plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'甩尾后Bin'); % Bin排序后 

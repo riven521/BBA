@@ -103,10 +103,18 @@ function [LU,Veh] = cpuVehLU(LU,Veh)
         LU.Rotaed = zeros(size(LU.ID));
     end
 
+    %% 计算LU的数量
     % 初始化计算
+    % V1"
+    %     for i=1:length(LU.Weight)
+    %         LU.nbID(i) = sum(LU.ID == LU.ID(i));
+    %     end
+    % V2: 直接计算 fixme todo 删除nbID?
     LU.nbID = sum(LU.ID==LU.ID');
     LU.nbLID = sum(LU.LID==LU.LID');
     
+    LU.nID = sum(LU.ID==LU.ID');          
+    LU.nLID = sum(LU.LID==LU.LID');    
     %% can del: 放到外面计算
     % 6：555 ITEMBALANCE必须 7 V2: 计算LU下面的isNonMixed/isMixedTile是否为不需要  层面 混拼/混拼排序 
     % 555 区分为LU相同高度（依据层数判断） 或 LU多种高度（依据高度判断 TODO 增加层数判断）两种类型

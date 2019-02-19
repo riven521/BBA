@@ -1,4 +1,5 @@
 function [nLUID, nLULID,nLUIDBin,nLULIDBin] = getStripnID(LU)
+% 通过LU计算：Strip对应的LUID数量、Strip对应相应bin内的ID数量
 
 uniStrip = unique(LU.LU_Strip(1,:));
 nStrip = length(uniStrip);

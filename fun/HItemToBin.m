@@ -116,16 +116,6 @@ end % EOF function
 %% 局部函数
 
 function LU = getLUnIDs(LU)
-    % V1"
-    %     for i=1:length(LU.Weight)
-    %         LU.nbID(i) = sum(LU.ID == LU.ID(i));
-    %     end
-    % V2: 直接计算 fixme todo 删除nbID?
-    LU.nbID = sum(LU.ID==LU.ID');
-    LU.nbLID = sum(LU.LID==LU.LID');
-    
-    LU.nID = sum(LU.ID==LU.ID');          
-    LU.nLID = sum(LU.LID==LU.LID');    
     
     % LU：托盘属性：nIDBin：此托盘所在bin内计数，没有-1；
     nLU = length(LU.Weight);

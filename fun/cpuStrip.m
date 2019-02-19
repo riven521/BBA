@@ -100,7 +100,7 @@ Strip.isWidthFull = isWidthFullStrip(Strip,Item);
 %Strip.nbItem: 混合:-; 单纯: 对应Strip内部该Item的nbLID类型个数,数值越大,即该LU类型越多
 [Strip.nbItem, Strip.nbLU, Strip.nbLULID] = cpuStripnbItem(Strip,Item,LU);
 
-% [Strip.nLUID, Strip.nLULID] = getStripnID(LU); Item2Bin计算
+[Strip.nLUID, Strip.nLULID] = getStripnID(LU);%此处需要计算，在Strip2bin需要用 
 
 
 %% 暂时无用 注释 4.1 STRIP.GapValue 和 isGAPBalance(条带的宽度W,沿车厢场边的差值)的计算
@@ -170,39 +170,6 @@ Strip.isWidthFull = isWidthFullStrip(Strip,Item);
 
 end
 
-
-
-% % function [nLUID, nLULID] = getStripnID(LU)
-% % 
-% % % nLU = length(LU.Weight);
-% % uniStrip = unique(LU.LU_Strip(1,:));
-% % nStrip = length(uniStrip);
-% % 
-% % nLUID = zeros(1,nStrip);
-% % nLULID = zeros(1,nStrip);
-% % 
-% % for i=1:nStrip
-% %     
-% %    istrip = uniStrip(i);
-% %    
-% %    idx = LU.LU_Strip(1,:) == istrip;
-% % %    unique(LU.ID(idx))
-% %    
-% %    if length(unique(LU.ID(idx))) == 1       
-% %        nLUID(istrip) = unique(LU.nID(idx));
-% %    else
-% %        nLUID(istrip) = -1;
-% %    end
-% %    
-% %    if length(unique(LU.LID(idx))) == 1
-% %        nLULID(istrip) = unique(LU.nLID(idx));
-% %    else
-% %        nLULID(istrip) = -1;
-% %    end
-% %    
-% % end
-% % 
-% % end
 
 
 %% 局部函数 %%

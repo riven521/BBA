@@ -61,12 +61,14 @@ for i=1:length(uniSIDord)
         else  % 1.2 如果该STRIP的含有多个STRIP, 必须对STRIP进行排序获取order
             
             tmpM = [Strip.nbLU(:,f);  Strip.nbLULID(:,f);  Strip.nbItem(:,f); Strip.isMixed(:,f);  Strip.isHeightFull(:,f);  Strip.loadingrate(:,f); ];
-            
-            [~,order] = sortrows(tmpM',[4,1,2,3,5,6],{'ascend','descend', 'descend', 'descend','descend','descend'});          if ~isrow(order), order=order'; end
-            
+            % 下面的计算有问题，不采用 todo 后期修复. 
+%              tmpM = [Strip.nLUID(:,f);  Strip.nLULID(:,f);  Strip.nbItem(:,f); Strip.isMixed(:,f);  Strip.isHeightFull(:,f);  Strip.loadingrate(:,f); ];
+          % 非混合优先；托盘类型数递减；托盘LID递减；堆垛数递减（相同托盘数，体积大优先）。 
+          [~,order] = sortrows(tmpM',[4,1,2,3,5,6],{'ascend','descend', 'descend','descend','descend','descend'});          if ~isrow(order), order=order'; end
 %             [~,order] = sortrows(tmpM',[1,2,3,4,5,6],{'descend', 'descend', 'descend','ascend','descend','descend'});          if ~isrow(order), order=order'; end
-%             [~,order] = sortrows(tmpM',[4],{'descend'});          if ~isrow(order), order=order'; end
-            
+              
+%             [~,order] = sortrows(tmpM',[4,1,2,5,6],{'ascend','descend', 'descend','descend','descend'});          if ~isrow(order), order=order'; end          
+
             %% 2 基于1的摆放顺序, 给定最终STRIP的priority到torder
             while any(perPriority==0) %当有SID下面的priority未给全时, 不能跳出循环(未全给原因是找不到相邻的strip了,再基于order给下一个首选strip)
                 

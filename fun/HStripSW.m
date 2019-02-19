@@ -61,29 +61,31 @@ function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
 % %        
 % % end
 
+% % %% 1: ********************** 甩尾 ********************************** 
+% % % 1 哪些甩尾: 所有都甩尾，在量大车头后，对车内进行量大摆放。
        %法5 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
        abnStrip = zeros(1,length(Strip.Weight));
        idx = ~Strip.isWidthFull | ~Strip.isHeightFull  | Strip.isMixed;  %todo isMixed是否甩尾呢？
        abnStrip(idx) = 1;
        
+       %        [Strip.nbItem, Strip.nbLU, Strip.nbLULID]
+       
        nLU = Strip.nLUIDBin;
        nLULID = Strip.nLULIDBin;
        
        nLU(idx) = 0;
-       nLULID(idx) = 0;
-              
-        %        [Strip.nbItem, Strip.nbLU, Strip.nbLULID] 
+       nLULID(idx) = 0;              
+
        tmpM = [abnStrip; Strip.isMixed; nLU; nLULID; Strip.meanHeight];
        [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});   
-%        [~,order] = sortrows(tmpM',[1,2,3,5],{'ascend','ascend','descend','descend'});   
-        
+    
        b = 1:length(Strip.Weight);
        b = b(order);
        
        StripisShuaiWei(b) = 1;        % StripseqShuaiWei(b) = order;
 
        %%% *********** LU甩尾的找出来,作图用 ***************
-       LUisShuaiWei( ismember(LU.LU_Strip(1,:), b) ) = 1;  % 该strip内的值    
+       LUisShuaiWei( ismember(LU.LU_Strip(1,:), b(idx) ) ) = 1;  % 该strip内的值    
         %%%  ***************** 是否甩尾的开关 *************
     for i=1:length(b)
         %     Strip = repairStripPlace(Strip,b(i));    %V1 不考虑SID/EID的甩尾 Strip.Strip_Bin
