@@ -633,6 +633,10 @@ V190219 V4 修改甩尾操作
 V190219 V5 修改量大车头操作（重新对条带分车）
 1：Hstrip2bin：每次nextfit到新bin，重新对sStrip啊脾虚。不可用，暂时恢复原状，采用strip2binagain函数。
 
+V190220 V1
+1：增强测试功能，运行demo即可测试。在testBBA.m中修改测试算例或全局变量参数
+
+
 
 TODO
 1 DEMO-DOCUMENT-FLOWCHART （重难点函数及位置）

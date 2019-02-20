@@ -10,10 +10,12 @@ addpath('./fun');
 addpath('./test'); 
 addpath('./utility'); 
 
-warning('off');
-runtests('testBBAMain_MixedGap.m') 
+results = runtests('test/testBBA.m');                               % 测试子目录下文件
 
-% runtests('testBBAMain.m') 
+% runtests('testBBA.m')                                                 % 测试主目录下文件
+% results = runtests(pwd,'IncludeSubfolders',true);       % 测试含子目录下所有测试文件
+
+% testBBA
 
 %%
 
