@@ -28,7 +28,7 @@ end
 %% 555  子托盘调整重要函数
 % 均在同一bin内的LU, VEH是一个车
 function [LU] = HGapAdjust(LU,VEH)
-global parMulipleGap ISplotShowGapAdjust ISplotGapCompare ISplotPause
+global parMulipleGap ISplotShowGapAdjust ISplotGapCompare ISplotShowType
 
 % 1 INITILIZE
 flagGap=0; % 1: 调整 0: 未调整
@@ -101,17 +101,12 @@ for iVertex=1:size(coordGapArray,1)
             end
         end
             
-        if ISplotShowGapAdjust
-            
+        % 1此处，plot每个可能的gap顶点,即使可能转换fail,当然转换成功也在此
+        if ISplotShowGapAdjust            
             plotGapPgon(VEH,pgLU,pgGap,pgVEH,coordGapArray,coordX,coordY,pgLU1,pgLU2,pgLU2Rota,flagLU,flagLURota);
-% figure('name',strjoin({'Gap展示：'}));
-% plotGapPgon(VEH,pgLU,pgGap,pgVEH,coordGapArray,coordX,coordY,pgLU1,pgLU2,pgLU2Rota,flagLU,flagLURota,pgGapNew);
-        end
+      end
         
         if flagLU || flagLURota
-            
-            
-            if ISplotGapCompare,            plotSolutionT(LU,VEH,0,0,0,1,3,'Gap调整成功展示');         end
             
             fprintf(1,'       Exsiting 混装间隙 in HBinGapAdjust (do2/do3)...\n');    
             
@@ -130,7 +125,8 @@ for iVertex=1:size(coordGapArray,1)
             
             flagGap=1;            
             
-            if ISplotGapCompare,            plotSolutionT(LU,VEH,0,0,0,1,3,'Gap调整成功展示');         end
+            % gap调整过程展示
+            % if ISplotGapCompare,      plotSolutionT(LU,VEH,0,0,0,1,ISplotShowType,'Gap调整成功后展示');         end
             
         end
         
@@ -189,9 +185,14 @@ for g=1:length(gapY)-1
     end
 end
 
+           
 if ISplotShowGapAdjust
     hold off;
 end
+
+% gap调整过程不展示，但依旧可能展示多次
+if ISplotGapCompare && flagGap
+    plotSolutionT(LU,VEH,0,0,0,1,ISplotShowType,'Gap调整成功后展示');         end
 
 
 % n1=fliplr(sortrows(n))

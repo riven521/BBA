@@ -1,4 +1,5 @@
 function [] = plotSolutionT(T,V,plotLU,plotItem,plotStrip,plotBin,plotColor,figname,luord,itemord,stripord)
+global ISplotPauseWait
 % plotSolutionT ==> 作图LU/STRIP/BIN
 % T: table 格式的LU
 % V: table 格式的Veh
@@ -8,6 +9,10 @@ function [] = plotSolutionT(T,V,plotLU,plotItem,plotStrip,plotBin,plotColor,fign
 % plotBin：非0：做Bin的图；1：
 % example：plotSolutionT(d.LU,d.Veh,1,1,1,1)
 %                  plotSolutionT(d.LU,d.Veh,2,0,0,3)
+
+if ISplotPauseWait
+pause;
+end
 
 if isstruct(T),  T = struct2table(structfun(@(x) x',T,'UniformOutput',false)); end
 if isstruct(V), V = struct2table(structfun(@(x) x',V,'UniformOutput',false)); end
@@ -85,7 +90,7 @@ if plotLU
         plotcube(subT.LWH(iLU,:), subT.Coord(iLU,:),0.7, subT.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         view(60,40); %view(111,33);  
-        if ISplotPause>0 ,      pause(ISplotPause);   end
+        if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end
 end
 
@@ -127,7 +132,7 @@ if plotItem
         plotcube(T.LWH(iLU,:), T.XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         view(60,40); %view(111,33);
-        if ISplotPause>0 ,      pause(ISplotPause);   end
+        if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end
 end
 
@@ -163,7 +168,7 @@ if plotStrip
         plotcube(T.LWH(iLU,:), T.XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
         view(60,40); %view(111,33);
-        if ISplotPause>0 ,      pause(ISplotPause);   end
+        if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end    
     
 %     for iLU=1:height(subT)
@@ -198,7 +203,7 @@ if ismember('LU_Bin', T.Properties.VariableNames)
             axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
             view(111,33);    %view(60,40);
             xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
-            if ISplotPause>0 ,      pause(ISplotPause);   end
+            if ISplotPause>0 ,      pause(ISplotPause/10);   end
         end
         
     end

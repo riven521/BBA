@@ -1,5 +1,5 @@
 function [d] = RunAlgorithm(d,p)
-        global  ISshuaiwei ISreStripToBin  %重新执行HStripToBin方案
+        global  ISshuaiwei ISreStripToBin  ISplotShowType %重新执行HStripToBin方案
         global  ISplotshuaiwei  ISplotStripToBinAgain   ISplotRunAlgo  ISplotRunLIS
 
         %% 预处理:检验Input输入数据
@@ -11,7 +11,7 @@ function [d] = RunAlgorithm(d,p)
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
         % Roated/maxHLayer/nbID/nbLID
         [d.LU, d.Veh] = cpuVehLU(d.LU, d.Veh);            %必须做>??  in case 意外错误
-
+% LU.Rotaed = zeros(size(LU.ID));
         %% 启发式: cpuLU 
         % 计算LU的isNonMixed和LU的isMixedTile 属性 用途似乎不大, 目的为了生成Item时,满垛的一起,不满垛的后面
          
@@ -32,7 +32,7 @@ function [d] = RunAlgorithm(d,p)
         % Item:
         % ADD: isRota/Rotaed/HLayer/LWH/Weight
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);          %Item将按ID序号排序（但下一操作将变化顺序）
-        
+        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1)
         %% 启发式: repairItems 修复LU_Item内是否上轻下重(修改顺序而已,坐标此时还未计算)
         % LU:
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
@@ -183,13 +183,15 @@ function [d] = RunAlgorithm(d,p)
         
         if ISplotRunAlgo && ISplotRunLIS
             %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU当前顺序
-                        plotSolutionT(d.LU,d.Veh,3,0,0,0,3,'排序后LU');     %LU排序后，因为Lu.order此时已知
-                        plotSolutionT(d.LU,d.Veh,0,1,0,0,3,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
-                        plotSolutionT(d.LU,d.Veh,0,2,0,0,3,'排序后Item',[],d.Item.itemorder,[]);
-                        plotSolutionT(d.LU,d.Veh,0,0,1,0,3,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
-            plotSolutionT(d.LU,d.Veh,0,0,2,0,1,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
-            plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'ID作图Bin');                  %     Bin排序后
+                        plotSolutionT(d.LU,d.Veh,3,0,0,0,ISplotShowType,'排序后LU');     %LU排序后，因为Lu.order此时已知
+                        plotSolutionT(d.LU,d.Veh,0,1,0,0,ISplotShowType,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
+                        plotSolutionT(d.LU,d.Veh,0,2,0,0,ISplotShowType,'排序后Item',[],d.Item.itemorder,[]);
+                        plotSolutionT(d.LU,d.Veh,0,0,1,0,ISplotShowType,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
+                        plotSolutionT(d.LU,d.Veh,0,0,2,0,ISplotShowType,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
+                        plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'排序作图Bin');                  %     Bin排序后
             %             plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'LID作图Bin');            % Bin排序后 
+        elseif ISplotRunAlgo && ISplotshuaiwei
+            plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'排序作图Bin');                  %     Bin排序后
         end
                                                     
         %% 启发式：量大车头 方案2: 每个剩余strip全体内比较量 better than 方案1 有故障? % 特别是对第三辆车及以后
@@ -224,7 +226,7 @@ function [d] = RunAlgorithm(d,p)
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin内相关属性 % 计算isTileNeed
 
                 if TFHStripToBinAgain &&  ISplotStripToBinAgain && ISplotRunAlgo
-                      plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'量大车头后Bin'); % Bin排序后
+                      plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'量大车头后Bin'); % Bin排序后
                 end
         end
                                                         
@@ -241,7 +243,7 @@ function [d] = RunAlgorithm(d,p)
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %计算Bin的isTileNeed
 
                 if TFHStripSW && ISplotshuaiwei && ISplotRunAlgo
-                        plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'甩尾后Bin'); % Bin排序后 
+                        plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'甩尾重排序后Bin'); % Bin排序后 
 %                     plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'甩尾后Bin'); % Bin排序后 
                 end                
         end

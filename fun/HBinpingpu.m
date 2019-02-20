@@ -6,7 +6,7 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
 %   do2inIbin=do3inIbin：ibin内的输出数据，来自do  
         
         global ISpingpuShuaiWei ISpingpuAll ISshuaiwei
-        global ISplotEachPingPuAll ISplotEachPingPuShuaiWei 
+        global ISplotEachPingPuAll ISplotEachPingPuShuaiWei  ISplotShowType
         
         % 3.1 初始化5个输出数据
         nbin = length(do.Bin.Weight);
@@ -66,10 +66,11 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         
                         do3Array(ibin) = do3inIbin;
                                    
-                        if ISplotEachPingPuAll  % plot 整车平铺前和整车平铺后的bin图
-%                             plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'整车平铺前 Bin'); 
-                            plotSolutionT(do3inIbin.LU,do3inIbin.Veh,  0, 0, 0 , 1 ,3,'整车平铺后 Bin');   % plot整车平铺后的bin % do3 修改到d中？？？目前保留到do2Array中，未与d合并
-                        end
+                        % 整车平铺过程不展示
+%                         if ISplotEachPingPuAll  % plot 整车平铺前和整车平铺后的bin图
+% %                             plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'整车平铺前 Bin'); 
+%                             plotSolutionT(do3inIbin.LU,do3inIbin.Veh,  0, 0, 0 , 1 ,3,'整车平铺后 Bin');   % plot整车平铺后的bin % do3 修改到d中？？？目前保留到do2Array中，未与d合并
+%                         end
                        
                         break;    % 整车平铺成功，跳出while后循环下一个bin
                     end
@@ -163,11 +164,12 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                         flagTiledArray(ibin)=2; %2代表甩尾平铺
               
                         do2Array(ibin) = do2inIbin;                        % todo -> do2 数据不进入d 仅在return2bba中修改    % do2 数据进入d???? return2bba不修改？？？
-                        
-                        if ISplotEachPingPuShuaiWei  % plot 甩尾平铺前和甩尾平铺后的bin图
-%                             plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺前 Bin');
-                            plotSolutionT(do2inIbin.LU,do2inIbin.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺后 Bin');  % plot甩尾平铺后的bin
-                        end
+                   
+% 甩尾平铺过程展示
+%                         if ISplotEachPingPuShuaiWei  % plot 甩尾平铺前和甩尾平铺后的bin图
+% %                             plotSolutionT(doinIbin.LU,doinIbin.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺前 Bin');
+%                             plotSolutionT(do2inIbin.LU,do2inIbin.Veh, 0, 0, 0 , 1 ,3,'甩尾平铺后 Bin');  % plot甩尾平铺后的bin
+%                         end
                     end                    
                 
                 end % END OF do2 WHILE 本车甩尾
@@ -176,6 +178,14 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
             
         end% END OF FOR
         
+        % 平铺过程不展示
+        if ISplotEachPingPuAll  && any(flagTiledArray==1) % plot 整车平铺前和整车平铺后的bin图
+            plotSolutionT(do3inIbin.LU,do3inIbin.Veh, 0, 0, 0 , 1 ,ISplotShowType,'整车平铺后 Bin');  % plot整车平铺后的bin
+        end
+        if ISplotEachPingPuShuaiWei  && any(flagTiledArray==2) % plot 甩尾平铺前和甩尾平铺后的bin图
+            plotSolutionT(do2inIbin.LU,do2inIbin.Veh, 0, 0, 0 , 1 ,ISplotShowType,'甩尾平铺后 Bin');  % plot甩尾平铺后的bin
+        end
+                        
         %% chk
         if any(flagTiledArray)
             for ibin=1:nbin

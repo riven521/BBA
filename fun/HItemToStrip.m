@@ -124,13 +124,13 @@ ItemEIDord = getItemOrd(ItemEID);
 %对LID排序: LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度 
 szRow = cellfun(@(x)size(x,1), Item.LID);  if (max(szRow)~=min(szRow)),  error('同一ITEM不应该有多个LID');  end %同一Item应该只有一个ID 必然的
 ItemLID = cell2mat(Item.LID);   %直接cell2mat转换; %ITEM按SID 1-n的顺序返回 
-
+ 
 [T] = getTableLU(Item);
 T.ItemSIDord = ItemSIDord';
 T.ItemEIDord = ItemEIDord';
 T.ItemLID = ItemLID';
-
-% V2 删除isNonMixed等排序
+ 
+% V2 删除isNonMixed等排序 以MixOrder替代
 [~,order] = sortrows(T,{'ItemSIDord','ItemEIDord',...   % 离散: 相同SID/EID 递增排序 (顺序给定)
     'MixOrder','W','L','ItemLID','H'},...
     {'ascend','ascend','ascend','descend','descend','descend','descend'});

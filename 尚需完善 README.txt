@@ -635,7 +635,12 @@ V190219 V5 修改量大车头操作（重新对条带分车）
 
 V190220 V1
 1：增强测试功能，运行demo即可测试。在testBBA.m中修改测试算例或全局变量参数
+2：修订HBinGapAdjust：多次gap优化返回后的pg重计算
+3：修订条带间隙判定，增加overlap判定
+4：修订HBinGapAdjust的plotgap函数：plotGapPgon，统一制图
 
+V190220 V2
+1：修复Item排序问题？
 
 
 TODO
