@@ -2,6 +2,9 @@ function [LU] = setLULWHwithbuff(LU,Veh)
 % setLULWHwithbuff ==> 修订LU的LWH数据 包含margin 考虑Rotaed
         
     % 1 UPDATE : 更新LU的Rotaed标记( LU横放或竖放 却决于距离边界的宽度 哪个小选哪个
+    if any(LU.Rotaed~=0)
+        error('run此函数前，其旋转状态不应有，而由如下函数获取');
+    end
     [LU.Rotaed]= getLuRotaedBBA(LU.LWH,LU.isRota,LU.margin,Veh.LWH(1,1));  %第二个参数：  3按VEH车辆左右摆放的缝隙最小排序
     
     % 2 UPDATE : 含margin的且含Rotaed的LU的LWH   

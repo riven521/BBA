@@ -126,7 +126,9 @@ function [nm] = computeMixandTile(Item,Veh)
         if nbmod==0
             % 若余数为0，且只有一层Strip，降低其优先级，因为可能其宽度不满层，允许与其他混合（也可能通过gap调整改变）
             if nbItem==nbmaxItem                                        % && GapWidth > ItemWidth*0.5
-                nm(flagItem)  = 2;
+                nm(flagItem)  = 2;      % 这种特殊的要特殊对待：单层，且宽度gap应该不是很大，但仍旧有gap；视为甩尾允许其混合
+                % 设置2：表明作为中间层，在不用混合和必须混合之间
+                % 设置3：表明必须混合，与必须单独混合的堆垛同等对待，从其它角度考虑顺序（长度等）
             else                                                                         % 否则指定为不允许和其它Item混合
                 nm(flagItem)  = 1;
             end            

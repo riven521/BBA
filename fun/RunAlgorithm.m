@@ -32,7 +32,7 @@ function [d] = RunAlgorithm(d,p)
         % Item:
         % ADD: isRota/Rotaed/HLayer/LWH/Weight
         [d.LU,d.Item] = HLUtoItem(d.LU,d.Veh);          %Item将按ID序号排序（但下一操作将变化顺序）
-        printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1)
+        %         printstruct(d.LU,'sortfields',1,'PRINTCONTENTS',1)
         %% 启发式: repairItems 修复LU_Item内是否上轻下重(修改顺序而已,坐标此时还未计算)
         % LU:
         % IDs/OIDs/LWH/Weight/Index/margin/isRota/maxL
@@ -111,6 +111,20 @@ function [d] = RunAlgorithm(d,p)
         % ADD: nLUID / nLULID
          [d.Strip] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh); %          [d.Strip,d.LU] = cpuStrip(d.Strip,d.Item,d.LU,d.Veh);
 
+         
+% % % %          if ISplotRunAlgo && ISplotRunLIS
+% % % %              plotSolutionT(d.LU,d.Veh,1,0,0,0,ISplotShowType,'原顺序LU'); %LU当前顺序
+% % % %              plotSolutionT(d.LU,d.Veh,3,0,0,0,ISplotShowType,'排序后LU');     %LU排序后，因为Lu.order此时已知
+% % % %              plotSolutionT(d.LU,d.Veh,0,1,0,0,ISplotShowType,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
+% % % %              plotSolutionT(d.LU,d.Veh,0,2,0,0,ISplotShowType,'排序后Item',[],d.Item.itemorder,[]);
+% % % %              plotSolutionT(d.LU,d.Veh,0,0,1,0,ISplotShowType,'排序前Strip');     %Strip排序前，因为Strip->Bin前的排序LU_Strip内没有
+% % % % %              plotSolutionT(d.LU,d.Veh,0,0,2,0,ISplotShowType,'排序后Strip',[],[],d.Strip.striporder);     %Strip排序后
+% % % %              %             plotSolutionT(d.LU,d.Veh,0,0,0,1,1,'LID作图Bin');            % Bin排序后
+% % % %          elseif ISplotRunAlgo && ISplotshuaiwei
+% % % % %              plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'排序作图Bin');                  %     Bin排序后
+% % % %          end
+         
+                 
         %% 启发式：HStripToBin - Strip到Bin的算法
         % ********* 1 Strip排序: % 1: SID 2: priorityofLID
         %fprintf(1,'     Running HStripToBin...\n');
@@ -182,7 +196,7 @@ function [d] = RunAlgorithm(d,p)
         
         
         if ISplotRunAlgo && ISplotRunLIS
-            %             plotSolutionT(d.LU,d.Veh,1,0,0,0,3,'原顺序LU'); %LU当前顺序
+                        plotSolutionT(d.LU,d.Veh,1,0,0,0,ISplotShowType,'原顺序LU'); %LU当前顺序
                         plotSolutionT(d.LU,d.Veh,3,0,0,0,ISplotShowType,'排序后LU');     %LU排序后，因为Lu.order此时已知
                         plotSolutionT(d.LU,d.Veh,0,1,0,0,ISplotShowType,'排序前Item',[],[],[]);   %Item排序前，因为Item->Strip前的排序LU_Item内没有
                         plotSolutionT(d.LU,d.Veh,0,2,0,0,ISplotShowType,'排序后Item',[],d.Item.itemorder,[]);

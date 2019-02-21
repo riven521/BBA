@@ -84,16 +84,18 @@ if plotLU
     
     % 5555 构建LU的坐标系Coord X坐标依据LU的宽度L移动 Y为0 Z为LU高度
     XYZ = zeros(height(subT),3);                
-    XYZ(:,1) = cumsum(subT.LWH(:,1));
+    XYZ(:,2) = cumsum(subT.LWH(:,2));%XYZ(:,1) = cumsum(subT.LWH(:,1));
     subT.Coord =[0 0 0; XYZ(1:end-1,:)];
     for iLU=1:height(subT)
         plotcube(subT.LWH(iLU,:), subT.Coord(iLU,:),0.7, subT.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-        view(60,40); %view(111,33);  
+        view(111,33);   % view(60,40); %
+        xlim([0 subT.LWH_V(iLU,1)]);  zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
         if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end
 end
-
+        
+        
 % 实质还是plotLU，同一Item依据顺序，给不同的高度Z值.
 if plotItem
     XYZ = zeros(height(T),3);
@@ -111,8 +113,9 @@ if plotItem
         % 从第1个Item开始，计算Lu的x坐标(相同堆垛是一样）
         %fidxItem = T.LU_Item(:,1)==iItem;  %同一堆垛下的逻辑值(多个）
         fidxStrip = T.LU_Item(:,1)==order(iStrip);  %同一堆垛下的逻辑值(多个）
-        XYZ(fidxStrip,1) = sumL;
-        sumL = sumL + unique(T.LWH(fidxStrip,1));       if numel(sumL) >  1 , error('e'); end
+        XYZ(fidxStrip,2) = sumL;
+%         sumL = sumL + unique(T.LWH(fidxStrip,1));       if numel(sumL) >  1 , error('e'); end
+        sumL = sumL + unique(T.LWH(fidxStrip,2));       if numel(sumL) >  1 , error('e'); end
         
         nLU = sum(fidxStrip); % (同一堆垛下的托盘数量)
         sumH = 0;
@@ -131,7 +134,8 @@ if plotItem
     for iLU=1:height(T)
         plotcube(T.LWH(iLU,:), T.XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-        view(60,40); %view(111,33);
+        view(111,33); %view(60,40); %
+        xlim([0 T.LWH_V(iLU,1)]);   zlim([0 T.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
         if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end
 end
@@ -167,7 +171,8 @@ if plotStrip
     for iLU=1:height(T)
         plotcube(T.LWH(iLU,:), T.XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
         axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-        view(60,40); %view(111,33);
+        view(111,33); %view(60,40); %
+        xlim([0 T.LWH_V(iLU,1)]);   zlim([0 T.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
         if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end    
     
@@ -190,11 +195,24 @@ if ismember('LU_Bin', T.Properties.VariableNames)
     
     % 逐个bin作图
     nBin = max(T.LU_Bin(:,1)); %bin的个数
+
+
+
+
     figure('name',strjoin({figname,'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
+%     uf = uifigure('name',strjoin({figname,'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
+%     ax = uiaxes(uf);
     
     for ibin=1:nBin % for ibin=nBin:nBin
         
-        subplot(2,ceil((nBin+1)/2),pos); pos = pos+1;
+            %  subplot(2,ceil((nBin+1)/2),pos); pos = pos+1;  % 固定2行
+
+            if nBin > 2
+                subplot(2,ceil((nBin+1)/2),pos);    % 2行，n列
+            else
+                subplot(1,ceil((nBin+1)/2),pos);    % 1行，n列
+            end
+            pos = pos+1;
         
         subT = T(T.LU_Bin(:,1)==ibin,:);                  % yxz =  T.LWH_T(f,:); coord = T.CoordLUBin(f,:);  color = T.LUcolor(f,:);  yxzVeh = T.LWH_V(f,:);
         

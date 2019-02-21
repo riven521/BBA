@@ -103,12 +103,12 @@ LU = getLUnIDs(LU);
 [Strip.nLUID, Strip.nLULID, Strip.nLUIDBin, Strip.nLULIDBin] = getStripnID(LU);
 
 if any(Strip.nbLU ~= Strip.nLUID) || any(Strip.nbLULID ~= Strip.nLULID)
-    Strip.nbLU ~= Strip.nLUID
-    Strip.nbLU
-     Strip.nLUID
-     Strip.nbLULID ~= Strip.nLULID
-     Strip.nbLULID 
-     Strip.nLULID
+%     Strip.nbLU ~= Strip.nLUID
+%     Strip.nbLU
+%      Strip.nLUID
+%      Strip.nbLULID ~= Strip.nLULID
+%      Strip.nbLULID 
+%      Strip.nLULID
     warning('结果不太一样两个算出来的，但建议以新的为准'); end
 
 end % EOF function

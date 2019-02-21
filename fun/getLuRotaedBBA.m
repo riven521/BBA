@@ -25,14 +25,42 @@ function [flag]  = getLuRotaedBBA(LWH,isRota,margin,HoriOrVert)
             x=mod(wVeh,LWHbuff(1,:));   %按车辆宽度对Hori排放取余数
             y=mod(wVeh,LWHbuff(2,:));   %按车辆宽度对Vert排放取余数
             
+            % 按道理是宽度W剩余小的情况作为判定托盘是否旋转依据
             flag3 = x <= y; %是否Hori排放比Vert排放余数更小 1 希望Hori摆放 0 否则
+            %             flag3 = x > y; %基本无法通过, 按道理是宽度W剩余大的情况作为判定托盘是否旋转依据
             fxor = ~xor(flag1,flag3); %XOR 异或对比           
             flag =  fxor & flag2;
+            
+            % 默认目前均为非旋转（已在运行此函数前确认）
+            % 新计算：托盘是否需要旋转
+            Rotaed = false(1,length(flag));
+            for i = 1: length(flag)
+                if flag3(i)==true               % 如果当前排放，宽度剩余gap更小，则无需旋转
+                    Rotaed(i) = false;
+                else                                   % 如果当前排放，宽度剩余gap更大，则旋转（在能旋转前提下）
+                    if flag2(i) == true
+                        Rotaed(i) = true;
+                    else
+                        Rotaed(i) = false;
+                    end
+                end
+            end
+
+            % 两种计算Rotaed对比
+            if any(Rotaed ~= flag)
+                Rotaed;
+                flag;
+                warning('两种计算方案结果不一致');
+            end
+            
+            % 返回的还是flage
+            flag = (Rotaed);
             
         end
 end
     
 
+%% V1: 
 % % % 将Item进行水平或竖直放置: LU或Item均可以使用
 % % function [L, flag]  =placeItemHori(Item,HoriOrVert)
 % %         % 获取是否旋转的标记flag

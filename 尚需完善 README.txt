@@ -639,8 +639,12 @@ V190220 V1
 3：修订条带间隙判定，增加overlap判定
 4：修订HBinGapAdjust的plotgap函数：plotGapPgon，统一制图
 
-V190220 V2
-1：修复Item排序问题？
+V190220 V2 git120
+1: 增加ISplotPause>0画图暂停变量
+2：修改plot过程不展示，展示每个重点算法的结果
+3: 修改托盘是否旋转标记计算方式。原xor方法可能有问题。
+4: 新增BBA.mlapp的简易测试appdemo，可选测试算例和部分参数。
+5：增加updatecontent.m文件
 
 
 TODO
