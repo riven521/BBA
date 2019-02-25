@@ -6,18 +6,9 @@
 %   BBA.mlapp
 %   BBA.mltbx
 %   BBA.prj
-%   Copy_of_Contents     - BBA
 %   demo                 - FILE
-%   README.md
 %   testBBA              - Runtests('testMain.m')
 %   尚需完善 README.txt
-%   
-%   BBA\BBARELEASE
-%   BBA190213 V108.mltbx
-%   BBA190213 V109.mltbx
-%   BBA190214 V110.mltbx
-%   BBA190219 V115.mltbx
-%   BBA190219 V118.mltbx
 %   
 %   BBA\CHECK
 %   chkInput             - GCHECKINPUT 重要函数:输入数据da转换(不增加新数据）+输入数据da核对

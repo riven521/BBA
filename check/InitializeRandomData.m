@@ -68,6 +68,8 @@ function [d] = InitializeRandomData(n,m)
     LU.PID = zeros(1,n);
     LU.SID = zeros(1,n);
     LU.Weight = zeros(1,n);
+    LU.Index = 1:n;
+    
 
 
     [uniID] = unique(LU.ID);    %   isRotaId = randi([0,1], 1, nUniId);

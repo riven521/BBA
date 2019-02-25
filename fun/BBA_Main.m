@@ -27,7 +27,12 @@ function [output_CoordLUBin,output_LU_LWH,output_LU_Seq] = ...
 
 %% Initialize Global Variable
 % rng('default');rng(1); % NOTE 是否随机的标志
+if nargin < 1
+    clear all;
+end
+
 close all; format long g; format bank; 
+warning('off');
 
 % 全局变量0： 作图开关
 % ISplotBBA： 是否最后对T作图的总开关；  ISplotShowGapAdjust: 是否显示gap间隙调整过程图
@@ -40,7 +45,7 @@ global  ISplotshuaiwei  ISplotStripToBinAgain ISplotGapCompare  ISplotRunAlgo IS
 % ISplotPause: plotSolutionT 等暂停时间 0不暂停 ISplotShowType：基于某种类型区分颜色
 global ISplotPause ISplotShowType
 
-if isempty(ISplotBBA),  ISplotBBA = 1;   end   % 是否显示LU/Strip/Bin的结果（均已排序）
+if isempty(ISplotBBA),  ISplotBBA = 0;   end   % 是否显示LU/Strip/Bin的结果（均已排序）
 if isempty(ISplotEachPingPuShuaiWei),  ISplotEachPingPuShuaiWei = 0;   end % 每次甩尾平铺成功后，展示平铺前后的对比图
 if isempty(ISplotEachPingPuAll),  ISplotEachPingPuAll = 0;   end % 每次整车平铺成功后，展示平铺前后的对比图
 if isempty(ISplotShowGapAdjust),  ISplotShowGapAdjust = 0;   end  
@@ -53,8 +58,8 @@ if isempty(ISplotGapCompare),  ISplotGapCompare = 0;   end
 
 
 if isempty(ISplotPauseWait),  ISplotPauseWait = 0;   end   % 是否plotsolutinT多个图直接等待用户反应
-if isempty(ISplotPause),  ISplotPause = 0.1;   end   %-0.05 % plot间隔时间
-if isempty(ISplotShowType),  ISplotShowType = 1;   end   % 1 LID 3 ID 8 甩尾
+if isempty(ISplotPause),  ISplotPause = 0.0;   end   %-0.05 % plot间隔时间
+if isempty(ISplotShowType),  ISplotShowType = 3;   end   % 1 LID 3 ID 8 甩尾
 
 % 全局变量1： 版本控制
 % verMilkRun：1 milkrun版本（包含多一个EID输入） 0 非milkrun；
@@ -147,7 +152,7 @@ pA(nAlg) = InitializeParameter('whichStripH', 3,...
 if nargin < 1 % Randome Generate
     n=32; m=1;                                          % 16需要注意 250 srng1
     d = InitializeRandomData(n,m);        % 0 默认值; >0 随机产生托盘n个算例 仅在直接允许BBA时采用
-    save( strcat( '.\useless\', strcat('GoodIns',num2str(n))), 'd');          %     load .\new\GoodIns200.mat;
+%     save( strcat( '.\useless\', strcat('GoodIns',num2str(n))), 'd');          %     load .\new\GoodIns200.mat;
 else
     d = InitializeInputData( ...
             'LUID', LUID,...

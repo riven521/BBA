@@ -44,7 +44,7 @@ if isempty(ISreStripToBin),  ISreStripToBin = 1;   end  % 车头优先LU数量排序参数
 global nDemo
 
 if nargin < 1
-    nDemo = 1; 
+    nDemo = 111; 
 else
     nDemo = varargin{1}; 
 end

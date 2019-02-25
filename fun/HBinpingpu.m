@@ -53,11 +53,17 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                     
                     iLayer=iLayer+1;
                     
-                    % 2.2  reRunAlgorithm do3是d3运算后的结果                    
-                    d3inIbin.LU = setLULWHwithbuff(d3inIbin.LU, d3inIbin.Veh);
-                    do3inIbin = RunAlgorithm(d3inIbin,p);   % do3Array(ibin) = do3; (仅对平铺成功的放入do3Array，其它的放不放无所谓，用不到
-                    [do3inIbin.LU,do3inIbin.Item] = setLCwithoutbuff(do3inIbin.LU,do3inIbin.Item);               %  margin替换回来
+                    % 2.2  reRunAlgorithm do3是d3运算后的结果
                     
+                    tmpd3 = d3inIbin;  % 此函数 避免对托盘变换旋转和margin后影响循环
+                    [tmpd3.LU] = setLULWHwithbuff(tmpd3.LU, tmpd3.Veh);          
+                    do3inIbin = RunAlgorithm(tmpd3,p);        
+                    [do3inIbin.LU,do3inIbin.Item] = setLCwithoutbuff(do3inIbin.LU,do3inIbin.Item);  
+
+%                 d3inIbin.LU = setLULWHwithbuff(d3inIbin.LU, d3inIbin.Veh);
+%                 do3inIbin = RunAlgorithm(d3inIbin,p);   % do3Array(ibin) = do3; (仅对平铺成功的放入do3Array，其它的放不放无所谓，用不到
+%                 [do3inIbin.LU,do3inIbin.Item] = setLCwithoutbuff(do3inIbin.LU,do3inIbin.Item);               %  margin替换回来
+
                     % 2.3   当全部平铺没有问题,做后处理
                     if max(do3inIbin.LU.LU_Bin(1,:)) == 1
                         fprintf(1,'       Exsiting 整车平铺 in HBinpingpu (do3)...\n');
@@ -152,7 +158,7 @@ function [flagTiledArray,do2Array,do3Array] = HBinpingpu(maind,do,p)
                     end
                     
                     %% 运行主算法及后处理 $5 reRunAlgorithm
-                    tmpd2 = d2inIbin;
+                    tmpd2 = d2inIbin;  % 此函数 避免对托盘变换旋转和margin后影响循环
                     [tmpd2.LU] = setLULWHwithbuff(tmpd2.LU, tmpd2.Veh);          
                     do2inIbin = RunAlgorithm(tmpd2,p);        %  do2 = RunAlgorithmPP(d2inIbin,p);  %do2.LU.LU_VehType = ones(size(d2inIbin.LU.ID)) * do2.Veh.order(1); % 针对车型选择,增加变量LU_VehType : 由于Veh内部按体积递减排序,获取order的第一个作为最大值                   
                     [do2inIbin.LU,do2inIbin.Item] = setLCwithoutbuff(do2inIbin.LU,do2inIbin.Item);  % do2Array(ibin) = do2; 必须注释，因为是个循环
