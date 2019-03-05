@@ -138,9 +138,10 @@ function [SIDorder,priority] = getAdjPriority(priority,order,SIDorder,tID,tLID)
             [~,nbcol2] = find(tID(:,:)==tLID & sum(~isnan( tID(:,:) ),1) ~=1 &  SIDorder==0);
             if ~isempty(nbcol2)
                 if ~isscalar(nbcol2)
-                    tID(:,:)
+%                     tID(:,:)
                     % tID(:,:)=tLID
-                    error('nbcol2包含不只一个数: 存在多个相同混合的STRIP; -> 同一个单Strip, 找其混合的其它Strip, 但发现有2个包含该strip的混合strip,无从选择哪个作为相邻strip的矛盾 ');   
+                    warning('nbcol2包含不只一个数: 存在多个相同混合的STRIP; -> 同一个单Strip, 找其混合的其它Strip, 但发现有2个包含该strip的混合strip,无从选择哪个作为相邻strip的矛盾 ');   
+%                     error('nbcol2包含不只一个数: 存在多个相同混合的STRIP; -> 同一个单Strip, 找其混合的其它Strip, 但发现有2个包含该strip的混合strip,无从选择哪个作为相邻strip的矛盾 ');   
                 end
                 SIDorder(nbcol2) = priority;
                 priority=priority+1;

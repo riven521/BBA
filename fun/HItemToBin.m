@@ -94,12 +94,13 @@ end  %EOF BIN
 
 
 %% 8：计算LU的个数
-% 计算每个托盘在在所有托盘下的数量LU.nLID/nID
+% 计算每个托盘在在所有托盘下的数量LU.nLID/nID (初始化做，后续无需重复做)
 % 计算每个托盘在当前bin内对数量LU.nLIDBin
-LU = getLUnIDs(LU);
+[LU.nIDBin,LU.nLIDBin] = getLUnIDs(LU); % 计算托盘的各自数量 % LU = getLUnIDs(LU);
 
 %% 8：计算Strip内的LU个数 ： getStripnID
-% Strip属性：nLUID（所有托盘计数）（混合为-1）nLUIDBin：（此托盘所在bin内计数）（混合为-1）
+% Strip属性：nLUID（所有托盘计数）（混合为-1）nLULID：LU的LID
+% Strip属性：nLUIDBin：（此托盘所在bin内计数）（混合为-1）
 [Strip.nLUID, Strip.nLULID, Strip.nLUIDBin, Strip.nLULIDBin] = getStripnID(LU);
 
 if any(Strip.nbLU ~= Strip.nLUID) || any(Strip.nbLULID ~= Strip.nLULID)
@@ -109,23 +110,23 @@ if any(Strip.nbLU ~= Strip.nLUID) || any(Strip.nbLULID ~= Strip.nLULID)
 %      Strip.nbLULID ~= Strip.nLULID
 %      Strip.nbLULID 
 %      Strip.nLULID
+%     error('结果不太一样两个算出来的，但建议以新的为准'); end
     warning('结果不太一样两个算出来的，但建议以新的为准'); end
 
 end % EOF function
 
 %% 局部函数
 
-function LU = getLUnIDs(LU)
+function [nIDBin,nLIDBin] = getLUnIDs(LU)
     
     % LU：托盘属性：nIDBin：此托盘所在bin内计数，没有-1；
     nLU = length(LU.Weight);
     nIDBin = zeros(1,nLU);
     for i=1:nLU
-        idx1 = LU.ID == LU.ID(i);
-        idx2 = LU.LU_Bin(1,:) == LU.LU_Bin(1,i) ;
+        idx1 = LU.ID == LU.ID(i);                           %与第i个LU相同ID的索引
+        idx2 = LU.LU_Bin(1,:) == LU.LU_Bin(1,i) ;    %与第i个LU相同bin的的LU索引
         nIDBin(i) = sum(idx1 & idx2);
     end
-    LU.nIDBin = nIDBin;
     
     nLIDBin = zeros(1,nLU);
     for i=1:nLU
@@ -133,7 +134,6 @@ function LU = getLUnIDs(LU)
         idx2 = LU.LU_Bin(1,:) == LU.LU_Bin(1,i) ;
         nLIDBin(i) = sum(idx1 & idx2);
     end
-    LU.nLIDBin = nLIDBin;
     
 end
 

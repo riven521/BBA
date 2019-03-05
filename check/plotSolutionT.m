@@ -67,6 +67,8 @@ elseif ISplotShowType == 7
     tmpT = unique(T(:,{'isMixTile'}));
 elseif ISplotShowType == 8
     tmpT = unique(T(:,{'isShuaiWei'}));   
+elseif ISplotShowType == 0
+    tmpT = unique(T(:,{'cust'}));   
 end
 
 tmpT.LUcolor = 0.8*hsv(height(tmpT));
@@ -170,11 +172,12 @@ if plotStrip
     T = sortrows(T,{'YXZ'},{'ascend'}); 
     for iLU=1:height(T)
         plotcube(T.LWH(iLU,:), T.XYZ(iLU,:),0.7, T.LUcolor(iLU,:));
-        axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-        view(111,33); %view(60,40); %
-        xlim([0 T.LWH_V(iLU,1)]);   zlim([0 T.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
-        if ISplotPause>0 ,      pause(ISplotPause/10);   end
+
     end    
+    axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+    view(111,33); %view(60,40); %
+    xlim([0 T.LWH_V(iLU,1)]);   zlim([0 T.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
+    if ISplotPause>0 ,      pause(ISplotPause/10);   end
     
 %     for iLU=1:height(subT)
 %         plotcube(subT.LWH(iLU,:),subT.CoordLUStrip(iLU,:),0.7, subT.LUcolor(iLU,:));
@@ -218,13 +221,20 @@ if ismember('LU_Bin', T.Properties.VariableNames)
         
         for iLU=1:height(subT)
             plotcube(subT.LWH(iLU,:),subT.CoordLUBin(iLU,:),0.7, subT.LUcolor(iLU,:));
+%             axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+%             view(111,33);    %view(60,40);
+%             xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
+%             if ISplotPause>0 ,      pause(ISplotPause/10);   end
+        end
+        
             axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
             view(111,33);    %view(60,40);
             xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
             if ISplotPause>0 ,      pause(ISplotPause/10);   end
-        end
-        
     end
+    
+
+            
 end
 end
 

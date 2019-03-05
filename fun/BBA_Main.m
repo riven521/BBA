@@ -190,7 +190,7 @@ end
 
 [d.LU,d.Veh] = cpuVehLU(d.LU,d.Veh);
 
-d = chkInput(d);
+% d = chkInput(d); % 严禁再check，因为会调整数据，回到原始状况
 
 % ************* 保留输入且处理过后的数据 ***********
 maind = d; % 主要的输入数据保留：
@@ -229,8 +229,7 @@ for iAlg = 1:nAlg
     
     % 1.5 % dA(iAlg)=do; % 仅在多算法版本使用    
 
-    ISplotRunAlgo = 0;
-    
+    ISplotRunAlgo = 0;  %     ISplotRunLIS = 0;
     %% 2 运行车型调整算法,不改变d 获取d1和do1, flaggetSmallVeh
     if ISlastVehType == 1
         fprintf(1,'\nRunning HBinChange with output do1 ...\n');

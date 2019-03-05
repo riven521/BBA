@@ -76,9 +76,36 @@ function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
        nLU(idx) = 0;
        nLULID(idx) = 0;              
 
+       
+       %%
+       global cust       
+       a = Strip.Strip_Bin(1,:) == 6;             
+       aa = ismember(cust.LU.LU_Strip(1,:),find(a));
+       cust.LU.cust = zeros(size(LU.Weight)); 
+       cust.LU.cust(aa) = 1;
+%        plotSolutionT(cust.LU,cust.Veh,0,0,1,1,0,'自定义甩尾重排序后Bin'); % Bin排序后 
+
+%        abnStrip(a)
+%        Strip.isMixed(a)
+%        nLU(a)
+%        nLULID(a)
+%        Strip.meanHeight(a)
+       %%
+
+       
+       % strip条带顺序 1：abnStrip（是否异常条带） 2：isMixed是否混合条带 3：nLU  4:nLULID 5:meanHeight高度
        tmpM = [abnStrip; Strip.isMixed; nLU; nLULID; Strip.meanHeight];
        [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});   
-    
+       tmpM = [abnStrip; Strip.isMixed;  Strip.meanHeight];    % 非异常的按混合，高度递减；实质: 应该按量大
+       [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});   
+       
+       isM = Strip.isMixed;
+       meanH = Strip.meanHeight;
+       isM(idx) = 0 ;
+       meanH(idx) = 0;
+       tmpM = [abnStrip; isM;  meanH];    % 非异常的按混合，高度递减；实质: 应该按量大
+       [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});       
+       
        b = 1:length(Strip.Weight);
        b = b(order);
        

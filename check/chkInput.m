@@ -100,6 +100,7 @@ for idx = 1:length(fields)
                     tmpVeh = Veh.(fields{idx});
                     if ~(tmpVeh(1)*1.5 <= tmpVeh(2)) %如果第一辆车辆的宽度的1.5倍大于车辆的长度,明现为长宽高放反了
                         Veh.(fields{idx}) = aField;
+                        error('正在处理3个车辆的情况,不应出现该车辆输入');
                     end             
 
                 else
@@ -174,7 +175,7 @@ for idx = 1:length(fields)
                         if isempty(tmpVeh),   error('不应该出现的错误');        end
                         if numel(unique(tmpVeh,'rows')) > 2
                             LU.(fields{idx}) = aField;
-                            warning('原托盘长宽高等进行了转置 \n');
+                            error('原托盘长宽高等进行了转置，不应出现这样的输入 \n');
                             break;
                         end
                     end
@@ -290,7 +291,10 @@ function deepCheck(LU,Veh)
                 %         f = LU.ID==uniID(iLU)
                 %         y=x(:,f)'
                 %         unique(y,'rows')
-        if numel(unique(tmp,'rows')) > 2,  error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    end        
+        if numel(unique(tmp,'rows')) > 2,  
+%             tmp
+            error('错误: 存在托盘ID类型相同 但其长宽不同数据 \n');    
+        end        
         tmp = LU.isRota(:,LU.ID==uniID(iLU));
         if isempty(tmp),      error('不应该出现的错误');       end
         if numel(unique(tmp)) > 2,  error('错误: 存在托盘ID类型相同 但其允许旋转类型不同数据 \n');    end
