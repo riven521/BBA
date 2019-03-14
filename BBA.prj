@@ -4,10 +4,12 @@
     <param.authnamewatermark>Rui Xu</param.authnamewatermark>
     <param.email>riven.china@gmail.com</param.email>
     <param.company>LIO</param.company>
-    <param.summary>V121</param.summary>
-    <param.description>基本小完美的版本V190220</param.description>
+    <param.summary />
+    <param.description>V190315:
+1:甩尾改为法4.（法5对全局strip改顺序，似乎影响已排放正常的strip，尽管有时结果漂亮，但为采用；
+依旧采用法4，先取异常strip（高宽不满+高度不均，仅对异常strip按非混和高度排序）</param.description>
     <param.screenshot />
-    <param.version>1.6</param.version>
+    <param.version>1.8</param.version>
     <param.output>${PROJECT_ROOT}\BBA.mltbx</param.output>
     <param.products.name />
     <param.products.id />
@@ -49,6 +51,7 @@
       <param.authnamewatermark />
       <param.email />
       <param.company />
+      <param.summary />
       <param.screenshot />
       <param.output />
       <param.products.name />
@@ -73,11 +76,13 @@
       <file>${PROJECT_ROOT}\bbarelease</file>
       <file>${PROJECT_ROOT}\check</file>
       <file>${PROJECT_ROOT}\Contents.m</file>
+      <file>${PROJECT_ROOT}\ContentsJJ.m</file>
       <file>${PROJECT_ROOT}\demo.m</file>
       <file>${PROJECT_ROOT}\fun</file>
       <file>${PROJECT_ROOT}\new</file>
       <file>${PROJECT_ROOT}\reademe</file>
       <file>${PROJECT_ROOT}\README.md</file>
+      <file>${PROJECT_ROOT}\srng.mat</file>
       <file>${PROJECT_ROOT}\test</file>
       <file>${PROJECT_ROOT}\testBBA.m</file>
       <file>${PROJECT_ROOT}\utility</file>

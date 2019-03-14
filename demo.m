@@ -17,7 +17,7 @@ addpath('./utility');
 global nDemo
 
 if nargin < 1
-    nDemo = 111; 
+    nDemo = 190314; 
 else
     nDemo = varargin{1}; 
 end
@@ -37,7 +37,7 @@ if isempty(ISplotRunLIS),  ISplotRunLIS = 1;   end                              
 
 % 外观参数：
 if isempty(ISplotPause),  ISplotPause = 0.00;   end   % 0.5 % plot间隔时间
-if isempty(ISplotShowType),  ISplotShowType = 1;   end   % 1 LID 3 ID 8 甩尾
+if isempty(ISplotShowType),  ISplotShowType = 3;   end   % 1 LID 3 ID 8 甩尾
 if isempty(ISplotPauseWait),  ISplotPauseWait = 0;   end   % 是否plotsolutinT多个图直接等待用户反应
 
 % 基本不动：作图参数

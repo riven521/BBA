@@ -1,4 +1,180 @@
 %% 函数: Strip甩尾 v3 增大甩尾范围
+%% 法5的甩尾规则。所有strip排序
+% % function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
+% % % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的 改为全部甩尾，调整范围
+% % % 2 哪些是宽度不满: 
+% % % 3 哪些是高度不满:     
+% % 
+% %     tempStrip_Bin = Strip.Strip_Bin(2,:);
+% % %     TF = false;    
+% %         TF = true;    
+% %     LUisShuaiWei = zeros(size(LU.Weight));      % 判断LU是否甩尾出来的,仅在作图时可能有用
+% %     StripisShuaiWei = zeros(size(Strip.Weight));       % StripseqShuaiWei = zeros(size(Strip.Weight)); % seqShuaiWei越大,表明越早甩尾; 越小, 越晚甩尾, 即越放置在车头.  
+% %        
+% % % % %% 1: ********************** 甩尾 法4 ********************************** 
+% % % % % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
+% % % % if any(~Strip.isWidthFull | ~Strip.isHeightFull) % | ~Strip.isHeightBalance)
+% % % %     
+% % % %     fprintf(1,'       Exsiting 甩尾需求 in HStripSW (Strip宽高不满)...\n');
+% % % %     TF = true;
+% % % %     
+% % % %     % Get b : strip index to be move to end of Vehicle
+% % % %     [~,bNOTheightfull] = find(Strip.isHeightFull == 0);
+% % % %     [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);
+% % % %     [~,bNOTheightbalance] = find(Strip.isHeightBalance == 0);
+% % % %     
+% % % %     b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
+% % % % % b = unique([bNOTheightfull, bNOTwidthfull, bNOTheightbalance],'stable');   
+% % % % 
+% % % % % 2 如果有满足甩尾的Strip, 要如何排序? 看order
+% % % %    if ~isempty(b)       
+% % % %        %法1 Sort b by LoadingRate,Height etc.
+% % % %             %tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
+% % % %             %[~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
+% % % %        %法2 Sort b by 1 剩余宽度大的后放; 2 剩余高度多的后放入
+% % % %             %tmpM = [Strip.LW(1,b); Strip.maxHeight(b)];
+% % % %             %[~,order] = sortrows(tmpM',[1,2],{'ascend','ascend'});
+% % % % 
+% % % %         %法3 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
+% % % %              %tmpM = [Strip.isSingleItem(b);Strip.isMixed(b);Strip.isHeightBalance(b); Strip.lowestHeight(b); Strip.maxHeight(b);Strip.meanHeight(b)];
+% % % %             %[~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});      
+% % % %        
+% % % %        %法4 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
+% % % %        tmpM = [Strip.isMixed(b);Strip.meanHeight(b)];
+% % % %        [~,order] = sortrows(tmpM',[1,2],{'ascend','descend'});   
+% % % %        
+% % % %        b = b(order);
+% % % %        
+% % % %        StripisShuaiWei(b) = 1;        % StripseqShuaiWei(b) = order;
+% % % % 
+% % % %        %%% *********** LU甩尾的找出来,作图用 ***************
+% % % %        LUisShuaiWei( ismember(LU.LU_Strip(1,:), b) ) = 1;  % 该strip内的值
+% % % %    end   
+% % % %   
+% % % %        
+% % % %     %%%  ***************** 是否甩尾的开关 *************
+% % % %     for i=1:length(b)
+% % % %         %     Strip = repairStripPlace(Strip,b(i));    %V1 不考虑SID/EID的甩尾 Strip.Strip_Bin
+% % % %         %     Strip = repairStripPlace2(Strip,b(i));    %V2 考虑SID/EDI的甩尾 Strip.Strip_Bin
+% % % %         tempStrip_Bin = repairStripPlace2(Strip,b(i));    %V3 返回Strip.Strip_Bin
+% % % %         Strip.Strip_Bin(2,:) = tempStrip_Bin;  % 必须有 Strip.Strip_Bin(2,:) 需要循环回去
+% % % %     end
+% % % %        
+% % % % end
+% % % % %% 1: ********************** 甩尾 法4 ********************************** 
+% % 
+% % 
+% % 
+% % 
+% % 
+% % 
+% % % % %% 1: ********************** 甩尾 法5  ********************************** 
+% % % % % 1 哪些甩尾: 所有都甩尾，在量大车头后，对车内进行量大摆放。
+% %        %法5 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
+% %        abnStrip = zeros(1,length(Strip.Weight));
+% %        idx = ~Strip.isWidthFull | ~Strip.isHeightFull  | Strip.isMixed;  %todo isMixed是否甩尾呢？
+% %        abnStrip(idx) = 1;
+% %        
+% %        %        [Strip.nbItem, Strip.nbLU, Strip.nbLULID]
+% %        
+% %        nLU = Strip.nLUIDBin;
+% %        nLULID = Strip.nLULIDBin;
+% %        
+% %        nLU(idx) = 0;
+% %        nLULID(idx) = 0;              
+% % 
+% %        
+% %        %%
+% %        global cust       
+% %        a = Strip.Strip_Bin(1,:) == 6;             
+% %        aa = ismember(cust.LU.LU_Strip(1,:),find(a));
+% %        cust.LU.cust = zeros(size(LU.Weight)); 
+% %        cust.LU.cust(aa) = 1;
+% % %        plotSolutionT(cust.LU,cust.Veh,0,0,1,1,0,'自定义甩尾重排序后Bin'); % Bin排序后 
+% % 
+% % %        abnStrip(a)
+% % %        Strip.isMixed(a)
+% % %        nLU(a)
+% % %        nLULID(a)
+% % %        Strip.meanHeight(a)
+% %        %% 法5.1 正常：量大 和 高度； 异常：非混 + 高度递减
+% %        
+% %        % strip条带顺序 1：abnStrip（是否异常条带） 2：isMixed是否混合条带 3：nLU（）  4:nLULID 5:meanHeight高度
+% %        tmpM = [abnStrip; Strip.isMixed; nLU; nLULID; Strip.meanHeight];
+% %        [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});   
+% %        
+% %        %% 法5.2 正常：高度； 异常：非混 + 高度递减
+% %        Strip
+% %        tmpM = [abnStrip; Strip.isMixed;  Strip.meanHeight];    % 非异常的按混合，高度递减；实质: 应该按量大
+% %        [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});   
+% %        
+% % % %        %% 法5.3 正常：高度； 异常：（后面）不改变考虑
+% % % %        
+% % % %        isM = Strip.isMixed;
+% % % %        meanH = Strip.meanHeight;
+% % % %        
+% % % %        % 异常的为0，即不改变异常的排序？？？？
+% % % %        isM(idx) = 0 ;       
+% % % %        meanH(idx) = 0;
+% % % %        
+% % % %        tmpM = [abnStrip; isM;  meanH];    % 非异常的按混合，高度递减；实质: 应该按量大； 异常的按不考虑。
+% % % %        [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});       
+% % % %        
+% %         %% 法5.4 正常：不变； 异常：非混 + 高度递减
+% %        
+% %        isM = Strip.isMixed;
+% %        meanH = Strip.meanHeight;
+% %        
+% %        % 正常的为0，即不改变正常的排序？？？？
+% %        isM(~idx) = 0 ;       
+% %        meanH(~idx) = 0;
+% %        
+% %        tmpM = [abnStrip; isM;  meanH];    % 非异常的按混合，高度递减；实质: 应该按量大； 异常的按不考虑。
+% %        [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});       
+% % % %          %% 法5.5 正常：高度； 异常：非混 + 高度递减
+% % % %        
+% % % %        isM = Strip.isMixed;
+% % % %        meanH = Strip.meanHeight;
+% % % %        
+% % % %        % 异常的为0，即不改变异常的排序？？？？
+% % % % %        isM(~idx) = 0 ;       
+% % % % %        meanH(~idx) = 0;
+% % % %        
+% % % %        tmpM = [abnStrip; isM;  meanH];    % 非异常的按混合，高度递减；实质: 应该按量大； 异常的按不考虑。
+% % % %        [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});       
+% %        
+% %        
+% %        %% 具体
+% %        b = 1:length(Strip.Weight);
+% %        b = b(order);
+% %        
+% %        StripisShuaiWei(b) = 1;        % StripseqShuaiWei(b) = order;
+% % 
+% %        %%% *********** LU甩尾的找出来,作图用 ***************
+% %        LUisShuaiWei( ismember(LU.LU_Strip(1,:), b(idx) ) ) = 1;  % 该strip内的值    
+% %         %%%  ***************** 是否甩尾的开关 ****************
+% %     for i=1:length(b)
+% %         %     Strip = repairStripPlace(Strip,b(i));    %V1 不考虑SID/EID的甩尾 Strip.Strip_Bin
+% %         %     Strip = repairStripPlace2(Strip,b(i));    %V2 考虑SID/EDI的甩尾 Strip.Strip_Bin
+% %         tempStrip_Bin = repairStripPlace2(Strip,b(i));    %V3 返回Strip.Strip_Bin
+% %         Strip.Strip_Bin(2,:) = tempStrip_Bin;  % 必须有 Strip.Strip_Bin(2,:) 需要循环回去
+% %     end
+% %     % % %% 1: ********************** 甩尾 法5  ********************************** 
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% %     
+% % end
+
+%% 法4的甩尾规则。仅异常的strip排序
 function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
 % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的 改为全部甩尾，调整范围
 % 2 哪些是宽度不满: 
@@ -10,118 +186,66 @@ function   [tempStrip_Bin, StripisShuaiWei,LUisShuaiWei,TF] = HStripSW(Strip,LU)
     LUisShuaiWei = zeros(size(LU.Weight));      % 判断LU是否甩尾出来的,仅在作图时可能有用
     StripisShuaiWei = zeros(size(Strip.Weight));       % StripseqShuaiWei = zeros(size(Strip.Weight)); % seqShuaiWei越大,表明越早甩尾; 越小, 越晚甩尾, 即越放置在车头.  
        
-% % %% 1: ********************** 甩尾 ********************************** 
-% % % 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
-% % if any(~Strip.isWidthFull | ~Strip.isHeightFull) % | ~Strip.isHeightBalance)
-% %     
-% %     fprintf(1,'       Exsiting 甩尾需求 in HStripSW (Strip宽高不满)...\n');
-% %     TF = true;
-% %     
-% %     % Get b : strip index to be move to end of Vehicle
-% %     [~,bNOTheightfull] = find(Strip.isHeightFull == 0);
-% %     [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);
-% %     [~,bNOTheightbalance] = find(Strip.isHeightBalance == 0);
-% %     
-% %     b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
-% % % b = unique([bNOTheightfull, bNOTwidthfull, bNOTheightbalance],'stable');   
-% % 
-% % % 2 如果有满足甩尾的Strip, 要如何排序? 看order
-% %    if ~isempty(b)       
-% %        %法1 Sort b by LoadingRate,Height etc.
-% %             %tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
-% %             %[~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
-% %        %法2 Sort b by 1 剩余宽度大的后放; 2 剩余高度多的后放入
-% %             %tmpM = [Strip.LW(1,b); Strip.maxHeight(b)];
-% %             %[~,order] = sortrows(tmpM',[1,2],{'ascend','ascend'});
-% % 
-% %         %法3 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
-% %              %tmpM = [Strip.isSingleItem(b);Strip.isMixed(b);Strip.isHeightBalance(b); Strip.lowestHeight(b); Strip.maxHeight(b);Strip.meanHeight(b)];
-% %             %[~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});      
-% %        
-% %        %法4 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
-% %        tmpM = [Strip.isMixed(b);Strip.meanHeight(b)];
-% %        [~,order] = sortrows(tmpM',[1,2],{'ascend','descend'});   
-% %        
-% %        b = b(order);
-% %        
-% %        StripisShuaiWei(b) = 1;        % StripseqShuaiWei(b) = order;
-% % 
-% %        %%% *********** LU甩尾的找出来,作图用 ***************
-% %        LUisShuaiWei( ismember(LU.LU_Strip(1,:), b) ) = 1;  % 该strip内的值
-% %    end   
-% %   
-% %        
-% %     %%%  ***************** 是否甩尾的开关 *************
-% %     for i=1:length(b)
-% %         %     Strip = repairStripPlace(Strip,b(i));    %V1 不考虑SID/EID的甩尾 Strip.Strip_Bin
-% %         %     Strip = repairStripPlace2(Strip,b(i));    %V2 考虑SID/EDI的甩尾 Strip.Strip_Bin
-% %         tempStrip_Bin = repairStripPlace2(Strip,b(i));    %V3 返回Strip.Strip_Bin
-% %         Strip.Strip_Bin(2,:) = tempStrip_Bin;  % 必须有 Strip.Strip_Bin(2,:) 需要循环回去
-% %     end
-% %        
-% % end
+%% 1: ********************** 甩尾 法4 ********************************** 
+% 1 哪些甩尾: 宽度不满isWidthFull或高度不满isHeightFull的
+if any(~Strip.isWidthFull | ~Strip.isHeightFull) % | ~Strip.isHeightBalance)
+    
+    fprintf(1,'       Exsiting 甩尾需求 in HStripSW (Strip宽高不满)...\n');
+    TF = true;
+    
+    % Get b : strip index to be move to end of Vehicle
+    [~,bNOTheightfull] = find(Strip.isHeightFull == 0);
+    [~,bNOTwidthfull] = find(Strip.isWidthFull == 0);
+    [~,bNOTheightbalance] = find(Strip.isHeightBalance == 0);
+    
+    b = unique([bNOTheightfull, bNOTwidthfull],'stable');    % 最后摆放车尾的顺序完全看order
+% b = unique([bNOTheightfull, bNOTwidthfull, bNOTheightbalance],'stable');   
 
-% % %% 1: ********************** 甩尾 ********************************** 
-% % % 1 哪些甩尾: 所有都甩尾，在量大车头后，对车内进行量大摆放。
-       %法5 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
-       abnStrip = zeros(1,length(Strip.Weight));
-       idx = ~Strip.isWidthFull | ~Strip.isHeightFull  | Strip.isMixed;  %todo isMixed是否甩尾呢？
-       abnStrip(idx) = 1;
-       
-       %        [Strip.nbItem, Strip.nbLU, Strip.nbLULID]
-       
-       nLU = Strip.nLUIDBin;
-       nLULID = Strip.nLULIDBin;
-       
-       nLU(idx) = 0;
-       nLULID(idx) = 0;              
+% 2 如果有满足甩尾的Strip, 要如何排序? 看order
+   if ~isempty(b)       
+       %法1 Sort b by LoadingRate,Height etc.
+            %tmpM = [Strip.loadingrate(b); Strip.maxHeight(b);Strip.loadingrateLimit(b);];
+            %[~,order] = sortrows(tmpM',[1,2,3],{'descend','descend','descend'});
+       %法2 Sort b by 1 剩余宽度大的后放; 2 剩余高度多的后放入
+            %tmpM = [Strip.LW(1,b); Strip.maxHeight(b)];
+            %[~,order] = sortrows(tmpM',[1,2],{'ascend','ascend'});
 
+        %法3 Sort b 1 非单个的放里面; 非混合isMixed的放里面; 高度均衡isHeightBalance的放里面; 最低高度lowestHeight递减的放里面
+             %tmpM = [Strip.isSingleItem(b);Strip.isMixed(b);Strip.isHeightBalance(b); Strip.lowestHeight(b); Strip.maxHeight(b);Strip.meanHeight(b)];
+            %[~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});      
        
-       %%
-       global cust       
-       a = Strip.Strip_Bin(1,:) == 6;             
-       aa = ismember(cust.LU.LU_Strip(1,:),find(a));
-       cust.LU.cust = zeros(size(LU.Weight)); 
-       cust.LU.cust(aa) = 1;
-%        plotSolutionT(cust.LU,cust.Veh,0,0,1,1,0,'自定义甩尾重排序后Bin'); % Bin排序后 
-
-%        abnStrip(a)
-%        Strip.isMixed(a)
-%        nLU(a)
-%        nLULID(a)
-%        Strip.meanHeight(a)
-       %%
-
+       %法4 Sort b 1 非混合isMixed的放里面;  平均高度t递减的放里面
+       tmpM = [Strip.isMixed(b);Strip.meanHeight(b)];
+       [~,order] = sortrows(tmpM',[1,2],{'ascend','descend'});   
        
-       % strip条带顺序 1：abnStrip（是否异常条带） 2：isMixed是否混合条带 3：nLU  4:nLULID 5:meanHeight高度
-       tmpM = [abnStrip; Strip.isMixed; nLU; nLULID; Strip.meanHeight];
-       [~,order] = sortrows(tmpM',[1,2,3,4,5],{'ascend','ascend','descend','descend','descend'});   
-       tmpM = [abnStrip; Strip.isMixed;  Strip.meanHeight];    % 非异常的按混合，高度递减；实质: 应该按量大
-       [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});   
-       
-       isM = Strip.isMixed;
-       meanH = Strip.meanHeight;
-       isM(idx) = 0 ;
-       meanH(idx) = 0;
-       tmpM = [abnStrip; isM;  meanH];    % 非异常的按混合，高度递减；实质: 应该按量大
-       [~,order] = sortrows(tmpM',[1,2,3],{'ascend','ascend','descend'});       
-       
-       b = 1:length(Strip.Weight);
        b = b(order);
        
        StripisShuaiWei(b) = 1;        % StripseqShuaiWei(b) = order;
 
        %%% *********** LU甩尾的找出来,作图用 ***************
-       LUisShuaiWei( ismember(LU.LU_Strip(1,:), b(idx) ) ) = 1;  % 该strip内的值    
-        %%%  ***************** 是否甩尾的开关 *************
+       LUisShuaiWei( ismember(LU.LU_Strip(1,:), b) ) = 1;  % 该strip内的值
+   end   
+  
+       
+    %%%  ***************** 是否甩尾的开关 *************
     for i=1:length(b)
         %     Strip = repairStripPlace(Strip,b(i));    %V1 不考虑SID/EID的甩尾 Strip.Strip_Bin
         %     Strip = repairStripPlace2(Strip,b(i));    %V2 考虑SID/EDI的甩尾 Strip.Strip_Bin
         tempStrip_Bin = repairStripPlace2(Strip,b(i));    %V3 返回Strip.Strip_Bin
         Strip.Strip_Bin(2,:) = tempStrip_Bin;  % 必须有 Strip.Strip_Bin(2,:) 需要循环回去
     end
+       
+end
+%% 1: ********************** 甩尾 法4 ********************************** 
+    
+    
+    
+    
+    
+    
     
 end
+
 
 %% 局部函数
 %% V3 减少返回参数 555 重点困难函数

@@ -258,7 +258,7 @@ function [d] = RunAlgorithm(d,p)
                 [d.LU,d.Item] = HItemToBin(d.LU,d.Item,d.Strip);    %  Item.Item_Bin  Item.CoordItemBin LU.LU_Bin LU.CoordLUBin
        
                 [d.Bin] = cpuBin(d.Bin,d.Strip,d.Item,d.LU,d.Veh);  %º∆À„BinµƒisTileNeed
-
+% plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'À¶Œ≤÷ÿ≈≈–Ú∫ÛBin'); % Bin≈≈–Ú∫Û 
                 if TFHStripSW && ISplotshuaiwei && ISplotRunAlgo
                         plotSolutionT(d.LU,d.Veh,0,0,0,1,ISplotShowType,'À¶Œ≤÷ÿ≈≈–Ú∫ÛBin'); % Bin≈≈–Ú∫Û 
 %                     plotSolutionT(d.LU,d.Veh,0,0,0,1,8,'À¶Œ≤∫ÛBin'); % Bin≈≈–Ú∫Û 

@@ -337,6 +337,7 @@ fprintf(1,'\nSimulation done.\n');
 % mcc -W 'java:BBA_MR_Main,Class1,1.0' -T link:lib BBA_MR_Main.m -d '.\new'
 % mlintrpt(fullfile(pwd,'fun'),'dir') 代码分析
 % mlintrpt(fullfile(pwd,'fun'),'dir') todo/fixme报告
+% updateContents('F:\Users\HHBS\Documents\555GitHub\ROS\fun') 
 
 % printstruct(do,'sortfields',1,'PRINTCONTENTS',0);    printstruct(do.Veh);
 % do = rmfield(do, {'Veh', 'LU'});

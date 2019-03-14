@@ -646,11 +646,17 @@ V190220 V2 git121 - to 刘
 4: 新增BBA.mlapp的简易测试appdemo，可选测试算例和部分参数。
 5：增加updatecontent.m文件
 
+V190225 V1 git121 
+1：整车平铺中增加临时变量temp3，避免旋转和marign后的循环替代
+
+V190306
+1：删除bba_main的再次，chkInput。会导致部分数据错误。
+2：甩尾选择法5或法4？有待确认
 
 TODO
 1 DEMO-DOCUMENT-FLOWCHART （重难点函数及位置）
 2 TEST MR 
-3 修改量大车头？
+3 修改量大车头？（量大车头不懂）（甩尾顺序要调整？！）
 4 高度不均衡且高度满层（增加仅在单层的判定）？
 
 
