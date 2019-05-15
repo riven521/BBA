@@ -112,6 +112,7 @@ if any(Strip.nbLU ~= Strip.nLUID) || any(Strip.nbLULID ~= Strip.nLULID)
 %      Strip.nLULID
 %     error('结果不太一样两个算出来的，但建议以新的为准'); end
     warning('结果不太一样两个算出来的，但建议以新的为准'); end
+% 实际   nLUID有问题，采用老版本的nLU
 
 end % EOF function
 

@@ -15,9 +15,10 @@ addpath('./fun');
 addpath('./utility'); 
 
 global nDemo
-
+%190424 gap调整后破坏horizontal stability 不允许gap  % 190421 : gap调整后甩尾可挪到前部 允许gap
+%190420：相同Y值可gap调整，类似沿着X轴左移 允许gap
 if nargin < 1
-    nDemo = 190314; 
+    nDemo = 190420; %190508; %190415/190420(gap) /190424 /190421 / 190508 190510
 else
     nDemo = varargin{1}; 
 end
@@ -26,24 +27,25 @@ end
 global ISplotBBA ISplotShowGapAdjust ISplotEachPingPuShuaiWei ISplotEachPingPuAll ISplotshuaiwei  ISplotStripToBinAgain  ISplotRunAlgo ISplotRunLIS ISplotPause ISplotShowType  ISplotGapCompare ISplotPauseWait
 global  parGap ISshuaiwei ISreStripToBin
 
-if isempty(ISplotEachPingPuShuaiWei),  ISplotEachPingPuShuaiWei = 1;   end % 555 比较重要展示参数 每次甩尾平铺成功后，展示平铺前后的对比图
-if isempty(ISplotEachPingPuAll),  ISplotEachPingPuAll = 1;   end                        % 555 比较重要展示参数 每次整车平铺成功后，展示平铺前后的对比图
+% 作图参数
+if isempty(ISplotEachPingPuShuaiWei),  ISplotEachPingPuShuaiWei =0 ;   end % 555 比较重要展示参数 每次甩尾平铺成功后，展示平铺前后的对比图
+if isempty(ISplotEachPingPuAll),  ISplotEachPingPuAll = 0;   end                        % 555 比较重要展示参数 每次整车平铺成功后，展示平铺前后的对比图
 
-if isempty(ISplotshuaiwei),  ISplotshuaiwei = 1;   end                                    % 555 比较重要展示参数
-if isempty(ISplotGapCompare),  ISplotGapCompare = 1;   end                      % 555 比较重要展示参数
+if isempty(ISplotRunLIS),  ISplotRunLIS = 0;   end                                    % 3 相对重要过程展示参数 5 重要, 从托盘到堆垛到strip均展示,多图
+if isempty(ISplotshuaiwei),  ISplotshuaiwei =0 ;   end                              % 555 比较重要展示参数 - 甩尾重排序
+if isempty(ISplotStripToBinAgain),  ISplotStripToBinAgain = 0;   end           % 量大车头 默认1
 
-if isempty(ISplotShowGapAdjust),  ISplotShowGapAdjust = 0;   end                    % 3 相对重要 间隙调整过程展示参数
-if isempty(ISplotRunLIS),  ISplotRunLIS = 1;   end                                                  % 3 相对重要过程展示参数
+if isempty(ISplotGapCompare),  ISplotGapCompare = 1;   end                      % 555 比较重要展示参数 - 每次gap调整后显示
+if isempty(ISplotShowGapAdjust),  ISplotShowGapAdjust = 1;   end                    % 3 相对重要 间隙调整过程展示参数 找gap调整过程原因
 
 % 外观参数：
-if isempty(ISplotPause),  ISplotPause = 0.00;   end   % 0.5 % plot间隔时间
+if isempty(ISplotPause),  ISplotPause = 0.0;   end   % 0.5 % plot间隔时间
 if isempty(ISplotShowType),  ISplotShowType = 3;   end   % 1 LID 3 ID 8 甩尾
 if isempty(ISplotPauseWait),  ISplotPauseWait = 0;   end   % 是否plotsolutinT多个图直接等待用户反应
 
 % 基本不动：作图参数
 if isempty(ISplotBBA),  ISplotBBA = 1;   end   %  555 比较重要展示参数：最终结果展示
-if isempty(ISplotRunAlgo),  ISplotRunAlgo = 1;   end                                    % 默认1
-if isempty(ISplotStripToBinAgain),  ISplotStripToBinAgain = 1;   end           % 量大车头 默认1
+if isempty(ISplotRunAlgo),  ISplotRunAlgo = 1;   end                       % 默认1
 
 % 基本不动：功能参数
 if isempty(parGap),  parGap = 1;   end                              % 是否允许主函数的间隙调整

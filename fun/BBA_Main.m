@@ -34,6 +34,32 @@ end
 close all; format long g; format bank; 
 warning('off');
 
+if datetime('now') > datetime(2020,03,03)
+    error('There is something wrong in the matlab version used');
+end
+
+% 增加LOG FILE OUTPUT - 即使BBA也要增加该日志
+curTime = datestr(now,30);
+mkdir('Log');  %为日志建立目录
+filepath = fullfile(pwd, strcat('.\Log\')); 
+filename = strcat(filepath,curTime,'T',num2str(length(LUID)),'.txt');
+fid = fopen(filename,'w'); 
+fprintf(fid,'LUID = ['); fprintf(fid,' %.0f',LUID); fprintf(fid,'];\n');
+fprintf(fid,'LULWH = ['); fprintf(fid,' %.2f',LULWH); fprintf(fid,'];\n');
+fprintf(fid,'VEHID = ['); fprintf(fid,' %.0f',VEHID); fprintf(fid,'];\n');
+fprintf(fid,'VEHLWH = ['); fprintf(fid,' %.2f',VEHLWH); fprintf(fid,'];\n');
+fprintf(fid,'LUSID = ['); fprintf(fid,' %.0f',varargin{1}); fprintf(fid,'];\n');
+fprintf(fid,'LUPID = ['); fprintf(fid,' %.0f',varargin{2}); fprintf(fid,'];\n');
+fprintf(fid,'LUISROTA = ['); fprintf(fid,' %.0f',varargin{3}); fprintf(fid,'];\n');
+fprintf(fid,'LUMARGIN = ['); fprintf(fid,' %.2f',varargin{4}); fprintf(fid,'];\n');
+fprintf(fid,'LUWEIGHT = ['); fprintf(fid,' %.4f',varargin{5}); fprintf(fid,'];\n');
+fprintf(fid,'VEHWEIGHT = ['); fprintf(fid,' %.2f',varargin{6}); fprintf(fid,'];\n');
+fprintf(fid,'LULID = ['); fprintf(fid,' %.0f',varargin{7}); fprintf(fid,'];\n');
+fprintf(fid,'BBAID = ['); fprintf(fid,' %.0f',varargin{8}); fprintf(fid,'];\n');
+if nargin >= 13
+fprintf(fid,'Para/EID = ['); fprintf(fid,' %.0f',varargin{9}); fprintf(fid,'];\n');     %参数13暂时无用，进来也不影响
+end
+
 % 全局变量0： 作图开关
 % ISplotBBA： 是否最后对T作图的总开关；  ISplotShowGapAdjust: 是否显示gap间隙调整过程图
 % ISplotEachPingPuAll/ISplotEachPingPuShuaiWei：整车平铺和甩尾平铺后画对比图 
@@ -56,7 +82,6 @@ if isempty(ISplotshuaiwei),  ISplotshuaiwei = 0;   end
 if isempty(ISplotStripToBinAgain),  ISplotStripToBinAgain = 0;   end  
 if isempty(ISplotGapCompare),  ISplotGapCompare = 0;   end  
 
-
 if isempty(ISplotPauseWait),  ISplotPauseWait = 0;   end   % 是否plotsolutinT多个图直接等待用户反应
 if isempty(ISplotPause),  ISplotPause = 0.0;   end   %-0.05 % plot间隔时间
 if isempty(ISplotShowType),  ISplotShowType = 3;   end   % 1 LID 3 ID 8 甩尾
@@ -64,12 +89,19 @@ if isempty(ISplotShowType),  ISplotShowType = 3;   end   % 1 LID 3 ID 8 甩尾
 % 全局变量1： 版本控制
 % verMilkRun：1 milkrun版本（包含多一个EID输入） 0 非milkrun；
 global verMilkRun
+
 if isempty(verMilkRun),  verMilkRun = 0;   end % 555: 默认不是MilkRun版本(MilkRun是9个参数的版本)
 % MR的参数9: EP LOCATION增加, 多的变量的自动增加
 if nargin > 1 && length(varargin) < 9 %'LUEID',varargin{9});
-    verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));
-elseif nargin > 1
-    verMilkRun = 1;  % 9个输入参数为milkrun版本
+    verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));  
+elseif nargin > 1 && length(varargin{9}) ~= length(LUID) %表明是para输入，非milkrun输入 todo fixme 后期修改
+    verMilkRun  = 0;   varargin{9} = ones(1,length(LUID));  % 9个输入参数为milkrun版本    
+elseif nargin > 1 && all(varargin{9}) %% 
+    verMilkRun = 1;  % 9个输入参数为milkrun版本 需要EID不能为0
+elseif nargin > 1 && ~all(varargin{9}) %% && length(varargin{9}) ~= 6
+    verMilkRun = 0; varargin{9} = ones(1,length(LUID));  % 9个输入参数 若等于9个, 但有值为0的, 也是正常版本
+else
+    error('varargin 9 is wrong');
 end
 
 % *********  功能开关 ******* 默认不动
@@ -223,7 +255,7 @@ for iAlg = 1:nAlg
     [do.LU,do.Item] = setLCwithoutbuff(do.LU,do.Item);
     
     % 1.4 CHECK 输入和输出的LU
-    chkLUnewold(d.LU,do.LU);  %新老数据对比 todo 完善新老数据对比 预防算法内部错误
+    chkLUnewold(maind.LU,do.LU); % bug修正 : chkLUnewold(d.LU,do.LU);  %新老数据对比 todo 完善新老数据对比 预防算法内部错误
     
     chktLU(do.LU); %核验LU/Item/Strip数据 是否数据是上轻下重；是否Z高度与ItemSEQ一致；是否ITEMID与XY坐标一致; todo :完善结果核对函数
     
@@ -286,8 +318,8 @@ end
 % bestOne = 1;
                                 %%%% dA = do = daBest(1) = daBest(bestOne) %isequal(do,d1)
 %% POST PROCESSING
-% 基于do do1 do2 do3 flagTiledArray flaggetSmallVeh 等结果数据 整合到do(T)内
-% 基于table格式 方便处理
+% 基于do do1 do2 do3 flagTiledArray flaggetSmallVeh 等结果数据 整合到do/T内
+% 基于table格式 方便处理 - 输出参数全部从T取值 (T已依据输出从1到n排序)
 
 fprintf(1,'\nRunning HBinCombine with output T...\n');
 
@@ -329,6 +361,8 @@ end
 % sortrows(x,{'CoordLUBin'})
 % 剔除展示顺序 % output_LU_Seq = output_LU_Seq(1:7,:);
 % whos
+fprintf(fid,'运行成功\n');
+fclose(fid);  %结束输出
 
 clearvars -except output*
 fprintf(1,'\nSimulation done.\n');

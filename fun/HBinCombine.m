@@ -3,7 +3,7 @@ function T = HBinCombine(do,flaggetSmallVeh,do1,flagTiledArray,do2Array,do3Array
 
 global ISlastVehType ISpingpu parGap
 
-%% 1 ******************获取展示顺序 do数据 T=d.LU增加ShowSEQ
+%% 1 ******************获取展示顺序 do数据 -> T
     T = getTableLU(do); chktLU(T);
 
     % 作图：原始非平铺的图
@@ -46,7 +46,7 @@ global ISlastVehType ISpingpu parGap
                     dd = do2Array(ibin);
                 end
                 
-                % 获取LU的Table格式
+                % 获取dd->LU的Table格式
                 T23 = getTableLU(dd);    chktLU(T23) ;
             end
             
@@ -82,7 +82,7 @@ global ISlastVehType ISpingpu parGap
                 error('1');
             end
             
-            %% 哪些会变化?? 5555
+            %% 哪些会变化?? 讲平铺/gap调整后的bin内的LU的部分属性(坐标,顺序等)返回到总表T中 5555
             % 某个bin内调整,其binID一定不会变化; 其bin的LU_VehType一定不会变化；
             % 其LID/Weight/LWH应该不会变化; SID/PID会变化; 因为OPID OSID OID等原因 idExchange函数
             % 某个bin内调整,其BINSEQ,CoordLUBin一定发生变化 （按bid和binseq排序的）
@@ -96,9 +96,14 @@ global ISlastVehType ISpingpu parGap
             T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = ... %补充增加LU_Item数据切换,虽然用途不大,但不会报chktLU错了.
                 T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
 
+            % 190421 增加
+            T.LU_Bin = [T.BINID,T.BINSEQ]; % 190421 增加BINID/BINSEQ的返回LU_Bin,方便作图; 仅看BINSEQ也可
+            % if parGap BINSEQ可能变化 -> 重新计算BINSEQ ID不变
+            
             % 如果考虑Gap且成功替换Gap,则本bin内的LWH和Rotaed也要替换到主数据T中
             if parGap % && flagGap Gap调整是必须  18-12 此处增加对混装间隙的处理 - 基于Table格式
                 T{flagTileLUIdx,{'LWH','Rotaed'}} = T23{:,{'LWH','Rotaed'}};
+%                 T{flagTileLUIdx,{'BINSEQ'}} = T23{:,{'BINSEQ'}};
             end
             
             %        sortrows(T.LU_Item)'
@@ -111,7 +116,8 @@ global ISlastVehType ISpingpu parGap
     end % END OF PINGPU
 
 %% 4 ****************** 针对获取的T 进行最后返回的output处理 ******************
-    [T.ShowSEQ, T.tblorder] = getBBASeqTLU(T); %增加 ShowSEQ(按车辆/供应商号/LID区分显示步骤) 和 tblorder
+    %增加 ShowSEQ(按车辆/供应商号/LID区分显示步骤) 和 tblorder -> 给刘强使用
+    [T.ShowSEQ, T.tblorder] = getBBASeqTLU(T); 
     %       chktLU(T)  %      上面不通过,猜想是LU_Item未及时调整,在后期甩尾平铺后. TODO
 
     % NOTE : 在此之前均未改变LU的顺序，改变LU顺序为按照显示顺序ShowSEQ递增

@@ -39,6 +39,9 @@ catch
     if any(cell2mat(struct2cell(fLU))) || any(cell2mat(struct2cell(fVeh)))
         error('输入数据存在小于0的数'); end
 end
+% 2: LU的重量不能为0(删除时依据Weight进行的判定)，如为0，设置为0.001
+LU.Weight(LU.Weight ==0) = 0.001;
+
 
 %% *************** 2 Veh向量判断 ***************
 % 判断Veh的每个field数组判定：向量/矩阵 是否不一致，是否列数不为nVeh

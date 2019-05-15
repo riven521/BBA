@@ -195,12 +195,10 @@ pos = 1;
 if ismember('LU_Bin', T.Properties.VariableNames)
     
     T=sortrows(T,{'LU_Bin'},{'ascend'});  % T的排序 (LU_Bin递增)
+            %     T=sortrows(T,{'BINSEQ'},{'ascend'});  % T的排序 (LU_Bin递增) 可删,因BINSEQ已返回到LU_Bin中
     
     % 逐个bin作图
     nBin = max(T.LU_Bin(:,1)); %bin的个数
-
-
-
 
     figure('name',strjoin({figname,'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
 %     uf = uifigure('name',strjoin({figname,'BIN展示：先后顺序排序后，合计*个',num2str([nBin])}));
@@ -221,15 +219,31 @@ if ismember('LU_Bin', T.Properties.VariableNames)
         
         for iLU=1:height(subT)
             plotcube(subT.LWH(iLU,:),subT.CoordLUBin(iLU,:),0.7, subT.LUcolor(iLU,:));
-%             axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
-%             view(111,33);    %view(60,40);
-%             xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
-%             if ISplotPause>0 ,      pause(ISplotPause/10);   end
+%                 axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
+%                 view(111,33);    %view(60,40);
+%                 xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
+%                 if ISplotPause>0 ,      pause(ISplotPause/10);   end
         end
         
             axis equal;         grid on;        xlabel('X','FontSize',10);         ylabel('Y','FontSize',10);         zlabel('Z','FontSize',10);
             view(111,33);    %view(60,40);
             xlim([0 subT.LWH_V(iLU,1)]);  ylim([0 subT.LWH_V(iLU,2)]); zlim([0 subT.LWH_V(iLU,3)]); % 车辆的长宽高调整到合适的车型
+            
+            % bin输出文本标记
+            x = T.CoordLUBin(T.LU_Bin(:,1)==ibin,1)'+T.LWH(T.LU_Bin(:,1)==ibin,1)'/2;
+            y = T.CoordLUBin(T.LU_Bin(:,1)==ibin,2)'+T.LWH(T.LU_Bin(:,1)==ibin,2)'/2;
+            z = T.CoordLUBin(T.LU_Bin(:,1)==ibin,3)'+T.LWH(T.LU_Bin(:,1)==ibin,3)'+7;
+            % 文本：托盘的序号+长宽高
+            %             str = strcat(string(T.Index(T.LU_Bin(:,1)==ibin)'),'(',string(T.LWH(T.LU_Bin(:,1)==ibin,1)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,2)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,3)'),')');
+            % 文本：托盘的序号+长宽高+坐标值
+            str = strcat(string(T.Index(T.LU_Bin(:,1)==ibin)'),'(',string(T.LWH(T.LU_Bin(:,1)==ibin,1)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,2)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,3)'),')'...
+                ,'(',string(T.CoordLUBin(T.LU_Bin(:,1)==ibin,1)'),' ',string(T.CoordLUBin(T.LU_Bin(:,1)==ibin,2)'),' ',string(T.CoordLUBin(T.LU_Bin(:,1)==ibin,3)'),')');
+            % 文本：托盘的序号
+            % str = strcat(string(T.Index(T.LU_Bin(:,1)==ibin)'));
+            % 文本：托盘的本ibin内序号 todo
+            %             str = strcat(string(T.Index(T.LU_Bin(:,1)==ibin)'));
+            text(x,y,z,str,'Color','white','FontSize',6);
+
             if ISplotPause>0 ,      pause(ISplotPause/10);   end
     end
     
@@ -237,7 +251,16 @@ if ismember('LU_Bin', T.Properties.VariableNames)
             
 end
 end
+%%
+% clc
+% a = [1 2 3]
+% a2 = [1 2 3]
+% b = string(a)
+% b2 = string(a2)
+% c=strcat(b,b2)
 
+%  str = {'local max','local min'};
+%%
 %% 注释
 % % % % % 3 开始作图 - 按Strip划分
 % % % if ismember('LU_Strip', T.Properties.VariableNames),

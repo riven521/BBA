@@ -1,4 +1,4 @@
-V12 180710 
+﻿V12 180710 
 1 增加间隙，输入参数5和6
 增加第五个输入 LUBUFF = [1,1]; %长宽间隙
 增加第六个输入 BINBUFF = [1,1,1]; 
@@ -649,11 +649,89 @@ V190220 V2 git121 - to 刘
 V190225 V1 git121 
 1：整车平铺中增加临时变量temp3，避免旋转和marign后的循环替代
 
+
+
+
 V190306
 1：删除bba_main的再次，chkInput。会导致部分数据错误。
 2：甩尾选择法5或法4？有待确认
 
+V190409
+1：增加参数13-用户功能选择参数 （milkrun的判定同样为参数13(EID),需要后期思考如何平衡)
+目前通过参数13长度不等于正常长度 length(varargin{9}) ~= length(LUID)，即为para
+% 13.1  相同型号相邻摆放: ?   是?1??否?0? 
+% 13.2  货物摆放前端优先级: ?按装货点优先?1??按卸货点优先?2
+% 13.3  货物摆放后端优先级: ?按装货点优先?1? 按卸货点优先?2
+% 13.4  车型容积大的优先使用: ?是 1???否 0?? 
+% 13.5  不满车厢平铺: ?是 1???否?0 ? 
+% 13.6  排列顺序: ?自由推荐??1?先上堆叠在平铺 2??平层再堆叠 3
+2：增加log文件输出
+
+V190415
+1: 修改混装间隙bug - 原因:1 堆垛原地移动case未剔除（非该原因,此类型均通过寻找条件的堆垛排除）；
+1 实际原因：LU 的 margin不一样，取margin时出错
+ 解决办法：1-修改LUmargin为真正的bottomLU的margin：HBinGapAdjust修改：
+ LU.CoordLUBin(fLU,1) = coordX + bottomLU.margin(idxLU,1);
+
+V190420
+1: bug - 原因:1 待调整的堆垛选择问题:
+1:选择: 必须Y值大于当前Gap点的Y值
+2:排序: 先y递增，后x递增排序(没问题)
+
+ 解决办法：
+1: 选择: 增加:包含等于Y值的堆垛
+2: 排序: 不变
+3: 目的: 可使堆垛在同一strip时,从右向左
+ ：HBinGapAdjust修改：
+     flagLeqLU = bottomLU.CoordLUBin(:,2) - bottomLU.margin(:,3) >= coordY;
+    flagEqLU = bottomLU.CoordLUBin(:,2) - bottomLU.margin(:,3) == coordY;  % NEW ADD 190420    
+
+        % 190420 NEW ADD 如果相同Y：flagEqLU 且挪动增加了X值 则flagLU/flagLURota = 0 即不允许右移
+                                            if thisLU.CoordLUBin(1) - thisLU.margin(1) <0, error('The margin minus is wrong'); end %放置margin减错
+        if flagEqLU(idxLU)  % 如果同Y值移动
+            if coordX>thisLU.CoordLUBin(1) - thisLU.margin(1)  % 如果同Y值移动 如右移 不允许
+            flagLU = 0;
+            flagLURota = 0;
+            else  % 如果同Y值移动 如左移 不允许旋转
+                flagLURota = 0;
+            end
+        end
+
+V190421
+1: bug - gap调整后，给出的显示顺序ShowSEQ错误
+原因：gap调整后，原先展示靠后的会提前到前面
+解决方法：HGapAdjust中: 某个VEH内的LU的gap调整后，增加对所有LU的LU_Bin的第2列修改; 修改后的LU值返回到do3Array/do2Array等; 继而返回到T23 = getTableLU(dd);继而返回到T中：LU_Bin-> BINSEQ ->  T.LU_Bin  T{flagTileLUIdx,{'CoordLUBin','BINSEQ','LU_Item'}} = T23{:,{'CoordLUBin','BINSEQ','LU_Item'}};
+继而排序获取ShowSEQ(getBBASeqTLU)(通过BINSEQ，相同SID，相同LID为一个SHOWSEQ)
+实现过程：增加LU_Bin修改，通过对LU的Coord值进行Y递增，X递增，Z递增排序，给与新的LU_Bin的第2列值; 第1列不变，因为不会跨bin调整
+示例:testBBA_190421
+代码：HBinGapAdjust如允许GAP调整,增加如下代码
+    % 190421 ADD 增加修改LU.LU_Bin -> LU为该bin内的托盘 不考虑序号
+    [~,b2] = sortrows(LU.CoordLUBin,[2,1,3],{'ascend' 'ascend' 'ascend'} ); 
+    [~,LU.LU_Bin(:,2)]=sort(b2);
+
+
+V190508
+1：Chkinput增加对LU.Weight=0的判定和修改
+2：增加log文件输出的关闭
+
+
+V190511 555 
+1: 增加每个托盘的稳定性Stability核验（四个方向，包含margin<100）
+chkHorizontalStability函数
+2: 增加托盘序号和长宽高的输出PLOTSOLUTIONT
+            % bin输出文本标记
+            x = T.CoordLUBin(T.LU_Bin(:,1)==ibin,1)'+T.LWH(T.LU_Bin(:,1)==ibin,1)'/2;
+            y = T.CoordLUBin(T.LU_Bin(:,1)==ibin,2)'+T.LWH(T.LU_Bin(:,1)==ibin,2)'/2;
+            z = T.CoordLUBin(T.LU_Bin(:,1)==ibin,3)'+T.LWH(T.LU_Bin(:,1)==ibin,3)'+7;
+            str = strcat(string(T.Index(T.LU_Bin(:,1)==ibin)'),'(',string(T.LWH(T.LU_Bin(:,1)==ibin,1)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,2)'),' ',string(T.LWH(T.LU_Bin(:,1)==ibin,3)'),')'); % str = num2(T.Index(T.LU_Bin(:,1)==ibin)')&'-'&num2cell(T.LWH(T.LU_Bin(:,1)==ibin,1)'); % todo 增加其它属性输出
+            text(x,y,z,str,'Color','white','FontSize',10);
+
+
+
 TODO
+1：删除bba_main的再次，chkInput。会导致部分数据错误。
+2：甩尾选择法5或法4？有待确认
+
 1 DEMO-DOCUMENT-FLOWCHART （重难点函数及位置）
 2 TEST MR 
 3 修改量大车头？（量大车头不懂）（甩尾顺序要调整？！）

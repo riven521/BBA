@@ -13,7 +13,7 @@ TLU.W = TLU.LWH(:,2);
 TLU.H = TLU.LWH(:,3);  %增加长宽高单列
 end
 
-
+% BINSEQ 来自 LU_Bin
 if any(strcmp('LU_Bin', TLU.Properties.VariableNames))
     TLU.BINID = TLU.LU_Bin(:,1);  
     TLU.BINSEQ = TLU.LU_Bin(:,2); 

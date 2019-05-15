@@ -11,20 +11,12 @@ lVeh  = Veh.LWH(2,1);
 %% Strip排序 555 (如何确保相同托盘类型的相邻摆放 DONE)
     % 获取Strip的顺序(重点是Strip高度递减排序（但经常遇到strip高度一样的）) %
     [Strip.striporder] = getStriporder(Strip);  % Strip两排序方式 高度/长度递减
-    % 获取按order排序后的Strip: sStrip
+    % 获取按order排序后的Strip: sStrip    
     if isSameCol(Strip)
         sStrip = structfun(@(x) x(:,Strip.striporder),Strip,'UniformOutput',false);
     else
-%         Strip.nLUID = Strip.nLUID(1:length(Strip.nbLU));
-%         Strip.nLULID = Strip.nLULID(1:length(Strip.nbLU));
-%         sStrip = structfun(@(x) x(:,Strip.striporder),Strip,'UniformOutput',false);
         error('不能使用structfun');
     end
-    
-%     Strip.striporder
-%     sStrip.striporder()
-   
-%     [T2] = getTableLU(Strip)
     
 %% LU->Item->Strip->Bin转换 
 % 获取stripBeBinMatrixSort: 每个排序后strip在哪个bin内  以及顺序
@@ -38,11 +30,13 @@ tmpBin_Strip = zeros(1,nStrip);    % 每个Bin内的Strip数量 后期不用
 % sStrip新增
 sStrip.Strip_Bin = zeros(2,nStrip); % dim1:序号 strip在某个bin dim2:进入顺序 555
 
+% LWStripSort = sStrip.LW; %从sorted获得
+% StripWeightSort = sStrip.Weight;
+
 % 55 获取thisBin - 当前strip要放入的bin序号
-% 循环往bin中安置strip,即固定strip,变化选择不同bin(thisBin),基于next fit，只能选择当前bin，若当前bin满。重新strip排序后，再放，或者甩尾时修改车内bin顺序
+% 循环往bin中安置strip,即固定strip,变化选择不同bin(thisBin)
 % 注释：获取 FLAG        可放下当前iStrip的至少一个bin的集合 
 % 注释：获取 thisBin   从FLAG中找到按规则的那个thisBin, 并执行 insert函数
-
 
 iStrip=1; iBin=1;
 while 1
@@ -54,6 +48,8 @@ while 1
         
     iStrip = iStrip + 1;
 end
+
+% %  plot2DBin();
 
 % Strip内部更新,sStrip依据order变化回来
 if isSameCol(sStrip)
@@ -87,7 +83,7 @@ EIDorder = getOrderofSID(Strip.EID); %EID一定是从1-n的过程(因为EID的idExchange预
         if ~issorted(unique(EIDorder),'strictascend'), error('EID未由小到大严格递增排序，请检查'); end  
         
 %对LID排序: 相邻摆放的重要原则 5555555 
-IDorder = getOrderofLID(SIDorder, EIDorder, Strip);             % STRIP的顺序至关重要(量大车头看着儿 5555 )
+IDorder = getOrderofLID(SIDorder, EIDorder, Strip);                                 % STRIP的顺序至关重要
 % LID无指定顺序, 仅在SID长宽全部一致,再按LID由小到达排序,其实没有意义(无SID/LID属于同一ITEM),最后看高度
 
 % 555 纠错语句 Single版本：V1: 同一SIDorder下,不允许有重复的 IDorder 即同一供应商下，必须有不同的顺序，不考虑EID
@@ -146,28 +142,9 @@ end
         %             if ~all(ismember(thisBin,flag)),     error('Not all thisBin belongs to flag ');       end
         %         end
     elseif p.whichBinH == 3 % 1 nextfit
-        flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );
+        flaged = find(Bin.LW(2, iBin) >= sStrip.LW(2,iStrip) & ...
+            Veh.Weight(1) - Bin.Weight(iBin) >= sStrip.Weight(iStrip) );
         if  isempty(flaged)  %注意与之前~flag的区别
-            
-% %             % todo 若改到下一个bin，重新对strip排序
-% %             [originT] = getTableLU(sStrip); 
-% %             T = originT; 
-% %             subT = T(1:iStrip-1,:);
-% % %             subT.LID 
-% % %             subT = 
-% % %             sum(subT.ID==subT.ID')
-% %             
-% %             T(1:iStrip-1,:) = [];  
-% %             
-% %             S = getSturctT(T);            
-% %             
-% %             [S.striporder] = getStriporder(S);            
-% %             sssStrip = structfun(@(x) x(:,S.striporder),S,'UniformOutput',false);   
-% %             
-% %             [ssssT] = getTableLU(sssStrip); 
-% %             originT(iStrip:end,:) = ssssT;
-% %             sStrip = getSturctT(originT); 
-                       
             iBin = iBin + 1;
             [thisBin,iBin]  = getThisBin( iBin, iStrip, sStrip, Veh, Bin, p);
         else
